@@ -113,6 +113,7 @@ hc_as_pyramid <- function(
 
   df_age_sex <- df_data %>%
     dplyr::filter(.data[[sex_var]] %in% c(male_level, female_level)) %>%
+    dplyr::mutate(!!rlang::sym(sex_var) := droplevels(.data[[sex_var]])) %>%
     dplyr::mutate(age_group = cut(
       .data[[age_var]],
       breaks = age_breaks,

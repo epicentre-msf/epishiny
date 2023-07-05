@@ -20,7 +20,7 @@ mapUI <- function(id,
       tags$span(shiny::icon("globe-africa"), title, class = "pe-2"),
       shinyWidgets::dropMenu(
         actionButton(ns("dropdown"), icon = shiny::icon("sliders"), label = "options", class = "btn-sm"),
-        options = dropMenuOptions(flip = TRUE),
+        options = shinyWidgets::dropMenuOptions(flip = TRUE),
         shinyWidgets::radioGroupButtons(
           ns("geo_level"),
           label = geo_lab,
@@ -97,26 +97,6 @@ mapServer <- function(
         rv$sf <- sf
       })
 
-      df_geo_counts <- reactive({
-        if (input$var == "n") {
-          var_lab <- "Patients"
-          df_counts <- df_mod() %>%
-            dplyr::count(!!rv$geo_col_sym, name = var_lab) %>%
-            dplyr::mutate(total = .data[[var_lab]])
-        } else {
-          df_counts <- df_mod() %>%
-            dplyr::mutate(!!rv$map_var_sym := forcats::fct_na_value_to_level(!!rv$map_var_sym, "(Missing)")) %>%
-            janitor::tabyl(!!rv$geo_col_sym, !!rv$map_var_sym, show_missing_levels = FALSE) %>%
-            janitor::adorn_totals("col", name = "total")
-        }
-
-        sf::st_drop_geometry(rv$sf) %>%
-          dplyr::select(pcode, name = rv$geo_name_col, lon, lat) %>%
-          dplyr::inner_join(df_counts, by = rv$geo_join) %>%
-          dplyr::mutate(across(where(is.numeric), as.double)) %>%
-          dplyr::mutate(across(where(is.double), ~if_else(is.na(.x), 0, .x)))
-      })
-
       # ==========================================================================
       # MAP
       # ==========================================================================
@@ -152,6 +132,7 @@ mapServer <- function(
         boundaries <- rv$sf
         leaflet::leafletProxy("map", session) %>%
           leaflet::clearGroup("Boundaries") %>%
+          leaflet.minicharts::clearMinicharts() %>%
           leaflet::addPolygons(
             data = boundaries,
             stroke = TRUE,
@@ -161,30 +142,57 @@ mapServer <- function(
             label = boundaries[[rv$geo_name_col]],
             group = "Boundaries",
             options = leaflet::pathOptions(pane = "boundaries")
+          ) %>%
+          leaflet.minicharts::addMinicharts(
+            boundaries$lon,
+            boundaries$lat,
+            layerId = boundaries$pcode,
+            chartdata = 1,
+            width = 0,
+            height = 0
           )
       }) %>% bindEvent(rv$sf)
 
       # map circles/pies ===========================================
+
+      df_geo_counts <- reactive({
+        if (rv$map_var == "n") {
+          var_lab <- "Patients"
+          df_counts <- df_mod() %>%
+            dplyr::count(.data[[rv$geo_col]], name = var_lab) %>%
+            dplyr::mutate(total = .data[[var_lab]])
+        } else {
+          df_counts <- df_mod() %>%
+            # dplyr::mutate(.data[[rv$map_var]] := forcats::fct_na_value_to_level(.data[[rv$map_var]], "(Missing)")) %>%
+            # janitor::tabyl(!!rv$geo_col_sym, !!rv$map_var_sym, show_missing_levels = FALSE) %>%
+            janitor::tabyl(.data[[rv$geo_col]], .data[[rv$map_var]], show_missing_levels = FALSE) %>%
+            janitor::adorn_totals("col", name = "total")
+        }
+
+        sf::st_drop_geometry(rv$sf) %>%
+          dplyr::select(pcode, name = rv$geo_name_col, lon, lat) %>%
+          dplyr::left_join(df_counts, by = rv$geo_join) %>%
+          dplyr::mutate(across(where(is.numeric), as.double)) %>%
+          dplyr::mutate(across(where(is.double), ~dplyr::if_else(is.na(.x), 0, .x)))
+      }) %>% bindEvent(df_mod(), rv$sf, rv$map_var)
+
       observe({
         df_map <- df_geo_counts()
 
-        leaflet::leafletProxy("map", session) %>% clearMinicharts()
-
         if (isTruthy(nrow(df_map) > 0)) {
-          chartData <- df_map %>% select(-pcode, -name, -lon, -lat, -total)
+          chartData <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
           pie_width <- 60 * sqrt(df_map$total) / sqrt(max(df_map$total))
 
           leaflet::leafletProxy("map", session) %>%
-            addMinicharts(
-              df_map$lon,
-              df_map$lat,
-              layerId = df_map$name,
+            leaflet.minicharts::updateMinicharts(
+              layerId = df_map$pcode,
               chartdata = chartData,
-              opacity = .9,
-              # fillColor = epi_pals()$pal10[1],
-              # colorPalette = epi_pals()$pal10,
+              opacity = .7,
+              fillColor = epi_pals()$d310[1],
+              colorPalette = epi_pals()$d310,
               legend = TRUE,
               showLabels = TRUE,
+              labelStyle = htmltools::css(font_family = "'Roboto Mono',sans-serif"),
               type = "pie",
               width = pie_width
             )

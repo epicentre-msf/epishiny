@@ -2,13 +2,11 @@
 #' @export
 epicurveUI <- function(
     id,
-    width = 12,
     title = "Epicurve",
-    date_lab = "Date axis",
     date_vars,
-    date_week_lab = "Bin by week?",
-    groups_lab = "Group data by",
     group_vars,
+    date_lab = "Date axis",
+    groups_lab = "Group data by",
     cfr_lab = "Show CFR?"
 ) {
   ns <- NS(id)
@@ -20,8 +18,8 @@ epicurveUI <- function(
       tags$span(shiny::icon("chart-column"), title, class = "pe-2"),
 
       shinyWidgets::dropMenu(
-        actionButton(ns("dropdown"), icon = shiny::icon("sliders"), label = "options", class = "btn-sm"),
-        options = dropMenuOptions(flip = TRUE),
+        actionButton(ns("dropdown"), icon = icon("sliders"), label = "options", class = "btn-sm"),
+        options = shinyWidgets::dropMenuOptions(flip = TRUE),
         selectInput(
           ns("date"),
           label = date_lab,
@@ -83,12 +81,9 @@ epicurveServer <- function(
     function(input, output, session) {
       ns <- session$ns
 
-      df <- reactive({
-        if (shiny::is.reactive(df_data)) {
-          df_data()
-        } else {
-          df_data
-        }
+      # reactive module data
+      df_mod <- reactive({
+        force_reactive(df_data)
       })
 
       # variables and labels etc
@@ -101,14 +96,14 @@ epicurveServer <- function(
         group <- input$group
         rv$group <- group
         rv$group_sym <- rlang::sym(group)
-        rv$missing_dates <- sum(is.na(df()[[input$date]]))
+        rv$missing_dates <- sum(is.na(df_mod()[[input$date]]))
       })
 
       df_curve <- reactive({
         date <- rlang::sym(input$date)
         group <- rlang::sym(input$group)
 
-        df <- df() %>%
+        df <- df_mod() %>%
           dplyr::mutate(!!date := lubridate::floor_date(
             lubridate::as_date(!!date),
             unit = input$date_interval,
@@ -122,7 +117,7 @@ epicurveServer <- function(
             stop("both `cfr_num` and `cfr_denom` must be supplied to calculate the CFR when `cfr_var` is supplied")
           }
 
-          df_cfr <- df() %>%
+          df_cfr <- df_mod() %>%
             dplyr::mutate(!!date := lubridate::floor_date(
               lubridate::as_date(!!date),
               input$date_interval,
@@ -148,7 +143,7 @@ epicurveServer <- function(
         if (is.null(cfr_numer) || is.null(cfr_denom)) {
           stop("both `cfr_num` and `cfr_denom` must be supplied to calculate the CFR when `cfr_var` is supplied")
         }
-        df() %>%
+        df_mod() %>%
           dplyr::mutate(!!rv$date := lubridate::floor_date(
             lubridate::as_date(!!rv$date_sym),
             input$date_interval,

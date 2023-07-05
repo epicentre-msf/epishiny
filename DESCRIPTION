@@ -1,5 +1,5 @@
 Package: epishiny
-Title: What the Package Does (One Line, Title Case)
+Title: Tools for interactive visualisation of epidemiological linelist data
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Paul",
@@ -7,19 +7,23 @@ Authors@R:
            role = c("aut", "cre"),
            email = "paul.campbell@epicentre.msf.org",
            comment = c(ORCID = "0000-0003-1018-6606"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+Description: Time, place and person analysis of patient level data using the R shiny web-framework.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
 Imports: 
     shiny (>= 1.5.0),
+    rlang,
     dplyr,
     tidyr,
     purrr,
+    stringr,
     lubridate,
+    forcats,
+    scales,
+    sf,
     shinyWidgets,
     bslib,
     highcharter,
@@ -28,13 +32,9 @@ Imports:
     leaflet,
     leaflet.extras,
     leaflet.minicharts,
-    epivis,
-    pushbar,
-    waiter
-Remotes:
-    rstudio/bslib,
-    jbkunst/highcharter,
-    epicentre-msf/epivis
+    waiter,
+    janitor,
+    glue
 Depends: 
     R (>= 2.10)
 URL: https://github.com/epicentre-msf/epishiny

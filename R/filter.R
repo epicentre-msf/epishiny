@@ -21,9 +21,6 @@ filterUI <- function(id, date_range, date_label = "Period") {
           end = date_range[2],
           weekstart = 1,
           format = "d/m/yy"
-          # value = c(date_range[1], date_range[2]),
-          # timeFormat = "%d %b",
-          # step = 1
         ),
         # actionButton(ns("days_all"), "Période complète", class = "btn-sm"),
         # actionButton(ns("days_14"), "14 jours", class = "btn-sm"),
@@ -38,7 +35,6 @@ filterUI <- function(id, date_range, date_label = "Period") {
       bslib::accordion_panel(
         "Group filters",
         shiny::uiOutput(ns("group_filters"))
-        # purrr::map2(group_vars, names(group_vars), make_select_filter, ns, df_linelist)
       )
     ),
 
@@ -64,7 +60,7 @@ filterUI <- function(id, date_range, date_label = "Period") {
 }
 
 #' @export
-filterServer <- function(id, df_ll, date_var, group_vars) {
+filterServer <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)") {
   moduleServer(
     id,
     function(input, output, session) {
@@ -77,7 +73,8 @@ filterServer <- function(id, df_ll, date_var, group_vars) {
       # ==========================================================================
 
       df_mod <- reactive({
-        force_reactive(df_ll)
+        force_reactive(df_ll) %>%
+          dplyr::mutate(dplyr::across(unname(group_vars), forcats::fct_na_value_to_level, level = na_label))
       })
 
       data_out <- reactiveVal()
