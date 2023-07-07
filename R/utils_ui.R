@@ -9,6 +9,7 @@
 use_epishiny <- function() {
   header <- tags$head(
     tags$script(src = "epishiny/js/weekNumber.js"),
+    tags$style(".dropdown-menu {z-index: 1000 !important;}"),
     shinyjs::useShinyjs(),
     waiter::useWaiter()
   )

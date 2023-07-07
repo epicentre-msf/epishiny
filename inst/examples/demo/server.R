@@ -11,6 +11,7 @@ server <- function(input, output, session) {
     id = "map",
     df_data = reactive(app_data()$df_ll),
     geo_data = geo_data,
+    group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
 

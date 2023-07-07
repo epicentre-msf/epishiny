@@ -4,7 +4,8 @@ mapUI <- function(id,
                   geo_data,
                   group_vars,
                   geo_lab = "Geo boundaries",
-                  groups_lab = "Group data by") {
+                  groups_lab = "Group data by",
+                  n_lab = "N patients") {
   ns <- shiny::NS(id)
 
   geo_levels <- purrr::set_names(
@@ -38,7 +39,7 @@ mapUI <- function(id,
           selectInput(
             ns("var"),
             label = groups_lab,
-            choices = c("N patients" = "n", group_vars),
+            choices = c(purrr::set_names("n", n_lab), group_vars),
             multiple = FALSE,
             selectize = FALSE,
             width = 200
@@ -73,6 +74,8 @@ mapServer <- function(
     id,
     df_data,
     geo_data,
+    group_vars,
+    n_lab = "N patients",
     export_width = 1200,
     export_height = 650,
     filter_info = NULL
@@ -117,6 +120,8 @@ mapServer <- function(
         map_var <- input$var
         map_var_sym <- rlang::sym(map_var)
         sf <- geo_select()$sf
+        var_list <- c(purrr::set_names("n", n_lab), group_vars)
+        map_var_lab <- names(var_list[var_list == map_var])
 
         # save as reactive values
         rv$geo_join <- geo_join
@@ -127,6 +132,7 @@ mapServer <- function(
         rv$geo_level_name <- geo_level_name
         rv$map_var <- map_var
         rv$map_var_sym <- map_var_sym
+        rv$map_var_lab <- map_var_lab
         rv$sf <- sf
       })
 
@@ -135,17 +141,17 @@ mapServer <- function(
       # ==========================================================================
       output$map <- leaflet::renderLeaflet({
         bbox <- sf::st_bbox(geo_data[[1]]$sf)
-        leaf_basemap(bbox, miniMap = FALSE)
+        leaf_basemap(bbox, miniMap = TRUE)
       })
 
       # observe({
       #   leaflet::leafletProxy("map", session) %>%
-      #     leaflet::removeControl("filter_info") %>%
+      #     leaflet::removeControl("var-lab") %>%
       #     leaflet::addControl(
-      #       html = shiny::HTML(filter_info()),
-      #       className = "leaflet-control-attribution",
-      #       position = "bottomleft",
-      #       layerId = "filter_info"
+      #       html = tags$div(tag_map_title, shiny::HTML(rv$map_var_lab)),
+      #       className = "map-title",
+      #       position = "topright",
+      #       layerId = "var-lab"
       #     )
       # })
 
