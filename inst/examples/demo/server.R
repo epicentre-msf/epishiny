@@ -1,6 +1,6 @@
 server <- function(input, output, session) {
 
-  df_master <- filterServer(
+  app_data <- filterServer(
     id = "filter",
     df_ll = df_ll,
     date_var = "date_notification",
@@ -9,29 +9,30 @@ server <- function(input, output, session) {
 
   mapServer(
     id = "map",
-    df_data = df_master,
-    geo_data = geo_data
+    df_data = reactive(app_data()$df_ll),
+    geo_data = geo_data,
+    filter_info = reactive(app_data()$filter_info)
   )
 
   epicurveServer(
     id = "curve",
-    df_data = df_master,
+    df_data = reactive(app_data()$df_ll),
     date_vars = date_vars,
     group_vars = group_vars,
     cfr_var = "outcome",
     cfr_numer = "Deceased",
-    cfr_denom = c("Deceased", "Healed", "Abandonment")
+    cfr_denom = c("Deceased", "Healed", "Abandonment"),
+    filter_info = reactive(app_data()$filter_info)
   )
 
   pyramidServer(
     id = "age_sex",
-    df_data = df_master,
+    df_data = reactive(app_data()$df_ll),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",
-    female_level = "Female"
-    # age_breaks = c(seq(from = 0, to = 80, by = 10), Inf),
-    # age_labels = label_breaks(age_breaks)
+    female_level = "Female",
+    filter_info = reactive(app_data()$filter_info)
   )
 
 }

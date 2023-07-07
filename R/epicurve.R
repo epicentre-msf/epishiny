@@ -74,7 +74,8 @@ epicurveServer <- function(
     cfr_var = NULL,
     cfr_numer = NULL,
     cfr_denom = NULL,
-    week_start = 1
+    week_start = 1,
+    filter_info = NULL
 ) {
   shiny::moduleServer(
     id,
@@ -219,7 +220,7 @@ epicurveServer <- function(
             y = 40,
             itemStyle = list(textOverflow = "ellipsis", width = 150)
           ) %>%
-          my_hc_export(title = "Epicurve")
+          my_hc_export(caption = isolate(filter_info()))
 
         if (isolate(input$date_interval == "week")) {
           hc <- hc %>%

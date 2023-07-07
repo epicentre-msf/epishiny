@@ -35,6 +35,7 @@ pyramidServer <- function(
     sex_var,
     male_level = "m",
     female_level = "f",
+    filter_info = NULL,
     ...
 ) {
   shiny::moduleServer(
@@ -57,6 +58,7 @@ pyramidServer <- function(
           sex_var,
           male_level,
           female_level,
+          filter_info = filter_info(),
           ...
         )
       })
@@ -105,7 +107,8 @@ hc_as_pyramid <- function(
     title = NULL,
     xlab = value_name,
     ylab = "Age group",
-    colours = c("#f15f36", "#19a0aa")
+    colours = c("#f15f36", "#19a0aa"),
+    filter_info = NULL
 ) {
 
   missing_sex <- sum(is.na(df_data[[age_var]]))
@@ -166,15 +169,14 @@ hc_as_pyramid <- function(
       formatter = highcharter::JS(sprintf("function () { return '<b>' + this.series.name + ', age ' + this.point.category + 'y</b><br/>' + '%s: ' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}", value_name, value_digit, value_unit))
     ) %>%
     highcharter::hc_legend(enabled = TRUE, reversed = TRUE, verticalAlign = "top", align = "center") %>%
-    highcharter::hc_title(text = NULL) %>%
-    my_hc_export(title = "Age Pyramid", width = 700)
+    highcharter::hc_title(text = NULL)
 
   if (sum(missing_age, missing_sex) > 0) {
     hc_out <- hc_out %>%
       highcharter::hc_credits(enabled = TRUE, text = glue::glue("Missing data: Age ({scales::number(missing_age)}), Sex ({scales::number(missing_sex)})"))
   }
 
-  hc_out
+  hc_out %>% my_hc_export(caption = filter_info, width = 700)
 }
 
 bin_ages <- function(

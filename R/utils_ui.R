@@ -9,7 +9,8 @@
 use_epishiny <- function() {
   header <- tags$head(
     tags$script(src = "epishiny/js/weekNumber.js"),
-    shinyjs::useShinyjs()
+    shinyjs::useShinyjs(),
+    waiter::useWaiter()
   )
   shiny::singleton(header)
 }

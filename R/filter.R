@@ -38,8 +38,8 @@ filterUI <- function(id, date_range, date_label = "Period") {
       )
     ),
 
-    layout_column_wrap(
-      width = 1,
+    layout_columns(
+      col_widths = 12,
       actionButton(
         ns("go"),
         "Filter data",
@@ -53,7 +53,8 @@ filterUI <- function(id, date_range, date_label = "Period") {
         icon = icon("arrows-rotate"),
         class = "btn-info btn-sm",
         style = "color: #fff;"
-      )
+      ),
+      uiOutput(ns("filter_info"))
     )
 
   )
@@ -66,21 +67,40 @@ filterServer <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)"
     function(input, output, session) {
       ns <- session$ns
 
-      observeEvent(input$reset, { shinyjs::reset("sb") })
+      # ==========================================================================
+      # DYNAMIC INPUTS
+      # ==========================================================================
+
+      output$group_filters <- shiny::renderUI({
+        purrr::map2(group_vars, names(group_vars), make_select_filter, ns, df_mod())
+      }) %>% shiny::bindEvent(df_mod())
 
       # ==========================================================================
       # DATA
       # ==========================================================================
 
+      rv <- reactiveValues(
+        df_ll = NULL,
+        filter_info = NULL
+      )
+
       df_mod <- reactive({
         force_reactive(df_ll) %>%
-          dplyr::mutate(dplyr::across(unname(group_vars), forcats::fct_na_value_to_level, level = na_label))
+          dplyr::mutate(dplyr::across(
+            unname(group_vars),
+            forcats::fct_na_value_to_level,
+            level = na_label
+          ))
       })
 
-      data_out <- reactiveVal()
-
       observe({
-        data_out(df_mod())
+        rv$df_ll <- df_mod()
+      })
+
+      # reset sidebar inputs when button clicked
+      observeEvent(input$reset, {
+        shinyjs::reset("sb")
+        shinyjs::delay(500, shinyjs::click("go"))
       })
 
       # observe({
@@ -95,31 +115,9 @@ filterServer <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)"
       #   )
       # }) %>% shiny::bindEvent(df_mod(), input$reset)
 
-      output$group_filters <- shiny::renderUI({
-        purrr::map2(group_vars, names(group_vars), make_select_filter, ns, df_mod())
-      }) %>% shiny::bindEvent(df_mod())
-
-      # ==========================================================================
-      # PUSHBAR SETUP
-      # ==========================================================================
-      # pushbar::setup_pushbar()
-      # observeEvent(pb_init(), {
-      #   if (pb_init() == 1) {
-      #     pushbar::pushbar_open(id = ns("filters"))
-      #   } else if (input$filters_pushbar_opened) {
-      #     pushbar::pushbar_close()
-      #   } else {
-      #     pushbar::pushbar_open(id = ns("filters"))
-      #   }
-      # })
-      # observeEvent(input$go, { pushbar::pushbar_close() })
-      # observeEvent(input$reset, { shinyjs::reset("resetable_filters") })
-      # observeEvent(input$close, { pushbar::pushbar_close() })
-
       # ==========================================================================
       # OBSERVERS
       # ==========================================================================
-
 
       observeEvent(input$days_all, {
         date_range <- range(df_data[[date_var]], na.rm = TRUE)
@@ -191,37 +189,40 @@ filterServer <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)"
         selected <- purrr::reduce(each_var, ~ .x & .y)
         df_out <- df_out %>% dplyr::filter(selected)
 
-        data_out(df_out)
+        rv$df_ll <- df_out
       }) %>% shiny::bindEvent(input$go, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-      # data_out <- reactive({
-      #   input$go
-      #
-      #   # first filter dates
-      #   date_range <- input$date
-      #
-      #   df_out <- df_mod() %>%
-      #     dplyr::filter(
-      #       ((.data[[date_var]] >= as.Date(date_range[1]) & .data[[date_var]] <= as.Date(date_range[2]))
-      #        | is.na(.data[[date_var]]))
-      #     )
-      #
-      #   if (!isolate(input$include_date_na)) {
-      #     df_out <- df_out %>% dplyr::filter(!is.na(.data[[date_var]]))
-      #   }
-      #
-      #   # then filter over all picker inputs
-      #   each_var <- purrr::map(group_vars, ~ filter_var(df_out[[.x]], input[[.x]]))
-      #   selected <- purrr::reduce(each_var, ~ .x & .y)
-      #   df_out <- df_out %>% dplyr::filter(selected)
-      #
-      #   return(df_out)
-      # }) %>%
-      #   # shiny::bindCache(input) %>%
-      #   shiny::bindEvent(input$go, ignoreNULL = FALSE)
+      # ==========================================================================
+      # FILTER INFORMATION TEXT OUTPUT
+      # ==========================================================================
+      observe({
+        date_filters <- glue::glue(
+          "Period: {format(input$date[1], '%d/%b/%y')} - {format(input$date[2], '%d/%b/%y')}"
+        )
 
-      # return to main app ===========================
-      return(data_out)
+        group_filters <- purrr::map2(unname(group_vars), names(group_vars), ~{
+          if (length(input[[.x]])) {
+            glue::glue("{.y}: {glue::glue_collapse(input[[.x]], sep = ', ')}")
+          }
+        }) %>% purrr::compact() %>% purrr::list_simplify()
+
+        fi_out <- glue::glue("<b>Filters applied</b></br>{date_filters}")
+
+        if (!is.null(group_filters)) {
+          fi_out <- glue::glue("{fi_out} </br> {glue::glue_collapse(group_filters, sep = '</br>')}")
+        }
+
+        rv$filter_info <- fi_out
+      })%>% shiny::bindEvent(input$go, ignoreNULL = FALSE, ignoreInit = FALSE)
+
+      output$filter_info <- renderUI({
+        shiny::helpText(shiny::HTML(rv$filter_info))
+      })
+
+      # return data to main app ===========================
+      shiny::reactive({
+        shiny::reactiveValuesToList(rv)
+      })
 
     }
   )

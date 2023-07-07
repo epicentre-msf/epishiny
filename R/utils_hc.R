@@ -7,7 +7,7 @@
 
   hc_opts <- getOption("highcharter.chart")
 
-  hc_opts$colors <- epi_pals()$d310
+  hc_opts$colors <- scales::alpha(epi_pals()$d310, .8)
 
   hc_opts$plotOptions$column <- list(
     zIndex = 2,
@@ -35,6 +35,12 @@
     enabled = FALSE,
     href = "",
     style = list(fontFamily = fntfmly, fontSize = "10px", fontStyle = "italic", cursor = "default")
+  )
+
+  hc_opts$caption <- list(
+    enabled = FALSE,
+    href = "",
+    style = list(fontFamily = fntfmly, fontSize = "10px", cursor = "default")
   )
 
   hc_opts$exporting <- list(enabled = FALSE)
@@ -77,6 +83,7 @@ my_hc_export <- function(
     title,
     subtitle,
     credits,
+    caption,
     colors,
     width = 900,
     height = 450,
@@ -101,6 +108,7 @@ my_hc_export <- function(
   colors <- set_hc_val(colors, hc$x$hc_opts$colors)
   credits <- set_hc_val(credits, hc$x$hc_opts$credits$text)
   show_credits <- ifelse(is.null(credits), FALSE, TRUE)
+  show_caption <- ifelse(is.null(caption), FALSE, TRUE)
 
   legend_title <- stringr::str_remove(hc$x$hc_opts$legend$title$text, "\\(click to filter\\)")
 
@@ -119,6 +127,7 @@ my_hc_export <- function(
       title = list(text = title),
       subtitle = list(text = subtitle),
       credits = list(enabled = show_credits, text = credits),
+      caption = list(enabled = show_caption, text = caption),
       colors = colors,
       legend = list(title = list(text = legend_title)),
       xAxis = list(plotBands = list()), # remove plotbands

@@ -32,6 +32,7 @@ Imports:
     leaflet,
     leaflet.extras,
     leaflet.minicharts,
+    mapview,
     waiter,
     janitor,
     glue

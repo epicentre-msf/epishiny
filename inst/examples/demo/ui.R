@@ -4,7 +4,6 @@ ui <-tagList(
   ),
 
   page_navbar(
-
     title = app_title,
     window_title = app_title,
     id = "tabs",
@@ -23,7 +22,7 @@ ui <-tagList(
 
     # nav pages
     nav_panel(
-      "Examples",
+      tags$span(shiny::icon("chart-column"), "Demo"),
       layout_sidebar(
         # sidebar
         sidebar = filterUI(
@@ -38,7 +37,6 @@ ui <-tagList(
             md = c(12, 12, 12),
             lg = c(12, 7, 5),
             xl = c(12, 7, 5)
-            # xxl = c(-1, 10, -1, -1, 5, 5, -1)
           ),
 
           mapUI(
@@ -59,6 +57,13 @@ ui <-tagList(
       )
     ),
 
+    nav_panel(
+      tags$span(shiny::icon("info"), "About"),
+      tags$div(
+        class = "container"
+      )
+    ),
+
     # nav images and links
     nav_spacer(),
     nav_item(
@@ -67,6 +72,7 @@ ui <-tagList(
         height = "40px"
       )
     )
+  ),
 
-  )
+  waiter::waiter_preloader(html = waiter::spin_3())
 )
