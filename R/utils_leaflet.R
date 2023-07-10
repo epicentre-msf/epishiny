@@ -1,8 +1,9 @@
-
+#' @keywords internal
+#' @noRd
 leaf_basemap <- function(
     bbox,
     baseGroups = c("Light", "OSM", "OSM HOT"),
-    overlayGroups = c("Boundaries", "Taux d'attaque"),
+    overlayGroups = c("Boundaries"),
     miniMap = TRUE
 ) {
   lf <- leaflet::leaflet() %>%
@@ -37,20 +38,3 @@ leaf_basemap <- function(
 
   return(lf)
 }
-
-tag_map_title <- tags$style(HTML("
-  .leaflet-control.map-title {
-    transform: translate(-50%,20%);
-    position: fixed !important;
-    left: 50%;
-    text-align: center;
-    padding-left: 10px;
-    padding-right: 10px;
-    color: rgba(85, 85, 85);
-    font-size: 18px;
-    font - weight:bold
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-  }
-"))

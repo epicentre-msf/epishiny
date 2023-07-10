@@ -1,20 +1,30 @@
 
 #' @export
-filterUI <- function(id, date_range, date_label = "Period") {
+filter_ui <- function(
+    id,
+    date_range,
+    title = "Data filters",
+    date_filters_lab = "Date filters",
+    period_lab = "Period",
+    missing_dates_lab = "Include patients with missing dates?",
+    group_filters_lab = "Group filters",
+    filter_btn_lab = "Filter data",
+    reset_btn_lab = "Reset filters"
+) {
   ns <- NS(id)
 
   bslib::sidebar(
     id = ns("sb"),
-    title = "Filter module",
+    title = title,
     bg = "white",
 
     bslib::accordion(
       open = FALSE,
       bslib::accordion_panel(
-        "Date filters",
+        date_filters_lab,
         dateRangeInput(
           inputId = ns("date"),
-          label = date_label,
+          label = period_lab,
           min = date_range[1],
           max = date_range[2],
           start = date_range[1],
@@ -28,12 +38,12 @@ filterUI <- function(id, date_range, date_label = "Period") {
         # actionButton(ns("days_1"), "Dernier jour", class = "btn-sm"),
         div(style = "padding-top: 10px;", shiny::checkboxInput(
           inputId = ns("include_date_na"),
-          label = "Include patients with missing dates?",
+          label = missing_dates_lab,
           value = TRUE
         ))
       ),
       bslib::accordion_panel(
-        "Group filters",
+        group_filters_lab,
         shiny::uiOutput(ns("group_filters"))
       )
     ),
@@ -42,17 +52,15 @@ filterUI <- function(id, date_range, date_label = "Period") {
       col_widths = 12,
       actionButton(
         ns("go"),
-        "Filter data",
+        filter_btn_lab,
         icon = icon("filter"),
-        class = "btn-primary btn-sm",
-        style = "color: #fff;"
+        class = "btn-primary btn-sm"
       ),
       actionButton(
         ns("reset"),
-        "Reset filters",
+        reset_btn_lab,
         icon = icon("arrows-rotate"),
-        class = "btn-info btn-sm",
-        style = "color: #fff;"
+        class = "btn-light btn-sm"
       ),
       uiOutput(ns("filter_info"))
     )
@@ -61,7 +69,7 @@ filterUI <- function(id, date_range, date_label = "Period") {
 }
 
 #' @export
-filterServer <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)") {
+filter_server <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)") {
   moduleServer(
     id,
     function(input, output, session) {
@@ -228,7 +236,8 @@ filterServer <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)"
   )
 }
 
-#' @export
+#' @keywords internal
+#' @noRd
 filterPushbarUI <- function(id, date_range, group_vars) {
   ns <- NS(id)
   tagList(

@@ -47,3 +47,46 @@ epi_pal <- list(
   SECONDARY = "#D37331",
   SUCCESS = "#94BA3B"
 )
+
+if (FALSE) {
+  pkgload::load_all()
+  
+  launch_epicurve(
+    df_ll,
+    date_vars,
+    group_vars,
+    ratio_line_lab = "Show CFR line?",
+    ratio_var = "outcome",
+    ratio_lab = "CFR",
+    ratio_numer = "Deceased",
+    ratio_denom = c("Deceased", "Healed", "Abandonment")
+  )
+
+  launch_module(
+    module = "filter",
+    df_ll = df_ll,
+    date_vars = date_vars,
+    group_vars = group_vars,
+    ratio_line_lab = "Show CFR line?",
+    ratio_var = "outcome",
+    ratio_lab = "CFR",
+    ratio_numer = "Deceased",
+    ratio_denom = c("Deceased", "Healed", "Abandonment")
+  )
+
+  launch_module(
+    module = "map",
+    df_ll = df_ll,
+    geo_data = geo_data,
+    group_vars = group_vars
+  )
+
+  launch_module(
+    module = "pyramid",
+    df_ll = df_ll,
+    age_var = "age_years",
+    sex_var = "sex_id",
+    male_level = "Male",
+    female_level = "Female"
+  )
+}

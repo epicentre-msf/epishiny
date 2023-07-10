@@ -1,11 +1,16 @@
 
 #' @export
-pyramidUI <- function(id, title = "Person", icon = "users") {
+pyramid_ui <- function(
+    id,
+    title = "Person",
+    icon = "users",
+    full_screen = TRUE
+) {
   ns <- shiny::NS(id)
 
   bslib::navset_card_tab(
     wrapper = \(...) {bslib::card_body(..., padding = 0, min_height = 300)},
-    full_screen = TRUE,
+    full_screen = full_screen,
 
     title = tags$div(
       class = "d-flex justify-content-start align-items-center",
@@ -16,26 +21,30 @@ pyramidUI <- function(id, title = "Person", icon = "users") {
     ),
 
     bslib::nav_panel(
-      title = shiny::icon("chart-column"),
+      title = shiny::icon("chart-bar"),
       highcharter::highchartOutput(ns("as_pyramid"))
+    ),
+    bslib::nav_panel(
+      title = shiny::icon("table"),
+      gt::gt_output(ns("as_tbl"))
     )
-    # bslib::nav_panel(
-    #   title = shiny::icon("table"),
-    #   gt::gt_output(ns("as_tbl"))
-    # )
   )
 
 }
 
 #' @export
-pyramidServer <- function(
+pyramid_server <- function(
     id,
-    df_data,
+    df_ll,
     age_var,
     sex_var,
-    male_level = "m",
-    female_level = "f",
-    filter_info = NULL,
+    male_level,
+    female_level,
+    age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
+    age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
+    age_var_lab = "Age (years)",
+    age_group_lab = "Age group",
+    filter_info = shiny::reactiveVal(),
     ...
 ) {
   shiny::moduleServer(
@@ -43,35 +52,55 @@ pyramidServer <- function(
     function(input, output, session) {
       ns <- session$ns
 
-      df <- reactive({
-        if (shiny::is.reactive(df_data)) {
-          df_data()
-        } else {
-          df_data
+      # loading spinner for summary table
+      w_tbl <- waiter::Waiter$new(
+        id = ns("as_tbl"),
+        html = waiter::spin_3(),
+        color = waiter::transparent(alpha = 0)
+      )
+
+      df_mod <- reactive({
+        df_ll <- force_reactive(df_ll)
+        if (!is.factor(df_ll[[sex_var]])) {
+          df_ll[[sex_var]] <- forcats::fct_na_value_to_level(
+            df_ll[[sex_var]],
+            getOption("epishiny.na.label", "(Missing)")
+          )
         }
+        df_ll
       })
 
       output$as_pyramid <- highcharter::renderHighchart({
         hc_as_pyramid(
-          df_data = df(),
+          df_ll = df_mod(),
           age_var,
           sex_var,
           male_level,
           female_level,
+          age_breaks,
+          age_labels,
           filter_info = filter_info(),
           ...
         )
       })
 
       output$as_tbl <- gt::render_gt({
-        df() %>%
-          select(sex_var, age_var) %>%
-          bin_ages(age_var) %>%
+        # show loading spinner
+        w_tbl$show()
+        on.exit(w_tbl$hide())
+
+        df_mod() %>%
+          select(all_of(c(sex_var, age_var))) %>%
+          bin_ages(
+            age_var,
+            age_breaks,
+            age_labels
+          ) %>%
           gtsummary::tbl_summary(
             by = sex_var,
             label  = list(
-              age_var ~ "Age (years)",
-              "age_group" ~ "Age Group"
+              age_var ~ age_var_lab,
+              "age_group" ~ age_group_lab
             ),
             # type = gtsummary::all_continuous() ~ "continuous2",
             type = list(age_var ~ "continuous2"),
@@ -79,7 +108,7 @@ pyramidServer <- function(
             statistic = gtsummary::all_continuous() ~ c("{mean}",
                                                         "{median} ({p25}, {p75})",
                                                         "{min}, {max}"),
-            missing_text = "Missing"
+            missing_text = "(Missing)"
           ) %>%
           gtsummary::add_overall() %>%
           gtsummary::italicize_levels() %>%
@@ -92,9 +121,10 @@ pyramidServer <- function(
   )
 }
 
-
+#' @keywords internal
+#' @noRd
 hc_as_pyramid <- function(
-    df_data,
+    df_ll,
     age_var,
     sex_var,
     male_level = "m",
@@ -111,10 +141,11 @@ hc_as_pyramid <- function(
     filter_info = NULL
 ) {
 
-  missing_sex <- sum(is.na(df_data[[age_var]]))
-  missing_age <- sum(is.na(df_data[[sex_var]]))
+  # missing_sex <- sum(!df_ll[[age_var]] %in% c(male_level, female_level) | is.na(df_ll[[age_var]]))
+  missing_sex <- nrow(filter(df_ll, !.data[[sex_var]] %in% c(male_level, female_level) | is.na(.data[[sex_var]])))
+  missing_age <- sum(is.na(df_ll[[age_var]]))
 
-  df_age_sex <- df_data %>%
+  df_age_sex <- df_ll %>%
     dplyr::filter(.data[[sex_var]] %in% c(male_level, female_level)) %>%
     dplyr::mutate(!!rlang::sym(sex_var) := droplevels(.data[[sex_var]])) %>%
     dplyr::mutate(age_group = cut(
@@ -166,19 +197,36 @@ hc_as_pyramid <- function(
     highcharter::hc_colors(colours) %>%
     highcharter::hc_tooltip(
       shared = FALSE,
-      formatter = highcharter::JS(sprintf("function () { return '<b>' + this.series.name + ', age ' + this.point.category + 'y</b><br/>' + '%s: ' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}", value_name, value_digit, value_unit))
+      formatter = highcharter::JS(
+        sprintf(
+          "function () { return '<b>' + this.series.name + ', age ' + this.point.category + 'y</b><br/>' + '%s: ' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}",
+          value_name,
+          value_digit,
+          value_unit
+        )
+      )
     ) %>%
-    highcharter::hc_legend(enabled = TRUE, reversed = TRUE, verticalAlign = "top", align = "center") %>%
+    highcharter::hc_legend(
+      enabled = TRUE,
+      reversed = TRUE,
+      verticalAlign = "top",
+      align = "center"
+    ) %>%
     highcharter::hc_title(text = NULL)
 
   if (sum(missing_age, missing_sex) > 0) {
     hc_out <- hc_out %>%
-      highcharter::hc_credits(enabled = TRUE, text = glue::glue("Missing data: Age ({scales::number(missing_age)}), Sex ({scales::number(missing_sex)})"))
+      highcharter::hc_credits(
+        enabled = TRUE,
+        text = glue::glue("Missing data: Age ({scales::number(missing_age)}), Sex ({scales::number(missing_sex)} missing/other)")
+      )
   }
 
   hc_out %>% my_hc_export(caption = filter_info, width = 700)
 }
 
+#' @keywords internal
+#' @noRd
 bin_ages <- function(
     df,
     age_var,
@@ -196,13 +244,3 @@ bin_ages <- function(
     )
   )
 }
-
-if (0) {
-  library(tidyverse)
-
-  df_linelist <- tibble::tibble(outbreaks::ebola_sim_clean$linelist) %>%
-    dplyr::mutate(age = runif(n(), 0, 60) %>% round(0))
-
-  hc_as_pyramid(df_linelist, age_var = "age", sex_var = "gender")
-}
-

@@ -1,34 +1,39 @@
-server <- function(input, output, session) {
+_server <- function(input, output, session) {
 
-  app_data <- filterServer(
+  app_data <- filter_server(
     id = "filter",
     df_ll = df_ll,
     date_var = "date_notification",
     group_vars = group_vars
   )
 
-  mapServer(
+  map_server(
     id = "map",
-    df_data = reactive(app_data()$df_ll),
+    df_ll = reactive(app_data()$df_ll),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
 
-  epicurveServer(
+  epicurve_click <- epicurve_server(
     id = "curve",
-    df_data = reactive(app_data()$df_ll),
+    df_ll = reactive(app_data()$df_ll),
     date_vars = date_vars,
     group_vars = group_vars,
-    cfr_var = "outcome",
-    cfr_numer = "Deceased",
-    cfr_denom = c("Deceased", "Healed", "Abandonment"),
+    ratio_var = "outcome",
+    ratio_lab = "CFR",
+    ratio_numer = "Deceased",
+    ratio_denom = c("Deceased", "Healed", "Abandonment"),
     filter_info = reactive(app_data()$filter_info)
   )
 
-  pyramidServer(
+  # observe({
+  #   print(epicurve_click())
+  # })
+
+  pyramid_server(
     id = "age_sex",
-    df_data = reactive(app_data()$df_ll),
+    df_ll = reactive(app_data()$df_ll),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

@@ -1,11 +1,14 @@
 #' @export
-mapUI <- function(id,
-                  title = "Place",
-                  geo_data,
-                  group_vars,
-                  geo_lab = "Geo boundaries",
-                  groups_lab = "Group data by",
-                  n_lab = "N patients") {
+map_ui <- function(
+    id,
+    geo_data,
+    group_vars,
+    title = "Place",
+    geo_lab = "Geo boundaries",
+    groups_lab = "Group data by",
+    n_lab = "N patients",
+    full_screen = TRUE
+) {
   ns <- shiny::NS(id)
 
   geo_levels <- purrr::set_names(
@@ -15,7 +18,7 @@ mapUI <- function(id,
 
   bslib::card(
     min_height = 200,
-    full_screen = TRUE,
+    full_screen = full_screen,
     bslib::card_header(
       class = "d-flex justify-content-start align-items-center",
       tags$span(shiny::icon("globe-africa"), title, class = "pe-2"),
@@ -70,15 +73,15 @@ mapUI <- function(id,
 }
 
 #' @export
-mapServer <- function(
+map_server <- function(
     id,
-    df_data,
+    df_ll,
     geo_data,
     group_vars,
     n_lab = "N patients",
     export_width = 1200,
     export_height = 650,
-    filter_info = NULL
+    filter_info = shiny::reactiveVal()
   ) {
   shiny::moduleServer(
     id,
@@ -97,14 +100,15 @@ mapServer <- function(
       # ==========================================================================
 
       df_mod <- reactive({
-        force_reactive(df_data)
+        force_reactive(df_ll)
       })
 
       geo_select <- reactive({
-        if (length(geo_data) == 1) {
-          geo_data[[1]]
+        gd <- force_reactive(geo_data)
+        if (length(gd) == 1) {
+          gd[[1]]
         } else {
-          geo_data[[input$geo_level]]
+          gd[[input$geo_level]]
         }
       })
 
@@ -256,6 +260,10 @@ mapServer <- function(
             leaflet::addMapPane(name = "region_highlight", zIndex = 420) %>%
             leaflet::addMapPane(name = "place_labels", zIndex = 320) %>%
             leaflet::addMiniMap(toggleDisplay = FALSE, position = "topleft") %>%
+            leaflet::addControl(
+              html = tags$b(rv$map_var_lab),
+              position = "topright"
+            ) %>% 
             leaflet::addScaleBar(
               position = "bottomright",
               options = leaflet::scaleBarOptions(imperial = FALSE)
@@ -321,7 +329,8 @@ mapServer <- function(
             selfcontained = FALSE,
             vwidth = export_width,
             vheight = export_height,
-            zoom = 2
+            zoom = 2,
+            delay = 0.5
           )
         }
       )
