@@ -1,4 +1,4 @@
-_server <- function(input, output, session) {
+server <- function(input, output, session) {
 
   app_data <- filter_server(
     id = "filter",
@@ -7,7 +7,7 @@ _server <- function(input, output, session) {
     group_vars = group_vars
   )
 
-  map_server(
+  place_server(
     id = "map",
     df_ll = reactive(app_data()$df_ll),
     geo_data = geo_data,
@@ -15,7 +15,7 @@ _server <- function(input, output, session) {
     filter_info = reactive(app_data()$filter_info)
   )
 
-  epicurve_click <- epicurve_server(
+  epicurve_click <- time_server(
     id = "curve",
     df_ll = reactive(app_data()$df_ll),
     date_vars = date_vars,
@@ -31,7 +31,7 @@ _server <- function(input, output, session) {
   #   print(epicurve_click())
   # })
 
-  pyramid_server(
+  person_server(
     id = "age_sex",
     df_ll = reactive(app_data()$df_ll),
     age_var = "age_years",

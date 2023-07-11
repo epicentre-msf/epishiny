@@ -64,12 +64,17 @@ filter_ui <- function(
       ),
       uiOutput(ns("filter_info"))
     )
-
   )
 }
 
 #' @export
-filter_server <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)") {
+filter_server <- function(
+    id,
+    df_ll,
+    date_var,
+    group_vars,
+    na_label = getOption("epishiny.na.label", "(Missing)")
+) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -236,7 +241,7 @@ filter_server <- function(id, df_ll, date_var, group_vars, na_label = "(Missing)
   )
 }
 
-#' @keywords internal
+
 #' @noRd
 filterPushbarUI <- function(id, date_range, group_vars) {
   ns <- NS(id)

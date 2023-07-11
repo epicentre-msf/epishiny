@@ -16,6 +16,7 @@ RoxygenNote: 7.2.1
 Imports: 
     shiny (>= 1.5.0),
     rlang,
+    magrittr,
     dplyr,
     tidyr,
     purrr,

@@ -1,4 +1,4 @@
-## code to prepare `DATASET` dataset goes here
+# code to prepare package example data
 library(tidyverse)
 library(obtdata)
 library(rmapshaper)

@@ -1,6 +1,6 @@
 ui <-tagList(
   tags$head(
-    epishiny::use_epishiny()
+    use_epishiny()
   ),
 
   page_navbar(
@@ -34,25 +34,24 @@ ui <-tagList(
         layout_columns(
           col_widths = breakpoints(
             md = c(12, 12, 12),
-            lg = c(12, 7, 5),
-            xl = c(12, 7, 5)
+            lg = c(12, 7, 5)
           ),
 
-          map_ui(
+          place_ui(
             id = "map",
             geo_data = geo_data,
             group_vars = group_vars
           ),
 
-          epicurve_ui(
+          time_ui(
             id = "curve",
             title = "Time",
             date_vars = date_vars,
             group_vars = group_vars,
-            ratio_lab = "Show CFR line?"
+            ratio_line_lab = "Show CFR line?"
           ),
 
-          pyramid_ui(id = "age_sex")
+          person_ui(id = "age_sex")
         )
       )
     ),

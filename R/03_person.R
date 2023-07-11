@@ -1,9 +1,10 @@
 
 #' @export
-pyramid_ui <- function(
+person_ui <- function(
     id,
     title = "Person",
     icon = "users",
+    opts_btn_lab = "options",
     full_screen = TRUE
 ) {
   ns <- shiny::NS(id)
@@ -16,7 +17,7 @@ pyramid_ui <- function(
       class = "d-flex justify-content-start align-items-center",
       tags$span(shiny::icon(icon), title, class = "pe-2"),
       shinyWidgets::dropMenu(
-        actionButton(ns("dropdown"), icon = shiny::icon("sliders"), label = "options", class = "btn-sm")
+        actionButton(ns("dropdown"), icon = shiny::icon("sliders"), label = opts_btn_lab, class = "btn-sm")
       )
     ),
 
@@ -33,7 +34,7 @@ pyramid_ui <- function(
 }
 
 #' @export
-pyramid_server <- function(
+person_server <- function(
     id,
     df_ll,
     age_var,
@@ -90,7 +91,7 @@ pyramid_server <- function(
         on.exit(w_tbl$hide())
 
         df_mod() %>%
-          select(all_of(c(sex_var, age_var))) %>%
+          dplyr::select(dplyr::all_of(c(sex_var, age_var))) %>%
           bin_ages(
             age_var,
             age_breaks,
@@ -121,7 +122,7 @@ pyramid_server <- function(
   )
 }
 
-#' @keywords internal
+
 #' @noRd
 hc_as_pyramid <- function(
     df_ll,
@@ -142,7 +143,7 @@ hc_as_pyramid <- function(
 ) {
 
   # missing_sex <- sum(!df_ll[[age_var]] %in% c(male_level, female_level) | is.na(df_ll[[age_var]]))
-  missing_sex <- nrow(filter(df_ll, !.data[[sex_var]] %in% c(male_level, female_level) | is.na(.data[[sex_var]])))
+  missing_sex <- nrow(dplyr::filter(df_ll, !.data[[sex_var]] %in% c(male_level, female_level) | is.na(.data[[sex_var]])))
   missing_age <- sum(is.na(df_ll[[age_var]]))
 
   df_age_sex <- df_ll %>%
@@ -225,7 +226,7 @@ hc_as_pyramid <- function(
   hc_out %>% my_hc_export(caption = filter_info, width = 700)
 }
 
-#' @keywords internal
+
 #' @noRd
 bin_ages <- function(
     df,

@@ -9,7 +9,7 @@
   # set epishiny default options =============
   options(
     epishiny.na.label = "(Missing)",
-    epishiny.week.initial = "W",
+    epishiny.week.letter = "W",
     epishiny.week.start = 1
   )
 

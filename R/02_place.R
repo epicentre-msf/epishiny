@@ -1,5 +1,5 @@
 #' @export
-map_ui <- function(
+place_ui <- function(
     id,
     geo_data,
     group_vars,
@@ -16,64 +16,67 @@ map_ui <- function(
     unname(purrr::map_chr(geo_data, "level_name"))
   )
 
-  bslib::card(
-    min_height = 200,
-    full_screen = full_screen,
-    bslib::card_header(
-      class = "d-flex justify-content-start align-items-center",
-      tags$span(shiny::icon("globe-africa"), title, class = "pe-2"),
-      shinyWidgets::dropMenu(
-        actionButton(
-          ns("dropdown"),
-          icon = shiny::icon("sliders"),
-          label = "options",
-          class = "btn-sm pe-2 me-2"
-        ),
-        options = shinyWidgets::dropMenuOptions(flip = TRUE),
-        bslib::layout_columns(
-          col_widths = 12,
-          shinyWidgets::radioGroupButtons(
-            ns("geo_level"),
-            label = geo_lab,
-            size = "sm",
-            status = "outline-dark",
-            choices = geo_levels
+  tagList(
+    use_epishiny(),
+    bslib::card(
+      min_height = 300,
+      full_screen = full_screen,
+      bslib::card_header(
+        class = "d-flex justify-content-start align-items-center",
+        tags$span(shiny::icon("globe-africa"), title, class = "pe-2"),
+        shinyWidgets::dropMenu(
+          actionButton(
+            ns("dropdown"),
+            icon = shiny::icon("sliders"),
+            label = "options",
+            class = "btn-sm pe-2 me-2"
           ),
-          selectInput(
-            ns("var"),
-            label = groups_lab,
-            choices = c(purrr::set_names("n", n_lab), group_vars),
-            multiple = FALSE,
-            selectize = FALSE,
-            width = 200
-          ),
-          sliderInput(
-            ns("circle_size_mult"),
-            label = "Circle size multiplyer",
-            min = 1,
-            max = 10,
-            value = 6,
-            step = 1,
-            width = 200
+          options = shinyWidgets::dropMenuOptions(flip = TRUE),
+          bslib::layout_columns(
+            col_widths = 12,
+            shinyWidgets::radioGroupButtons(
+              ns("geo_level"),
+              label = geo_lab,
+              size = "sm",
+              status = "outline-dark",
+              choices = geo_levels
+            ),
+            selectInput(
+              ns("var"),
+              label = groups_lab,
+              choices = c(purrr::set_names("n", n_lab), group_vars),
+              multiple = FALSE,
+              selectize = FALSE,
+              width = 200
+            ),
+            sliderInput(
+              ns("circle_size_mult"),
+              label = "Circle size multiplyer",
+              min = 1,
+              max = 10,
+              value = 6,
+              step = 1,
+              width = 200
+            )
           )
+        ),
+        downloadButton(
+          ns("dl"),
+          label = "Download",
+          icon = shiny::icon("camera"),
+          class = "btn-sm pe-2 me-2"
         )
       ),
-      downloadButton(
-        ns("dl"),
-        label = "Download",
-        icon = shiny::icon("camera"),
-        class = "btn-sm pe-2 me-2"
+      bslib::card_body(
+        padding = 0,
+        leaflet::leafletOutput(ns("map"))
       )
-    ),
-    bslib::card_body(
-      padding = 0,
-      leaflet::leafletOutput(ns("map"))
     )
   )
 }
 
 #' @export
-map_server <- function(
+place_server <- function(
     id,
     df_ll,
     geo_data,
@@ -82,7 +85,7 @@ map_server <- function(
     export_width = 1200,
     export_height = 650,
     filter_info = shiny::reactiveVal()
-  ) {
+) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -90,7 +93,7 @@ map_server <- function(
 
       # loading spinner for map export
       w_map <- waiter::Waiter$new(
-        id = c(ns("map")),
+        id = ns("map"),
         html = waiter::spin_3(),
         color = waiter::transparent(alpha = 0)
       )
@@ -201,21 +204,21 @@ map_server <- function(
         sf::st_drop_geometry(rv$sf) %>%
           dplyr::select(pcode, name = rv$geo_name_col, lon, lat) %>%
           dplyr::left_join(df_counts, by = rv$geo_join) %>%
-          dplyr::mutate(across(where(is.numeric), as.double)) %>%
-          dplyr::mutate(across(where(is.double), ~dplyr::if_else(is.na(.x), 0, .x)))
+          dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
+          dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
       }) %>% bindEvent(df_mod(), rv$sf, rv$map_var)
 
       observe({
         df_map <- df_geo_counts()
 
         if (isTruthy(nrow(df_map) > 0)) {
-          chartData <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
+          chart_data <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
           pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::updateMinicharts(
               layerId = df_map$pcode,
-              chartdata = chartData,
+              chartdata = chart_data,
               opacity = .7,
               fillColor = epi_pals()$d310[1],
               colorPalette = epi_pals()$d310,
@@ -231,7 +234,7 @@ map_server <- function(
       # Map image export ==========================================================
       output$dl <- downloadHandler(
         filename = function() {
-          glue::glue("EPI-MAP-{Sys.Date()}.png")
+          glue::glue("EPI-MAP-{time_stamp()}.png")
         },
         content = function(file) {
           # show loading spinner
@@ -241,9 +244,9 @@ map_server <- function(
           # rebuild current map shown on dashboard
           boundaries <- rv$sf
           df_map <- df_geo_counts()
-          chartData <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
+          chart_data <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
 
-          # * 7 instead of * 10 like in the app map because 
+          # * 7 instead of * 10 like in the app map because
           # circles are coming out larger in the image export
           pie_width <- (input$circle_size_mult * 7) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
@@ -263,7 +266,7 @@ map_server <- function(
             leaflet::addControl(
               html = tags$b(rv$map_var_lab),
               position = "topright"
-            ) %>% 
+            ) %>%
             leaflet::addScaleBar(
               position = "bottomright",
               options = leaflet::scaleBarOptions(imperial = FALSE)
@@ -272,7 +275,7 @@ map_server <- function(
               html = shiny::HTML(filter_info()),
               className = "leaflet-control-attribution",
               position = "bottomleft"
-            ) %>% 
+            ) %>%
             leaflet::addPolygons(
               data = boundaries,
               stroke = TRUE,
@@ -287,7 +290,7 @@ map_server <- function(
               lng = boundaries$lon,
               lat = boundaries$lat,
               layerId = df_map$pcode,
-              chartdata = chartData,
+              chartdata = chart_data,
               opacity = .8,
               fillColor = epi_pals()$d310[1],
               colorPalette = epi_pals()$d310,
@@ -298,7 +301,7 @@ map_server <- function(
               width = pie_width
             )
 
-          tiles <- recode(
+          tiles <- dplyr::recode(
             input$map_groups[[1]],
             "Light" = "CartoDB.PositronNoLabels",
             "OSM" = "OpenStreetMap",

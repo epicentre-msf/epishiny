@@ -1,0 +1,48 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%",
+  eval = FALSE
+)
+```
+
+# epishiny
+
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
+Interactive web-based data visualisations and dashboards are an increasingly common method 
+of monitoring infectious disease outbreaks. Whilst R is now a commonly used tool for analysis 
+and data visualisation in epidemiology, epidemiologists will often lack the knowledge required 
+to be able to produce interactive dashboards directly from within their R workflows, 
+resulting in external propriatory software being used instead.
+
+`epishiny` aims to bridge this gap by providing simple functions that produce engaging, 
+feature-rich interactive visualisations and dashboards from epidemiological linelist data 
+using R's [`shiny`](https://shiny.posit.co/) web-framework.
+
+## Installation
+
+You can install the development version of epishiny from GitHub with either the [remotes](https://remotes.r-lib.org/) or [pak](https://pak.r-lib.org/) package:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("epicentre-msf/epishiny")
+
+# install.packages("pak")
+pak::pkg_install("epicentre-msf/epishiny")
+```
+
+# Example
+
+```{r eval=TRUE, file='inst/examples/doc-examples/setup.R'}
+```

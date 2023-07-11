@@ -1,6 +1,26 @@
-
+#' @title Time module
+#'
+#' @description Visualise data over time with an interactive 'epicurve'.
+#'
+#' @name time
+#'
+#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param date_vars named character vector of date variables for the date axis input. Names are used as variable labels.
+#' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param title header title for the card.
+#' @param opts_btn_lab text label for the dropdown menu button.
+#' @param date_lab text label for the date variable input.
+#' @param date_int_lab text label for the date interval input.
+#' @param day_week_month_labs character vector with text labels for day, week and month, respectively.
+#' @param groups_lab text label for the grouping variable input.
+#' @param ratio_line_lab text label for the ratio line input. If not supplied the input is not included.
+#' @param full_screen add full-screen button to the card.
+#'
+#' @return the module server function returns any point click event data of the highchart.
+#'   see [highcharter::hc_add_event_point] for details.
 #' @export
-epicurve_ui <- function(
+#' @example inst/examples/doc-examples/app.R
+time_ui <- function(
     id,
     date_vars,
     group_vars,
@@ -14,72 +34,89 @@ epicurve_ui <- function(
     full_screen = TRUE
 ) {
   ns <- NS(id)
-  bslib::card(
-    full_screen = full_screen,
-    bslib::card_header(
-      class = "d-flex justify-content-start align-items-center",
-
-      tags$span(shiny::icon("chart-column"), title, class = "pe-2"),
-
-      shinyWidgets::dropMenu(
-        actionButton(
-          ns("dropdown"),
-          icon = icon("sliders"),
-          label = opts_btn_lab,
-          class = "btn-sm"
-        ),
-        options = shinyWidgets::dropMenuOptions(flip = TRUE),
-        selectInput(
-          ns("date"),
-          label = date_lab,
-          choices = date_vars,
-          multiple = FALSE,
-          selectize = FALSE,
-          width = 200
-        ),
-        tags$br(),
-        shinyWidgets::radioGroupButtons(
-          ns("date_interval"),
-          label = date_int_lab,
-          size = "sm",
-          status = "outline-dark",
-          choices = purrr::set_names(
-            c("day", "week", "month"),
-            day_week_month_labs
-          ),
-          selected = "week"
-        ),
-        tags$br(),
-        selectInput(
-          ns("group"),
-          label = groups_lab,
-          choices = group_vars,
-          multiple = FALSE,
-          selectize = FALSE,
-          width = 200
-        ),
-        tags$br(),
-        if (!is.null(ratio_line_lab)) {
-          shiny::checkboxInput(
-            ns("show_ratio_line"),
-            ratio_line_lab,
-            value = FALSE,
-            width = "100%"
-          )
-        }
-      )
-    ),
-    bslib::card_body(
-      padding = 0,
+  tagList(
+    use_epishiny(),
+    bslib::card(
       min_height = 300,
-      # echarts4r::echarts4rOutput(ns("epicurve"), height = "100%")
-      highcharter::highchartOutput(ns("chart"))
+      full_screen = full_screen,
+      bslib::card_header(
+        class = "d-flex justify-content-start align-items-center",
+
+        tags$span(shiny::icon("chart-column"), title, class = "pe-2"),
+
+        shinyWidgets::dropMenu(
+          actionButton(
+            ns("dropdown"),
+            icon = icon("sliders"),
+            label = opts_btn_lab,
+            class = "btn-sm"
+          ),
+          options = shinyWidgets::dropMenuOptions(flip = TRUE),
+          selectInput(
+            ns("date"),
+            label = date_lab,
+            choices = date_vars,
+            multiple = FALSE,
+            selectize = FALSE,
+            width = 200
+          ),
+          tags$br(),
+          shinyWidgets::radioGroupButtons(
+            ns("date_interval"),
+            label = date_int_lab,
+            size = "sm",
+            status = "outline-dark",
+            choices = purrr::set_names(
+              c("day", "week", "month"),
+              day_week_month_labs
+            ),
+            selected = "week"
+          ),
+          tags$br(),
+          selectInput(
+            ns("group"),
+            label = groups_lab,
+            choices = group_vars,
+            multiple = FALSE,
+            selectize = FALSE,
+            width = 200
+          ),
+          tags$br(),
+          if (!is.null(ratio_line_lab)) {
+            shiny::checkboxInput(
+              ns("show_ratio_line"),
+              ratio_line_lab,
+              value = FALSE,
+              width = "100%"
+            )
+          }
+        )
+      ),
+      bslib::card_body(
+        padding = 0,
+        # min_height = 300,
+        # echarts4r::echarts4rOutput(ns("epicurve"), height = "100%")
+        highcharter::highchartOutput(ns("chart"))
+      )
     )
   )
 }
 
+
+
+
+#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param y_lab text label for y-axis of chart.
+#' @param ratio_var character string of variable name to use for ratio calculation.
+#' @param ratio_lab text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
+#' @param ratio_numer value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
+#' @param ratio_denom values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
+#' @param filter_info if contained within an app using [filter_server()], supply the `filter_info` element
+#'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#'
+#' @rdname time
 #' @export
-epicurve_server <- function(
+time_server <- function(
     id,
     df_ll,
     date_vars,
@@ -89,7 +126,6 @@ epicurve_server <- function(
     ratio_lab = NULL,
     ratio_numer = NULL,
     ratio_denom = NULL,
-    week_start = 1,
     filter_info = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
@@ -100,10 +136,6 @@ epicurve_server <- function(
       df_mod <- reactive({
         force_reactive(df_ll)
       })
-
-      # filter_info <- reactive({
-      #   force_reactive(filter_info)
-      # })
 
       # variables and labels etc
       rv <- reactiveValues()
@@ -126,7 +158,7 @@ epicurve_server <- function(
           dplyr::mutate(!!date := lubridate::floor_date(
             lubridate::as_date(!!date),
             unit = input$date_interval,
-            week_start = week_start
+            week_start = getOption("epishiny.week.start", 1)
           )) %>%
           dplyr::count(!!date, !!group) %>%
           tidyr::drop_na()
@@ -136,22 +168,22 @@ epicurve_server <- function(
             stop("both `ratio_numer` and `ratio_denom` must be supplied when `ratio_var` is supplied")
           }
 
-          df_rate <- df_mod() %>%
+          df_ratio <- df_mod() %>%
             dplyr::mutate(!!date := lubridate::floor_date(
               lubridate::as_date(!!date),
               input$date_interval,
-              week_start = week_start
+              week_start = getOption("epishiny.week.start", 1)
             )) %>%
             dplyr::group_by(!!date) %>%
             dplyr::summarise(
               n = sum(.data[[ratio_var]] %in% ratio_numer),
               N = sum(.data[[ratio_var]] %in% ratio_denom),
-              rate = (n / N) * 100,
+              ratio = (n / N) * 100,
               .groups = "drop"
             ) %>%
-            dplyr::select(!!date, rate)
+            dplyr::select(!!date, ratio)
 
-          df <- df %>% dplyr::left_join(df_rate, by = input$date)
+          df <- df %>% dplyr::left_join(df_ratio, by = input$date)
         }
 
         return(df)
@@ -247,7 +279,7 @@ epicurve_server <- function(
             highcharter::hc_add_series(
               data = df,
               "line",
-              highcharter::hcaes(x =!!date, y = rate),
+              highcharter::hcaes(x =!!date, y = ratio),
               id = "ratio_line",
               name = ratio_lab,
               yAxis = 1,
@@ -292,7 +324,7 @@ epicurve_server <- function(
             highcharter::hcpxy_add_series(
               data = df_line,
               "line",
-              highcharter::hcaes(x = !!rv$date_sym, y = rate),
+              highcharter::hcaes(x = !!rv$date_sym, y = ratio),
               id = "ratio_line",
               name = ratio_lab,
               yAxis = 1,
