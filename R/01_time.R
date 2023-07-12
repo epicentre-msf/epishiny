@@ -19,7 +19,7 @@
 #' @return the module server function returns any point click event data of the highchart.
 #'   see [highcharter::hc_add_event_point] for details.
 #' @export
-#' @example inst/examples/doc-examples/app.R
+#' @example inst/examples/docs/app.R
 time_ui <- function(
     id,
     date_vars,

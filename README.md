@@ -38,11 +38,10 @@ pak::pkg_install("epicentre-msf/epishiny")
 
 # Example
 
+## Setup
+
 ``` r
 library(epishiny)
-#> Registered S3 method overwritten by 'quantmod':
-#>   method            from
-#>   as.zoo.data.frame zoo
 
 # example package data
 data("df_ll")
@@ -83,3 +82,47 @@ group_vars <- c(
   "Outcome" = "outcome"
 )
 ```
+
+## Time module
+
+``` r
+# launch time epicurve module
+launch_module(
+  module = "time",
+  df_ll = df_ll,
+  date_vars = date_vars,
+  group_vars = group_vars
+)
+```
+
+<img src="inst/examples/docs/img/time.png" width="100%" />
+
+## Place module
+
+``` r
+# launch place map module
+launch_module(
+  module = "place",
+  df_ll = df_ll,
+  geo_data = geo_data,
+  group_vars = group_vars
+)
+```
+
+<img src="inst/examples/docs/img/place.png" width="100%" />
+
+## Person module
+
+``` r
+# launch person age/sex pyramid module
+launch_module(
+  module = "person",
+  df_ll = df_ll,
+  age_var = "age_years",
+  sex_var = "sex_id",
+  male_level = "Male",
+  female_level = "Female"
+)
+```
+
+<img src="inst/examples/docs/img/person.png" width="100%" />

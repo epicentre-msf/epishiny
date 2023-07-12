@@ -10,7 +10,9 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "man/figures/README-",
   out.width = "100%",
-  eval = FALSE
+  eval = TRUE,
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
@@ -44,5 +46,98 @@ pak::pkg_install("epicentre-msf/epishiny")
 
 # Example
 
-```{r eval=TRUE, file='inst/examples/doc-examples/setup.R'}
+## Setup
+
+```{r file='inst/examples/docs/setup.R'}
+```
+
+```{r include=FALSE}
+library(shinytest2)
+pkgload::load_all()
+```
+
+## Time module
+
+```{r eval=FALSE}
+# launch time epicurve module
+launch_module(
+  module = "time",
+  df_ll = df_ll,
+  date_vars = date_vars,
+  group_vars = group_vars
+)
+```
+
+```{r include=FALSE}
+app_path <- here::here("inst/examples/docs/time")
+
+app <- AppDriver$new(app_path, width = 1000, height = 600)
+
+img_path <- tempfile(fileext = ".png")
+app$get_screenshot(file = img_path, delay = 1)
+fs::file_copy(img_path, "inst/examples/docs/img/time.png", overwrite = TRUE)
+
+app$stop()
+```
+
+```{r echo=FALSE}
+knitr::include_graphics("inst/examples/docs/img/time.png")
+```
+
+## Place module
+
+```{r eval=FALSE}
+# launch place map module
+launch_module(
+  module = "place",
+  df_ll = df_ll,
+  geo_data = geo_data,
+  group_vars = group_vars
+)
+```
+
+```{r include=FALSE}
+app_path <- here::here("inst/examples/docs/place")
+
+app <- AppDriver$new(app_path, width = 1000, height = 600)
+
+img_path <- tempfile(fileext = ".png")
+app$get_screenshot(file = img_path, delay = 1)
+fs::file_copy(img_path, "inst/examples/docs/img/place.png", overwrite = TRUE)
+
+app$stop()
+```
+
+```{r echo=FALSE}
+knitr::include_graphics("inst/examples/docs/img/place.png")
+```
+
+## Person module
+
+```{r eval=FALSE}
+# launch person age/sex pyramid module
+launch_module(
+  module = "person",
+  df_ll = df_ll,
+  age_var = "age_years",
+  sex_var = "sex_id",
+  male_level = "Male",
+  female_level = "Female"
+)
+```
+
+```{r include=FALSE}
+app_path <- here::here("inst/examples/docs/person")
+
+app <- AppDriver$new(app_path, width = 1000, height = 600)
+
+img_path <- tempfile(fileext = ".png")
+app$get_screenshot(file = img_path, delay = 1)
+fs::file_copy(img_path, "inst/examples/docs/img/person.png", overwrite = TRUE)
+
+app$stop()
+```
+
+```{r echo=FALSE}
+knitr::include_graphics("inst/examples/docs/img/person.png")
 ```

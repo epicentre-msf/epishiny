@@ -38,7 +38,7 @@ filter_var <- function(x, val) {
 
 #' @noRd
 time_stamp <- function() {
-  format(Sys.time(), "%Y-%m-%d_%H:%M:%S")
+  format(Sys.time(), "%Y-%m-%d_%H%M%S")
 }
 
 #' @noRd

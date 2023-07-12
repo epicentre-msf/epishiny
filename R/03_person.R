@@ -10,8 +10,9 @@ person_ui <- function(
   ns <- shiny::NS(id)
 
   bslib::navset_card_tab(
-    wrapper = \(...) {bslib::card_body(..., padding = 0, min_height = 300)},
+    wrapper = \(...) {bslib::card_body(..., padding = 0, min_height = 300, class = "person-container")},
     full_screen = full_screen,
+    id = ns("tabs"),
 
     title = tags$div(
       class = "d-flex justify-content-start align-items-center",
@@ -27,7 +28,11 @@ person_ui <- function(
     ),
     bslib::nav_panel(
       title = shiny::icon("table"),
-      gt::gt_output(ns("as_tbl"))
+      tags$div(
+        id = ns("as_tbl_container"),
+        style = "min-height: 300px;",
+        gt::gt_output(ns("as_tbl"))
+      )
     )
   )
 
@@ -55,7 +60,7 @@ person_server <- function(
 
       # loading spinner for summary table
       w_tbl <- waiter::Waiter$new(
-        id = ns("as_tbl"),
+        id = ns("as_tbl_container"),
         html = waiter::spin_3(),
         color = waiter::transparent(alpha = 0)
       )
@@ -92,11 +97,7 @@ person_server <- function(
 
         df_mod() %>%
           dplyr::select(dplyr::all_of(c(sex_var, age_var))) %>%
-          bin_ages(
-            age_var,
-            age_breaks,
-            age_labels
-          ) %>%
+          bin_ages(age_var, age_breaks, age_labels) %>%
           gtsummary::tbl_summary(
             by = sex_var,
             label  = list(
@@ -106,16 +107,27 @@ person_server <- function(
             # type = gtsummary::all_continuous() ~ "continuous2",
             type = list(age_var ~ "continuous2"),
             digits = list(age_var ~ c(2, 0, 0, 0, 0, 0)),
+            missing_text = getOption("epishiny.na.label", "(Missing)"),
             statistic = gtsummary::all_continuous() ~ c("{mean}",
                                                         "{median} ({p25}, {p75})",
-                                                        "{min}, {max}"),
-            missing_text = "(Missing)"
+                                                        "{min}, {max}")
+          ) %>%
+          gtsummary::modify_header(
+            gtsummary::all_stat_cols() ~ "**{level}**, N = {n} ({gtsummary::style_percent(p, digits = 1)}%)"
           ) %>%
           gtsummary::add_overall() %>%
           gtsummary::italicize_levels() %>%
           gtsummary::modify_footnote(update = gtsummary::everything() ~ NA) %>%
           gtsummary::bold_labels() %>%
-          gtsummary::as_gt()
+          gtsummary::as_gt() %>%
+          gt::opt_interactive(
+            use_compact_mode = TRUE,
+            use_pagination = FALSE,
+            use_pagination_info = FALSE,
+            use_page_size_select = FALSE,
+            use_sorting = FALSE,
+            use_highlight = TRUE
+          )
       })
 
     }

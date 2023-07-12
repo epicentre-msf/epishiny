@@ -2,6 +2,11 @@ library(shiny)
 library(bslib)
 pkgload::load_all()
 
+options(
+  "epishiny.na.label" = "(Manquant)",
+  "epishiny.week.letter" = "S"
+)
+
 app_title = "epishiny modules"
 app_font <- "Roboto Mono"
 
