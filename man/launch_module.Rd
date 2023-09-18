@@ -8,7 +8,7 @@ launch_module(module = c("time", "place", "person"), ...)
 }
 \arguments{
 \item{module}{name of the module to launch. Current options are
-'epicurve', 'map' or 'pyramid'}
+'time', 'place' or 'person'}
 
 \item{...}{other named arguments passed to the relevant module
 UI and Server functions. See each module's documenation for details

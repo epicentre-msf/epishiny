@@ -9,6 +9,11 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
+**Please note this package is in alpha stage of development and not yet
+suitable for use in production as the API is likely to change.**
+
+## Philosophy
+
 Interactive web-based data visualisations and dashboards are an
 increasingly common method of monitoring infectious disease outbreaks.
 Whilst R is now a commonly used tool for analysis and data visualisation
@@ -36,9 +41,23 @@ remotes::install_github("epicentre-msf/epishiny")
 pak::pkg_install("epicentre-msf/epishiny")
 ```
 
-# Example
+## Demo Dashboard
 
-## Setup
+You can launch a demo dashboard with examples of every epishiny module
+with the `launch_demo_dashboard()` function. The code for this dashboard
+can be found in [inst/examples/demo](inst/examples/demo).
+
+<img src="inst/examples/docs/img/dashboard.png" width="100%" />
+
+## Launching individual modules
+
+As well as for use in dashboards, each epishiny module can be launched
+individually from within an R script allowing for incorporation into
+exploratory data analaysis pipelines. Their interactive nature allows
+the user to quickly visualise the data in different ways, as well as
+export images for use in reports and communications with others.
+
+### Setup
 
 ``` r
 library(epishiny)
@@ -83,7 +102,7 @@ group_vars <- c(
 )
 ```
 
-## Time module
+### Time module
 
 ``` r
 # launch time epicurve module
@@ -97,7 +116,7 @@ launch_module(
 
 <img src="inst/examples/docs/img/time.png" width="100%" />
 
-## Place module
+### Place module
 
 ``` r
 # launch place map module
@@ -111,7 +130,7 @@ launch_module(
 
 <img src="inst/examples/docs/img/place.png" width="100%" />
 
-## Person module
+### Person module
 
 ``` r
 # launch person age/sex pyramid module
