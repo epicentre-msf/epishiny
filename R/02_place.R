@@ -164,6 +164,7 @@ place_server <- function(
 
       observe({
         boundaries <- rv$sf
+        req(nrow(boundaries) > 0)
         leaflet::leafletProxy("map", session) %>%
           leaflet::clearGroup("Boundaries") %>%
           leaflet.minicharts::clearMinicharts() %>%
@@ -227,6 +228,14 @@ place_server <- function(
               labelStyle = htmltools::css(font_family = "'Roboto Mono',sans-serif"),
               type = "pie",
               width = pie_width
+            )
+        } else {
+          leaflet::leafletProxy("map", session) %>%
+            leaflet.minicharts::updateMinicharts(
+              layerId = df_map$pcode,
+              chartdata = 1,
+              width = 0,
+              height = 0
             )
         }
       }) %>% bindEvent(df_geo_counts(), input$circle_size_mult)

@@ -27,6 +27,7 @@ Imports:
     sf,
     shinyWidgets,
     bslib,
+    bsicons,
     highcharter,
     gtsummary,
     reactable,

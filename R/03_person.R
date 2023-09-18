@@ -77,6 +77,7 @@ person_server <- function(
       })
 
       output$as_pyramid <- highcharter::renderHighchart({
+        shiny::validate(shiny::need(nrow(df_mod()) > 0, "No data to display"))
         hc_as_pyramid(
           df_ll = df_mod(),
           age_var,
@@ -92,6 +93,7 @@ person_server <- function(
 
       output$as_tbl <- gt::render_gt({
         # show loading spinner
+        shiny::validate(shiny::need(nrow(df_mod()) > 0, "No data to display"))
         w_tbl$show()
         on.exit(w_tbl$hide())
 
