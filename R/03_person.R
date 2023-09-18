@@ -10,7 +10,7 @@ person_ui <- function(
   ns <- shiny::NS(id)
 
   bslib::navset_card_tab(
-    wrapper = \(...) {bslib::card_body(..., padding = 0, min_height = 300, class = "person-container")},
+    wrapper = \(...) {bslib::card_body(..., padding = 0, class = "person-container")}, # min_height = 300,
     full_screen = full_screen,
     id = ns("tabs"),
 

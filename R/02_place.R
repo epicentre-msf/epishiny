@@ -19,7 +19,7 @@ place_ui <- function(
   tagList(
     use_epishiny(),
     bslib::card(
-      min_height = 300,
+      # min_height = 300,
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",

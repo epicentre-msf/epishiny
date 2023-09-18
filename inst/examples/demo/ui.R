@@ -31,28 +31,47 @@ ui <-tagList(
           period_lab = "Notification period"
         ),
         # main content
-        layout_columns(
-          col_widths = breakpoints(
-            md = c(12, 12, 12),
-            lg = c(12, 7, 5)
-          ),
-
+        layout_column_wrap(
+          width = 1 / 2,
           place_ui(
             id = "map",
             geo_data = geo_data,
             group_vars = group_vars
           ),
-
-          time_ui(
-            id = "curve",
-            title = "Time",
-            date_vars = date_vars,
-            group_vars = group_vars,
-            ratio_line_lab = "Show CFR line?"
-          ),
-
-          person_ui(id = "age_sex")
+          layout_column_wrap(
+            width = 1,
+            time_ui(
+              id = "curve",
+              title = "Time",
+              date_vars = date_vars,
+              group_vars = group_vars,
+              ratio_line_lab = "Show CFR line?"
+            ),
+            person_ui(id = "age_sex")
+          )
         )
+        # layout_columns(
+        #   col_widths = breakpoints(
+        #     md = c(12, 12, 12),
+        #     lg = c(12, 7, 5)
+        #   ),
+
+        #   place_ui(
+        #     id = "map",
+        #     geo_data = geo_data,
+        #     group_vars = group_vars
+        #   ),
+
+        #   time_ui(
+        #     id = "curve",
+        #     title = "Time",
+        #     date_vars = date_vars,
+        #     group_vars = group_vars,
+        #     ratio_line_lab = "Show CFR line?"
+        #   ),
+
+        #   person_ui(id = "age_sex")
+        # )
       )
     ),
 

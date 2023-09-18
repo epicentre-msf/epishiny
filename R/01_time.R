@@ -37,7 +37,7 @@ time_ui <- function(
   tagList(
     use_epishiny(),
     bslib::card(
-      min_height = 300,
+      # min_height = 300,
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
@@ -91,6 +91,23 @@ time_ui <- function(
             )
           }
         )
+
+        # class = "d-flex align-items-center gap-1",
+        # tags$span(
+        #   shiny::icon("chart-column"),
+        #   title,
+        #   bslib::tooltip(
+        #     bsicons::bs_icon("info-circle"),
+        #     "Patient origin/residence",
+        #     placement = "right"
+        #   ),
+        #   class = "pe-2"
+        # ),
+        # bslib::popover(
+        #   trigger = bsicons::bs_icon("gear"),
+        #   title = opts_btn_lab,
+          
+        # )
       ),
       bslib::card_body(
         padding = 0,
