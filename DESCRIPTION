@@ -27,7 +27,7 @@ Imports:
     scales,
     sf,
     shinyWidgets,
-    bslib (>= 1.5.1),
+    bslib (>= 0.5.1),
     htmltools,
     htmlwidgets,
     bsicons,
