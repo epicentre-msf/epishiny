@@ -57,7 +57,7 @@ launch_module <- function(module = c("time", "place", "person"), ...) {
   } else {
     options(shiny.launch.browser = TRUE)
   }
-
+  library(shiny)
   shiny::shinyApp(ui, server)
 }
 

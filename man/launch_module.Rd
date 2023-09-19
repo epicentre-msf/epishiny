@@ -23,6 +23,7 @@ visualisation modules (time, place, person) independently, allowing for
 incorporation into exploratory data analysis workflows in R.
 }
 \examples{
+library(shiny)
 library(epishiny)
 
 # example package data

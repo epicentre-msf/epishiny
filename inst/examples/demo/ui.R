@@ -1,8 +1,4 @@
 ui <-tagList(
-  tags$head(
-    use_epishiny()
-  ),
-
   page_navbar(
     title = app_title,
     window_title = app_title,
