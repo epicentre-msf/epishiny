@@ -1,5 +1,4 @@
 #' @noRd
-#' @export
 use_epishiny <- function() {
   header <- shiny::tags$head(
     tags$script(src = "epishiny/js/weekNumber.js"),
@@ -10,10 +9,13 @@ use_epishiny <- function() {
   shiny::singleton(header)
 }
 
-
 #' @importFrom magrittr %>%
 #' @noRd
 magrittr::`%>%`
+
+#' @importFrom magrittr %<>%
+#' @noRd
+magrittr::`%<>%`
 
 #' @importFrom rlang :=
 #' @noRd

@@ -18,6 +18,8 @@
 #'
 #' @return the module server function returns any point click event data of the highchart.
 #'   see [highcharter::hc_add_event_point] for details.
+#' @import shiny
+#' @importFrom dplyr .data
 #' @export
 #' @example inst/examples/docs/app.R
 time_ui <- function(
@@ -106,7 +108,7 @@ time_ui <- function(
         # bslib::popover(
         #   trigger = bsicons::bs_icon("gear"),
         #   title = opts_btn_lab,
-          
+
         # )
       ),
       bslib::card_body(

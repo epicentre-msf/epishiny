@@ -17,6 +17,7 @@ Imports:
     shiny (>= 1.5.0),
     rlang,
     magrittr,
+    tibble,
     dplyr,
     tidyr,
     purrr,
@@ -26,9 +27,13 @@ Imports:
     scales,
     sf,
     shinyWidgets,
-    bslib,
+    bslib (>= 1.5.1),
+    htmltools,
+    htmlwidgets,
     bsicons,
     highcharter,
+    rlist,
+    gt,
     gtsummary,
     reactable,
     leaflet,
@@ -36,8 +41,10 @@ Imports:
     leaflet.minicharts,
     mapview,
     waiter,
+    shinyjs,
     janitor,
-    glue
+    glue,
+    rstudioapi
 Depends: 
     R (>= 2.10)
 URL: https://github.com/epicentre-msf/epishiny

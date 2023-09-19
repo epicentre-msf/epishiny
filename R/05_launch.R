@@ -46,18 +46,14 @@ launch_module <- function(module = c("time", "place", "person"), ...) {
   slb <- getOption("shiny.launch.browser")
   on.exit(options(shiny.launch.browser = slb))
   if (
-    # Check if inside Rstudio
-    Sys.getenv("RSTUDIO") == "1" &&
     # Make sure that {rstudioapi} is available
     requireNamespace("rstudioapi", quietly = TRUE) &&
     # Returns TRUE if RStudio is running
     rstudioapi::hasFun("viewer")
   ) {
     options(shiny.launch.browser = .rs.invokeShinyPaneViewer)
-  } else {
-    options(shiny.launch.browser = TRUE)
   }
-  library(shiny)
+
   shiny::shinyApp(ui, server)
 }
 

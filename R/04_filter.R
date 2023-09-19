@@ -48,7 +48,7 @@ filter_ui <- function(
       )
     ),
 
-    layout_columns(
+    bslib::layout_columns(
       col_widths = 12,
       actionButton(
         ns("go"),
@@ -132,52 +132,52 @@ filter_server <- function(
       # OBSERVERS
       # ==========================================================================
 
-      observeEvent(input$days_all, {
-        date_range <- range(df_data[[date_var]], na.rm = TRUE)
-        updateSliderInput(
-          session,
-          "date",
-          value = c(date_range[1], date_range[2]),
-          timeFormat = "%d %b",
-          step = 1
-        )
-      })
-
-      observeEvent(input$days_14, {
-        date_range <- range(df_data[[date_var]], na.rm = TRUE)
-        date_range[1] <- date_range[2] - 13
-        updateSliderInput(
-          session,
-          "date",
-          value = c(date_range[1], date_range[2]),
-          timeFormat = "%d %b",
-          step = 1
-        )
-      })
-
-      observeEvent(input$days_7, {
-        date_range <- range(df_data[[date_var]], na.rm = TRUE)
-        date_range[1] <- date_range[2] - 6
-        updateSliderInput(
-          session,
-          "date",
-          value = c(date_range[1], date_range[2]),
-          timeFormat = "%d %b",
-          step = 1
-        )
-      })
-
-      observeEvent(input$days_1, {
-        date_range <- range(df_data[[date_var]], na.rm = TRUE)
-        date_range[1] <- date_range[2]
-        updateSliderInput(
-          session,
-          "date",
-          value = c(date_range[1], date_range[2]),
-          timeFormat = "%d %b",
-          step = 1
-        )
-      })
+      # observeEvent(input$days_all, {
+      #   date_range <- range(df_data[[date_var]], na.rm = TRUE)
+      #   updateSliderInput(
+      #     session,
+      #     "date",
+      #     value = c(date_range[1], date_range[2]),
+      #     timeFormat = "%d %b",
+      #     step = 1
+      #   )
+      # })
+      #
+      # observeEvent(input$days_14, {
+      #   date_range <- range(df_data[[date_var]], na.rm = TRUE)
+      #   date_range[1] <- date_range[2] - 13
+      #   updateSliderInput(
+      #     session,
+      #     "date",
+      #     value = c(date_range[1], date_range[2]),
+      #     timeFormat = "%d %b",
+      #     step = 1
+      #   )
+      # })
+      #
+      # observeEvent(input$days_7, {
+      #   date_range <- range(df_data[[date_var]], na.rm = TRUE)
+      #   date_range[1] <- date_range[2] - 6
+      #   updateSliderInput(
+      #     session,
+      #     "date",
+      #     value = c(date_range[1], date_range[2]),
+      #     timeFormat = "%d %b",
+      #     step = 1
+      #   )
+      # })
+      #
+      # observeEvent(input$days_1, {
+      #   date_range <- range(df_data[[date_var]], na.rm = TRUE)
+      #   date_range[1] <- date_range[2]
+      #   updateSliderInput(
+      #     session,
+      #     "date",
+      #     value = c(date_range[1], date_range[2]),
+      #     timeFormat = "%d %b",
+      #     step = 1
+      #   )
+      # })
 
       # ==========================================================================
       # FILTER DATA
@@ -238,46 +238,5 @@ filter_server <- function(
       })
 
     }
-  )
-}
-
-
-#' @noRd
-filterPushbarUI <- function(id, date_range, group_vars) {
-  ns <- NS(id)
-  tagList(
-    pushbar::pushbar_deps(),
-    pushbar::pushbar(
-      id = ns("filters"),
-      style = "background:#fbfbfb;margin-top:50px;padding:20px;width:360px;z-index:9999;",
-      div(
-        class = "sidebar-inputs",
-        sliderInput(
-          inputId = ns("date"),
-          label = "Date d'admission",
-          min = date_range[1],
-          max = date_range[2],
-          value = c(date_range[1], date_range[2]),
-          timeFormat = "%d %b",
-          step = 1
-        ),
-        actionButton(ns("days_all"), "Période complète", class = "btn-sm"),
-        actionButton(ns("days_14"), "14 jours", class = "btn-sm"),
-        actionButton(ns("days_7"), "7 jours", class = "btn-sm"),
-        actionButton(ns("days_1"), "Dernier jour", class = "btn-sm"),
-        div(style = "padding-top: 10px;", shiny::checkboxInput(
-          inputId = ns("include_date_na"),
-          label = "Inclure les cas avec des dates manquantes ?",
-          value = TRUE
-        )),
-        div(
-          id = ns("resetable_filters"),
-          purrr::map2(group_vars, names(group_vars), make_select_filter, ns),
-          actionButton(ns("go"), "Update Data", icon = icon("database"), class = "btn-primary btn-sm", style = "color: #fff;"),
-          actionButton(ns("reset"), "Reset Inputs", icon = icon("arrows-rotate"), class = "btn-info btn-sm", style = "color: #fff;"),
-          actionButton(ns("close"), "Close", icon = icon("circle-xmark"), class = "btn-danger btn-sm", style = "color: #fff;")
-        )
-      )
-    )
   )
 }

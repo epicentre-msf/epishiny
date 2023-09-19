@@ -66,33 +66,40 @@ group_vars <- c(
 )
 
 # launch time epicurve module
-launch_module(
-  module = "time",
-  df_ll = df_ll,
-  date_vars = date_vars,
-  group_vars = group_vars,
-  ratio_line_lab = "Show CFR line?",
-  ratio_var = "outcome",
-  ratio_lab = "CFR",
-  ratio_numer = "Deceased",
-  ratio_denom = c("Deceased", "Healed", "Abandonment")
-)
+if (interactive()) {
+  launch_module(
+    module = "time",
+    df_ll = df_ll,
+    date_vars = date_vars,
+    group_vars = group_vars,
+    ratio_line_lab = "Show CFR line?",
+    ratio_var = "outcome",
+    ratio_lab = "CFR",
+    ratio_numer = "Deceased",
+    ratio_denom = c("Deceased", "Healed", "Abandonment")
+  )
+}
 
 # launch place map module
-launch_module(
-  module = "place",
-  df_ll = df_ll,
-  geo_data = geo_data,
-  group_vars = group_vars
-)
+if (interactive()) {
+  launch_module(
+    module = "place",
+    df_ll = df_ll,
+    geo_data = geo_data,
+    group_vars = group_vars
+  )
+}
 
 # launch person age/sex pyramid module
-launch_module(
-  module = "person",
-  df_ll = df_ll,
-  age_var = "age_years",
-  sex_var = "sex_id",
-  male_level = "Male",
-  female_level = "Female"
-)
+if (interactive()) {
+  launch_module(
+    module = "person",
+    df_ll = df_ll,
+    age_var = "age_years",
+    sex_var = "sex_id",
+    male_level = "Male",
+    female_level = "Female"
+  )
+}
+
 }
