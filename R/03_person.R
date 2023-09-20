@@ -1,5 +1,19 @@
 
+#' Person module
+#'
+#' Visualise age and sex demographics in a population pyramid chart and summary table.
+#'
+#' @rdname person
+#'
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
+#' @param title The title for the card.
+#' @param icon The icon to display next to the title.
+#' @param opts_btn_lab The label for the options button.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
+#'
+#' @return A [bslib::navset_card_tab] UI element with chart and table tabs.
 #' @export
+#' @example inst/examples/docs/app.R
 person_ui <- function(
     id,
     title = "Person",
@@ -38,6 +52,20 @@ person_ui <- function(
 
 }
 
+#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param age_var The name of the age variable in the data.
+#' @param sex_var The name of the sex variable in the data.
+#' @param male_level The level representing males in the sex variable.
+#' @param female_level The level representing females in the sex variable.
+#' @param age_breaks A numeric vector specifying age breaks for age groups.
+#' @param age_labels Labels corresponding to the age breaks.
+#' @param age_var_lab The label for the age variable.
+#' @param age_group_lab The label for the age group variable.
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
+#'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#'
+#' @rdname person
+#'
 #' @export
 person_server <- function(
     id,

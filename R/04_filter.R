@@ -1,5 +1,25 @@
 
+#' Filter module
+#'
+#' Filter linelist data using a sidebar with shiny inputs.
+#'
+#' @rdname filter
+#'
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
+#' @param date_range A vector containing the minimum and maximum dates for the date range input.
+#' @param title The title of the sidebar.
+#' @param date_filters_lab The label for the date filters accordion panel.
+#' @param period_lab The label for the date range input.
+#' @param missing_dates_lab The label for the include missing dates checkbox.
+#' @param group_filters_lab The label for the group filters accordion panel.
+#' @param filter_btn_lab The label for the filter data button.
+#' @param reset_btn_lab The label for the reset filters button.
+#'
+#' @return A [bslib::sidebar] UI element with date filters, group filters, and action buttons.
+#'
+#' @import shiny
 #' @export
+#' @example inst/examples/docs/app.R
 filter_ui <- function(
     id,
     date_range,
@@ -67,6 +87,18 @@ filter_ui <- function(
   )
 }
 
+
+#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param date_var The name of the date variable in the data frame to be filtered on.
+#' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param na_label The label to use for missing values in group variables.
+#'
+#' @return The server function returns both the filtered data and a formatted text string with filter information
+#'   named `df_ll` and `filter_info` respectively in a reactive list. These should be passed as arguments
+#'   of the same name in the time, place and person modules wrapped in a [`shiny::reactive()`]
+#'
+#'
+#' @rdname filter
 #' @export
 filter_server <- function(
     id,

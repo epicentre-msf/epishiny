@@ -1,4 +1,21 @@
+#' Place module
+#'
+#' Visualise geographical distribution across multiple administrative boundaries on an interactive leaflet map.
+#'
+#' @rdname place
+#'
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
+#' @param geo_data A list of spatial sf dataframes with information for different geographical levels.
+#' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param title The title for the card.
+#' @param geo_lab The label for the geographical level selection.
+#' @param groups_lab The label for the group data by selection.
+#' @param n_lab The label for the raw count variable.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
+#'
+#' @return A [bslib::card] UI element with options and download button and a leaflet map.
 #' @export
+#' @example inst/examples/docs/app.R
 place_ui <- function(
     id,
     geo_data,
@@ -75,6 +92,16 @@ place_ui <- function(
   )
 }
 
+#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param export_width The width of the exported map image.
+#' @param export_height The height of the exported map image.
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
+#'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#'
+#' @rdname place
+#'
+#' @return The server function returns the leaflet map's shape click information as a list.
+#'
 #' @export
 place_server <- function(
     id,
@@ -346,6 +373,11 @@ place_server <- function(
           )
         }
       )
+
+      # return map shape click information to main app
+      shiny::reactive({
+        input$map_shape_click
+      })
     }
   )
 }

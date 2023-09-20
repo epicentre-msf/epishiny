@@ -1,13 +1,13 @@
-#' Launch a single epishiny module as a standalone shiny app
+#' Launch a single 'epishiny' module as a standalone shiny app
 #'
-#' Use this function to quickly launch any of the 3 epishiny interactive
+#' Use this function to quickly launch any of the 3 'epishiny' interactive
 #' visualisation modules (time, place, person) independently, allowing for
 #' incorporation into exploratory data analysis workflows in R.
 #'
-#' @param module name of the module to launch. Current options are
-#'  'time', 'place' or 'person'
-#' @param ... other named arguments passed to the relevant module
-#'  UI and Server functions. See each module's documenation for details
+#' @param module Name of the module to launch. Current options are
+#'  [time], [place] or [person].
+#' @param ... Other named arguments passed to the relevant module
+#'  UI and Server functions. See each module's documentation for details
 #'  of the arguments required.
 #'
 #' @return No return value, a shiny app is launched.
