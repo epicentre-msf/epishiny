@@ -208,7 +208,7 @@ place_server <- function(
           leaflet.minicharts::addMinicharts(
             boundaries$lon,
             boundaries$lat,
-            layerId = boundaries$pcode,
+            layerId = boundaries[[rv$geo_name_col]],
             chartdata = 1,
             width = 0,
             height = 0
@@ -245,7 +245,7 @@ place_server <- function(
 
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::updateMinicharts(
-              layerId = df_map$pcode,
+              layerId = df_map$name,
               chartdata = chart_data,
               opacity = .7,
               fillColor = epi_pals()$d310[1],
@@ -259,7 +259,7 @@ place_server <- function(
         } else {
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::updateMinicharts(
-              layerId = df_map$pcode,
+              layerId = df_map$name,
               chartdata = 1,
               width = 0,
               height = 0
@@ -325,7 +325,7 @@ place_server <- function(
             leaflet.minicharts::addMinicharts(
               lng = boundaries$lon,
               lat = boundaries$lat,
-              layerId = df_map$pcode,
+              layerId = df_map$name,
               chartdata = chart_data,
               opacity = .8,
               fillColor = epi_pals()$d310[1],
