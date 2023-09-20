@@ -33,7 +33,7 @@ server <- function(input, output, session) {
     date_vars = date_vars,
     group_vars = group_vars,
     ratio_var = "outcome",
-    ratio_lab = "CFR",
+    ratio_lab = "R",
     ratio_numer = "Deceased",
     ratio_denom = c("Deceased", "Healed", "Abandonment"),
     filter_info = reactive(app_data()$filter_info)

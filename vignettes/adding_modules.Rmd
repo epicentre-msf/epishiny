@@ -43,15 +43,26 @@ Then we need to create both a UI and server file. As starting point, we duplicat
 **Issue suggestion: export all functions required in module files to NAMESPACE, so can run with library(epishiny)**
 
 #### Add functions to UI and server files
-Then we need to add the relevant UI and server functions from `01b_transmission.R` to the UI and server functions in `ui.R`, `server.R`.
-
-**Issue suggestion: is there a way to include new module functions in `ui.R` and `server.R` automatically, without needing to add manually?**
-
-Need to ensure that both `transmission_ui` in `ui.R` and `transmission_server` in `server.R` have the same ID, e.g. `id = "transmission"`.
+Then we need to add the relevant UI and server functions from `01b_transmission.R` to the UI and server functions in `ui.R`, `server.R`. Need to ensure that both `transmission_ui` in `ui.R` and `transmission_server` in `server.R` have the same ID, e.g. `id = "transmission"`.
 
 **Issue suggestion: could the default ID be the function name (e.g. "time", "transmission") to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?**
 
 In `ui.R`, can use `layout_column_wrap()` to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.
+
+**Issue suggestion: is there a way to include new module functions in `ui.R` and `server.R` automatically, without needing to add manually?**
+
+Then we define a global function `estimate_func()` in `global.R` that estimates R using `{EpiEstim}`. We then edit `transmission_server()` in `01b_transmission.R` to output deaths from earlier CFR calculation, then use provide these numbers required for R estimation:
+```
+dplyr::select(!!date, n1, N, ratio)
+
+...
+
+# Estimate R
+df_line$ratio <- estimate_func(df_line$n1)
+```
+**Question: is this the optimal place to introduce this functionality (i.e. using ratio as placeholder for timeseries)**
+
+**Issue suggestion: seems to be some duplication of plotting within the `(isolate(isTruthy(input$show_ratio_line)))` if statement, which makes customisation more challenging.**
 
 ## How to add an edited module
 
@@ -74,7 +85,7 @@ setwd("~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/
 
 - `date` is a base function in R, so redefining it as a variable in the code potentially creates challenges for users to edit and test functions.
 
-- **Issue suggestion (for EpiEstim): option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths**
+- **Issue suggestion (for EpiEstim): option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths (see `estimate_func()` above)**
 
 
 

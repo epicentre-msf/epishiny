@@ -127,7 +127,7 @@ transmission_ui <- function(
 #' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
 #' @param y_lab text label for y-axis of chart.
 #' @param ratio_var character string of variable name to use for ratio calculation.
-#' @param ratio_lab text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
+#' @param ratio_lab text label to describe the computed ratio i.e. 'R' for reproduction number.
 #' @param ratio_numer value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
 #' @param ratio_denom values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
 #' @param filter_info if contained within an app using [filter_server()], supply the `filter_info` element
@@ -140,7 +140,7 @@ transmission_server <- function(
     df_ll,
     date_vars,
     group_vars,
-    y_lab = "R",
+    y_lab = "Deaths",
     ratio_var = NULL,
     ratio_lab = NULL,
     ratio_numer = NULL,
@@ -290,7 +290,7 @@ transmission_server <- function(
               ),
               list(
                 title = list(text = ratio_lab),
-                labels = list(enabled = TRUE, format = "{value}%"),
+                labels = list(enabled = TRUE, format = "{value}"),
                 gridLineWidth = 1,
                 opposite = TRUE
               )
@@ -304,7 +304,7 @@ transmission_server <- function(
               yAxis = 1,
               zIndex = 10,
               color = "black",
-              tooltip = list(valueDecimals = 1, valueSuffix = "%")
+              tooltip = list(valueDecimals = 1, valueSuffix = "")
             )
         }
 
@@ -323,7 +323,9 @@ transmission_server <- function(
         if (isTruthy(input$show_ratio_line)) {
 
           df_line <- df_curve()
-          df_line$ratio <- 100*cumsum(df_line$n1)/cumsum(df_line$N)
+          
+          # Estimate R
+          df_line$ratio <- estimate_func(df_line$n1)
 
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_remove_series(id = "ratio_line") %>%
@@ -335,7 +337,7 @@ transmission_server <- function(
                 ),
                 list(
                   title = list(text = ratio_lab),
-                  labels = list(enabled = TRUE, format = "{value}%"),
+                  labels = list(enabled = TRUE, format = "{value}"),
                   gridLineWidth = 1,
                   opposite = TRUE
                 )
@@ -350,7 +352,7 @@ transmission_server <- function(
               yAxis = 1,
               zIndex = 10,
               color = "black",
-              tooltip = list(valueDecimals = 1, valueSuffix = "%")
+              tooltip = list(valueDecimals = 1, valueSuffix = "")
             )
         } else {
           highcharter::highchartProxy(ns("chart")) %>%

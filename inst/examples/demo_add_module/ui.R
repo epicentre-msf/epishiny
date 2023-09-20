@@ -38,10 +38,10 @@ ui <-tagList(
             ),
             transmission_ui(
               id = "transmission",
-              title = "Time",
+              title = "Transmissibility",
               date_vars = date_vars,
               group_vars = group_vars,
-              ratio_line_lab = "Show CFR line?"
+              ratio_line_lab = "Show R?"
             )
           ),
           layout_column_wrap(
