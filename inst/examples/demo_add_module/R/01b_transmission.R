@@ -2,7 +2,7 @@
 #'
 #' @description Insert description here
 #'
-#' @name time
+#' @name transmission
 #'
 #' @param id module id. Must be the same in both the UI and server function to link the two.
 #' @param date_vars named character vector of date variables for the date axis input. Names are used as variable labels.
@@ -195,12 +195,12 @@ transmission_server <- function(
             )) %>%
             dplyr::group_by(!!date) %>%
             dplyr::summarise(
-              n = sum(.data[[ratio_var]] %in% ratio_numer),
+              n1 = sum(.data[[ratio_var]] %in% ratio_numer),
               N = sum(.data[[ratio_var]] %in% ratio_denom),
-              ratio = (n / N) * 100,
+              ratio = (n1 / N) * 100,
               .groups = "drop"
             ) %>%
-            dplyr::select(!!date, ratio)
+            dplyr::select(!!date, n1, N, ratio)
 
           df <- df %>% dplyr::left_join(df_ratio, by = input$date)
         }
@@ -323,6 +323,7 @@ transmission_server <- function(
         if (isTruthy(input$show_ratio_line)) {
 
           df_line <- df_curve()
+          df_line$ratio <- 100*cumsum(df_line$n1)/cumsum(df_line$N)
 
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_remove_series(id = "ratio_line") %>%

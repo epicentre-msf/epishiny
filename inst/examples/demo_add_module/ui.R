@@ -29,10 +29,20 @@ ui <-tagList(
         # main content
         layout_column_wrap(
           width = 1 / 2,
-          place_ui(
-            id = "map",
-            geo_data = geo_data,
-            group_vars = group_vars
+          layout_column_wrap(
+            width = 1,
+            place_ui(
+              id = "map",
+              geo_data = geo_data,
+              group_vars = group_vars
+            ),
+            transmission_ui(
+              id = "transmission",
+              title = "Time",
+              date_vars = date_vars,
+              group_vars = group_vars,
+              ratio_line_lab = "Show CFR line?"
+            )
           ),
           layout_column_wrap(
             width = 1,

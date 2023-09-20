@@ -2,6 +2,10 @@ library(shiny)
 library(bslib)
 library(epishiny)
 
+# Additional packages
+library(EpiEstim)
+library(epiparameter)
+
 # options(
 #   "epishiny.na.label" = "(Manquant)",
 #   "epishiny.week.letter" = "S"

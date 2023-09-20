@@ -171,6 +171,7 @@ time_server <- function(
 
       df_curve <- reactive({
         date <- rlang::sym(input$date)
+        print(date)
         group <- rlang::sym(input$group)
 
         df <- df_mod() %>%

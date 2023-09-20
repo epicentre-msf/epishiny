@@ -168,29 +168,56 @@ pre code {
 
 
 <p>This vignette describes exploring the process for adding new module to <code>epishiny</code>, from an external user point of view.</p>
-<div id="structure-of-modules-in-package" class="section level2">
-<h2>Structure of modules in package</h2>
+<div id="install-package" class="section level2">
+<h2>Install package</h2>
+<p>To ensure all relevant functions can be accessed by new module as described below, need to clone the <code>epishiny</code> package then use <code>pkgload::load_all</code> to load with all functions copied into environment (not just those listed as exports):</p>
+<pre><code># install.packages(&quot;pkgload&quot;)
+library(pkgload)
+setwd(&quot;~/Documents/GitHub/epiverse-trace/&quot;)
+pkgload::load_all(&quot;epishiny&quot;)</code></pre>
+</div>
+<div id="overview-of-structure-of-modules-in-package" class="section level2">
+<h2>Overview of structure of modules in package</h2>
 <p>Add the moment, there are two ways to display existing modules (defined in <code>05_launch.R</code>):</p>
 <ul>
 <li><p><code>launch_module()</code> displays a single module, currently one of the three (hard coded) options: <code>c(&quot;time&quot;, &quot;place&quot;, &quot;person&quot;)</code>. This looks for functions of form <code>[name]_ui.R</code> and <code>[name]_ui.R</code> which are currently sourced from <code>R/[n]_[name].R</code> files.</p></li>
 <li><p><code>launch_demo_dashboard()</code> displays an app that loads from the UI and server files defined in <code>inst/examples/demo/</code>. A simpler version of the structured app with multiple modules is in <code>docs/app.R</code>. Each module has a unique id (e.g. <code>id=&quot;map&quot;</code>) so that repeated functions across the modules will have a unique name in the compiled shiny app (e.g. <code>ns(&quot;dropdown&quot;)</code> turns into <code>&quot;map-dropdown&quot;</code>)</p></li>
 </ul>
 </div>
-<div id="defining-new-module" class="section level2">
-<h2>Defining new module</h2>
-<div id="create-new-module-files" class="section level4">
-<h4>Create new module files</h4>
-<p>First, we need to create both a UI and server file. As starting point, we duplicated <code>01_time.R</code> to create <code>01b_transmission.R</code></p>
-</div>
+<div id="how-to-define-a-new-module" class="section level2">
+<h2>How to define a new module</h2>
 <div id="create-new-app-structure" class="section level4">
 <h4>Create new app structure</h4>
-<p>Next, we need to create a new app folder e.g. <code>demo/demo_add_module</code> with three files: <code>ui.R</code>, <code>server.R</code> and <code>global.R</code> (if relevant, to loadr= required options and data). Then we need to add the relevant UI and server functions from <code>01b_transmission.R</code> to the UI and server functions.</p>
-<p><em>Decision point</em>: if modules are very customised to specific use cases, it may be better to define the new module files in an <code>R</code> folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace.</p>
+<p>First, we need to create a new app folder e.g. <code>demo/demo_add_module</code> with three files: <code>ui.R</code>, <code>server.R</code> and <code>global.R</code> (if relevant, to loadr= required options and data).</p>
 </div>
-<div id="miscellaenous-notes-and-bugs" class="section level3">
-<h3>Miscellaenous notes and bugs</h3>
+<div id="create-new-module-files" class="section level4">
+<h4>Create new module files</h4>
+<p>Then we need to create both a UI and server file. As starting point, we duplicated <code>01_time.R</code> to create <code>01b_transmission.R</code></p>
+<p><strong>Note</strong>: because modules may be very customised to specific use cases, we currently define the new module files in an <code>R</code> folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace. But issue is that this requires <code>pkgload::load_all()</code> currently, which is designed for development.</p>
+<p><strong>Issue suggestion: export all functions required in module files to NAMESPACE, so can run with library(epishiny)</strong></p>
+</div>
+<div id="add-functions-to-ui-and-server-files" class="section level4">
+<h4>Add functions to UI and server files</h4>
+<p>Then we need to add the relevant UI and server functions from <code>01b_transmission.R</code> to the UI and server functions in <code>ui.R</code>, <code>server.R</code>.</p>
+<p><strong>Issue suggestion: is there a way to include new module functions in <code>ui.R</code> and <code>server.R</code> automatically, without needing to add manually?</strong></p>
+<p>Need to ensure that both <code>transmission_ui</code> in <code>ui.R</code> and <code>transmission_server</code> in <code>server.R</code> have the same ID, e.g. <code>id = &quot;transmission&quot;</code>.</p>
+<p><strong>Issue suggestion: could the default ID be the function name (e.g. “time”, “transmission”) to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?</strong></p>
+<p>In <code>ui.R</code>, can use <code>layout_column_wrap()</code> to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.</p>
+</div>
+</div>
+<div id="how-to-add-an-edited-module" class="section level2">
+<h2>How to add an edited module</h2>
+<p>It would also be useful e explored</p>
+<div id="try-out-the-app" class="section level4">
+<h4>Try out the app</h4>
+<p>To use app locally, point to app folder and run shiny:</p>
+<pre><code>setwd(&quot;~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/&quot;); runApp()</code></pre>
+</div>
+<div id="miscellaenous-notes-and-bugs" class="section level4">
+<h4>Miscellaenous notes and bugs</h4>
 <ul>
-<li>Unclear why default option in <code>launch_module()</code> is <code>module = c(&quot;time&quot;, &quot;place&quot;, &quot;person&quot;)</code> when it only takes single argument</li>
+<li><p>Unclear why default option in <code>launch_module()</code> is <code>module = c(&quot;time&quot;, &quot;place&quot;, &quot;person&quot;)</code> when it only takes single argument</p></li>
+<li><p>App loading is currently quite slow. Wonder if there are particular dependencies or processing tasks that could be optimised.</p></li>
 </ul>
 </div>
 </div>

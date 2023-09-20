@@ -6,6 +6,22 @@ date: "2023-09-20"
 
 This vignette describes exploring the process for adding new module to `epishiny`, from an external user point of view.
 
+## Install package
+
+To ensure all relevant functions can be accessed by new module as described below, need to clone the `epishiny` package then use `pkgload::load_all` to load with all functions copied into environment (not just those listed as exports):
+```
+# install.packages("pkgload")
+library(pkgload)
+setwd("~/Documents/GitHub/epiverse-trace/")
+pkgload::load_all("epishiny")
+```
+
+This vignette also uses `EpiEstim` and `epiparameter`:
+```
+install.packages("EpiEstim")
+install_github("epiverse-trace/epiparameter")
+```
+
 ## Overview of structure of modules in package
 
 Add the moment, there are two ways to display existing modules (defined in `05_launch.R`):
@@ -16,16 +32,32 @@ Add the moment, there are two ways to display existing modules (defined in `05_l
 
 ## How to define a new module
 
-#### Create new module files
-First, we need to create both a UI and server file. As starting point, we duplicated `01_time.R` to create `01b_transmission.R`
-
 #### Create new app structure
-Next, we need to create a new app folder e.g. `demo/demo_add_module` with three files: `ui.R`, `server.R` and `global.R` (if relevant, to loadr= required options and data). Then we need to add the relevant UI and server functions from `01b_transmission.R` to the UI and server functions.
+First, we need to create a new app folder e.g. `demo/demo_add_module` with three files: `ui.R`, `server.R` and `global.R` (if relevant, to loadr= required options and data). 
 
-In the UI, can use `layout_column_wrap()` to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.
+#### Create new module files
+Then we need to create both a UI and server file. As starting point, we duplicated `01_time.R` to create `01b_transmission.R`
 
-**Decision point**: if modules are very customised to specific use cases, it may be better to define the new module files in an `R` folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace.
+**Note**: because modules may be very customised to specific use cases, we currently define the new module files in an `R` folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace. But issue is that this requires `pkgload::load_all()` currently, which is designed for development. 
 
+**Issue suggestion: export all functions required in module files to NAMESPACE, so can run with library(epishiny)**
+
+#### Add functions to UI and server files
+Then we need to add the relevant UI and server functions from `01b_transmission.R` to the UI and server functions in `ui.R`, `server.R`.
+
+**Issue suggestion: is there a way to include new module functions in `ui.R` and `server.R` automatically, without needing to add manually?**
+
+Need to ensure that both `transmission_ui` in `ui.R` and `transmission_server` in `server.R` have the same ID, e.g. `id = "transmission"`.
+
+**Issue suggestion: could the default ID be the function name (e.g. "time", "transmission") to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?**
+
+In `ui.R`, can use `layout_column_wrap()` to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.
+
+## How to add an edited module
+
+It could also be useful to have ability to edit features of a module locally (i.e. `01_time.R`), then deploy this in an app. But from quick check, doesn't seem to overwrite the loaded package functions if place an edited R file in within the app folder, e.g. `demo/demo_add_module/R`
+
+**Issue suggestion: have option for user to load edited version of existing modules locally, beyond options that can already be defined in `global.R`? Although this may add too much instability, in which case it might be better to expand as module options that can be defined in as app globals.**
 
 #### Try out the app
 
@@ -34,9 +66,15 @@ To use app locally, point to app folder and run shiny:
 setwd("~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/"); runApp()
 ```
 
-
 #### Miscellaenous notes and bugs
 
 - Unclear why default option in `launch_module()` is `module = c("time", "place", "person")` when it only takes single argument
+
+- App loading is currently quite slow. Wonder if there are particular dependencies or processing tasks that could be optimised. Could check what `waiter()` is wrapped around?
+
+- `date` is a base function in R, so redefining it as a variable in the code potentially creates challenges for users to edit and test functions.
+
+- **Issue suggestion (for EpiEstim): option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths**
+
 
 
