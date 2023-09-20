@@ -1,0 +1,42 @@
+---
+title: "Adding new module"
+output: html_document
+date: "2023-09-20"
+---
+
+This vignette describes exploring the process for adding new module to `epishiny`, from an external user point of view.
+
+## Overview of structure of modules in package
+
+Add the moment, there are two ways to display existing modules (defined in `05_launch.R`):
+
+- `launch_module()` displays a single module, currently one of the three (hard coded) options: `c("time", "place", "person")`. This looks for functions of form `[name]_ui.R` and `[name]_ui.R` which are currently sourced from `R/[n]_[name].R` files.
+
+- `launch_demo_dashboard()` displays an app that loads from the UI and server files defined in `inst/examples/demo/`. A simpler version of the structured app with multiple modules is in `docs/app.R`. Each module has a unique id (e.g. `id="map"`) so that repeated functions across the modules will have a unique name in the compiled shiny app (e.g. `ns("dropdown")` turns into `"map-dropdown"`)
+
+## How to define a new module
+
+#### Create new module files
+First, we need to create both a UI and server file. As starting point, we duplicated `01_time.R` to create `01b_transmission.R`
+
+#### Create new app structure
+Next, we need to create a new app folder e.g. `demo/demo_add_module` with three files: `ui.R`, `server.R` and `global.R` (if relevant, to loadr= required options and data). Then we need to add the relevant UI and server functions from `01b_transmission.R` to the UI and server functions.
+
+In the UI, can use `layout_column_wrap()` to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.
+
+**Decision point**: if modules are very customised to specific use cases, it may be better to define the new module files in an `R` folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace.
+
+
+#### Try out the app
+
+To use app locally, point to app folder and run shiny:
+```
+setwd("~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/"); runApp()
+```
+
+
+#### Miscellaenous notes and bugs
+
+- Unclear why default option in `launch_module()` is `module = c("time", "place", "person")` when it only takes single argument
+
+
