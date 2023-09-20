@@ -1,4 +1,15 @@
-
+#' @title Person Module
+#'
+#' @description Pyramid chart to visualise the age and sex of the population
+#'
+#' @name population
+#'
+#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param title header title for the card.
+#' @param icon icon for the card.
+#' @param opts_btn_lab text label for the dropdown menu button.
+#' @param full_screen add full-screen button to the card.
+#'
 #' @export
 person_ui <- function(
     id,
@@ -38,6 +49,19 @@ person_ui <- function(
 
 }
 
+#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param age_var named vector of age variables for the age axis input.
+#' @param sex_var named vector of sex variables for the sex axis input.
+#' @param male_level
+#' @param female_level
+#' @param age_breaks age group breaks for the pyramid age categories.
+#' @param age_labels age group labels for the pyramid age categories.
+#' @param age_var_lab variable name for age group in the table available to download.
+#' @param age_group_lab y-axis labels
+#' @param filter_info
+#'
+#' @rdname person
 #' @export
 person_server <- function(
     id,
