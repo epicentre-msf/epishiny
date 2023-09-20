@@ -19,7 +19,6 @@ pkgload::load_all("epishiny")
 This vignette also uses `EpiEstim` and `epiparameter`:
 ```
 install.packages("EpiEstim")
-install_github("epiverse-trace/epiparameter")
 ```
 
 ## Overview of structure of modules in package
@@ -51,7 +50,7 @@ In `ui.R`, can use `layout_column_wrap()` to define the geometry of where the ad
 
 **Issue suggestion: is there a way to include new module functions in `ui.R` and `server.R` automatically, without needing to add manually?**
 
-Then we define a global function `estimate_func()` in `global.R` that estimates R using `{EpiEstim}`. We then edit `transmission_server()` in `01b_transmission.R` to output deaths from earlier CFR calculation, then use provide these numbers required for R estimation:
+Then we define a global function `estimate_func()` in `global.R` that estimates R using `{EpiEstim}`. As a placeholder, we assume mean serial interval = 5 days with s.d. = 1. We then edit `transmission_server()` in `01b_transmission.R` to output deaths from earlier CFR calculation, then use provide these numbers required for R estimation:
 ```
 dplyr::select(!!date, n1, N, ratio)
 
@@ -62,7 +61,7 @@ df_line$ratio <- estimate_func(df_line$n1)
 ```
 **Question: is this the optimal place to introduce this functionality (i.e. using ratio as placeholder for timeseries)**
 
-**Issue suggestion: seems to be some duplication of plotting within the `(isolate(isTruthy(input$show_ratio_line)))` if statement, which makes customisation more challenging.**
+**Issue suggestion: seems to be some duplication of plotting within the `(isolate(isTruthy(input$show_ratio_line)))` if statement, which makes customisation more challenging. Also unclear how to display R by default, rather than requiring user to select Options > Show R? in plot**
 
 ## How to add an edited module
 

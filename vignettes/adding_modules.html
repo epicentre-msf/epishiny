@@ -175,6 +175,9 @@ pre code {
 library(pkgload)
 setwd(&quot;~/Documents/GitHub/epiverse-trace/&quot;)
 pkgload::load_all(&quot;epishiny&quot;)</code></pre>
+<p>This vignette also uses <code>EpiEstim</code> and <code>epiparameter</code>:</p>
+<pre><code>install.packages(&quot;EpiEstim&quot;)
+install_github(&quot;epiverse-trace/epiparameter&quot;)</code></pre>
 </div>
 <div id="overview-of-structure-of-modules-in-package" class="section level2">
 <h2>Overview of structure of modules in package</h2>
@@ -198,16 +201,25 @@ pkgload::load_all(&quot;epishiny&quot;)</code></pre>
 </div>
 <div id="add-functions-to-ui-and-server-files" class="section level4">
 <h4>Add functions to UI and server files</h4>
-<p>Then we need to add the relevant UI and server functions from <code>01b_transmission.R</code> to the UI and server functions in <code>ui.R</code>, <code>server.R</code>.</p>
-<p><strong>Issue suggestion: is there a way to include new module functions in <code>ui.R</code> and <code>server.R</code> automatically, without needing to add manually?</strong></p>
-<p>Need to ensure that both <code>transmission_ui</code> in <code>ui.R</code> and <code>transmission_server</code> in <code>server.R</code> have the same ID, e.g. <code>id = &quot;transmission&quot;</code>.</p>
+<p>Then we need to add the relevant UI and server functions from <code>01b_transmission.R</code> to the UI and server functions in <code>ui.R</code>, <code>server.R</code>. Need to ensure that both <code>transmission_ui</code> in <code>ui.R</code> and <code>transmission_server</code> in <code>server.R</code> have the same ID, e.g. <code>id = &quot;transmission&quot;</code>.</p>
 <p><strong>Issue suggestion: could the default ID be the function name (e.g. “time”, “transmission”) to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?</strong></p>
 <p>In <code>ui.R</code>, can use <code>layout_column_wrap()</code> to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.</p>
+<p><strong>Issue suggestion: is there a way to include new module functions in <code>ui.R</code> and <code>server.R</code> automatically, without needing to add manually?</strong></p>
+<p>Then we define a global function <code>estimate_func()</code> in <code>global.R</code> that estimates R using <code>{EpiEstim}</code>. We then edit <code>transmission_server()</code> in <code>01b_transmission.R</code> to output deaths from earlier CFR calculation, then use provide these numbers required for R estimation:</p>
+<pre><code>dplyr::select(!!date, n1, N, ratio)
+
+...
+
+# Estimate R
+df_line$ratio &lt;- estimate_func(df_line$n1)</code></pre>
+<p><strong>Question: is this the optimal place to introduce this functionality (i.e. using ratio as placeholder for timeseries)</strong></p>
+<p><strong>Issue suggestion: seems to be some duplication of plotting within the <code>(isolate(isTruthy(input$show_ratio_line)))</code> if statement, which makes customisation more challenging.</strong></p>
 </div>
 </div>
 <div id="how-to-add-an-edited-module" class="section level2">
 <h2>How to add an edited module</h2>
-<p>It would also be useful e explored</p>
+<p>It could also be useful to have ability to edit features of a module locally (i.e. <code>01_time.R</code>), then deploy this in an app. But from quick check, doesn’t seem to overwrite the loaded package functions if place an edited R file in within the app folder, e.g. <code>demo/demo_add_module/R</code></p>
+<p><strong>Issue suggestion: have option for user to load edited version of existing modules locally, beyond options that can already be defined in <code>global.R</code>? Although this may add too much instability, in which case it might be better to expand as module options that can be defined in as app globals.</strong></p>
 <div id="try-out-the-app" class="section level4">
 <h4>Try out the app</h4>
 <p>To use app locally, point to app folder and run shiny:</p>
@@ -217,7 +229,9 @@ pkgload::load_all(&quot;epishiny&quot;)</code></pre>
 <h4>Miscellaenous notes and bugs</h4>
 <ul>
 <li><p>Unclear why default option in <code>launch_module()</code> is <code>module = c(&quot;time&quot;, &quot;place&quot;, &quot;person&quot;)</code> when it only takes single argument</p></li>
-<li><p>App loading is currently quite slow. Wonder if there are particular dependencies or processing tasks that could be optimised.</p></li>
+<li><p>App loading is currently quite slow. Wonder if there are particular dependencies or processing tasks that could be optimised. Could check what <code>waiter()</code> is wrapped around?</p></li>
+<li><p><code>date</code> is a base function in R, so redefining it as a variable in the code potentially creates challenges for users to edit and test functions.</p></li>
+<li><p><strong>Issue suggestion (for EpiEstim): option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths (see <code>estimate_func()</code> above)</strong></p></li>
 </ul>
 </div>
 </div>

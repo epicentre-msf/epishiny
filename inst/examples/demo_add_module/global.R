@@ -68,7 +68,7 @@ estimate_func <- function(x){
   output_R <- estimate_R(incid = x,
                          method = "parametric_si",
                          config = make_config(list(
-                           mean_si = 3, std_si = 1)))
+                           mean_si = 5, std_si = 1)))
   
   out_R <- c(rep(NA,7),output_R$R$`Mean(R)`) # Add buffer so length is the same
   out_R
