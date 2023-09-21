@@ -53,7 +53,7 @@ In `ui.R`, can use `layout_column_wrap()` to define the geometry of where the ad
 
 **Issue suggestion: Currently all modules group based on the `group_vars` variable in `global.R`, with "Governate" as the default. Not sure whether this can be edited easily currently, or needs to be redefined in `server.R` etc. Would be useful to have option for customisation (e.g. if plotting R, would be good to show fitted timeseries as default.**
 
-Then we define a global function `estimate_func()` in `global.R` that estimates R using `{EpiEstim}`. This function also groups by date of notification across locations for the weekly R estimation, then reaggegates to match the original object
+Then we define a global function `estimate_func()` in `global.R` that estimates R using `{EpiEstim}`. This function also groups by date of notification across locations for the weekly R estimation, then re-aggregates to match the original object (this is currently hard coded for data that is displayed weekly).
 
 The serial interval for cholera has previously been defined as a gamma distribution with shape 0.5 and rate 0.1 ([Kahn et al, PNAS, 2020](https://www.pnas.org/doi/10.1073/pnas.1913052117)), so we can convert this into mean and standard deviation as follows:
 
