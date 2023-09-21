@@ -58,8 +58,9 @@ launch a demo dashboard for the app.
 
 Aside from the launch module, each module is made up of a UI (user interface)
 function and a server function. The UI function defines the layout, labels, input
-controls and options, and output displays. The server function defines the behaviour
-of the module and how this changes depending on the inputs that the user specifies.
+controls (e.g., buttons, sliders, text inputs), and output displays (e.g., plots,
+tables, text). The server function defines the behaviour of the module and how 
+this changes depending on the inputs that the user specifies.
 Both functions are linked together by a unique module id, which means that different
 modules will not interfere with each other.
 
