@@ -140,7 +140,7 @@ transmission_server <- function(
     df_ll,
     date_vars,
     group_vars,
-    y_lab = "Deaths",
+    y_lab = "Patients",
     ratio_var = NULL,
     ratio_lab = NULL,
     ratio_numer = NULL,
@@ -203,6 +203,9 @@ transmission_server <- function(
             dplyr::select(!!date, n1, N, ratio)
 
           df <- df %>% dplyr::left_join(df_ratio, by = input$date)
+          
+          # Estimate R
+          df$ratio <- estimate_func(df)
         }
 
         return(df)
@@ -323,10 +326,7 @@ transmission_server <- function(
         if (isTruthy(input$show_ratio_line)) {
 
           df_line <- df_curve()
-          
-          # Estimate R
-          df_line$ratio <- estimate_func(df_line$n1)
-
+        
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_remove_series(id = "ratio_line") %>%
             highcharter::hcpxy_update(

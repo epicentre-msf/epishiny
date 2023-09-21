@@ -175,9 +175,9 @@ pre code {
 library(pkgload)
 setwd(&quot;~/Documents/GitHub/epiverse-trace/&quot;)
 pkgload::load_all(&quot;epishiny&quot;)</code></pre>
-<p>This vignette also uses <code>EpiEstim</code> and <code>epiparameter</code>:</p>
-<pre><code>install.packages(&quot;EpiEstim&quot;)
-install_github(&quot;epiverse-trace/epiparameter&quot;)</code></pre>
+<p>This vignette also uses the new version of <code>EpiEstim</code> for aggregated data and <code>epiparameter</code>:</p>
+<pre><code>install.packages(&#39;EpiEstim&#39;, repos = c(&#39;https://mrc-ide.r-universe.dev&#39;, &#39;https://cloud.r-project.org&#39;))
+install.packages(&quot;epiparameter&quot;)</code></pre>
 </div>
 <div id="overview-of-structure-of-modules-in-package" class="section level2">
 <h2>Overview of structure of modules in package</h2>
@@ -197,29 +197,41 @@ install_github(&quot;epiverse-trace/epiparameter&quot;)</code></pre>
 <h4>Create new module files</h4>
 <p>Then we need to create both a UI and server file. As starting point, we duplicated <code>01_time.R</code> to create <code>01b_transmission.R</code></p>
 <p><strong>Note</strong>: because modules may be very customised to specific use cases, we currently define the new module files in an <code>R</code> folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace. But issue is that this requires <code>pkgload::load_all()</code> currently, which is designed for development.</p>
-<p><strong>Issue suggestion: export all functions required in module files to NAMESPACE, so can run with library(epishiny)</strong></p>
+<p><strong>Issue suggestion: Export all functions required in module files to NAMESPACE, so can run with library(epishiny)</strong></p>
 </div>
 <div id="add-functions-to-ui-and-server-files" class="section level4">
 <h4>Add functions to UI and server files</h4>
 <p>Then we need to add the relevant UI and server functions from <code>01b_transmission.R</code> to the UI and server functions in <code>ui.R</code>, <code>server.R</code>. Need to ensure that both <code>transmission_ui</code> in <code>ui.R</code> and <code>transmission_server</code> in <code>server.R</code> have the same ID, e.g. <code>id = &quot;transmission&quot;</code>.</p>
-<p><strong>Issue suggestion: could the default ID be the function name (e.g. “time”, “transmission”) to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?</strong></p>
+<p><strong>Issue suggestion: Could the default ID be the function name (e.g. “time”, “transmission”) to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?</strong></p>
 <p>In <code>ui.R</code>, can use <code>layout_column_wrap()</code> to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.</p>
-<p><strong>Issue suggestion: is there a way to include new module functions in <code>ui.R</code> and <code>server.R</code> automatically, without needing to add manually?</strong></p>
-<p>Then we define a global function <code>estimate_func()</code> in <code>global.R</code> that estimates R using <code>{EpiEstim}</code>. We then edit <code>transmission_server()</code> in <code>01b_transmission.R</code> to output deaths from earlier CFR calculation, then use provide these numbers required for R estimation:</p>
-<pre><code>dplyr::select(!!date, n1, N, ratio)
+<p><strong>Issue suggestion: Would be useful to have way to add new module functions in <code>ui.R</code> and <code>server.R</code> automatically, without needing to add manually.</strong></p>
+<p><strong>Issue suggestion: Currently all modules group based on the <code>group_vars</code> variable in <code>global.R</code>, with “Governate” as the default. Not sure whether this can be edited easily currently, or needs to be redefined in <code>server.R</code> etc. Would be useful to have option for customisation (e.g. if plotting R, would be good to show fitted timeseries as default.</strong></p>
+<p>Then we define a global function <code>estimate_func()</code> in <code>global.R</code> that estimates R using <code>{EpiEstim}</code>. This function also groups by date of notification across locations for the weekly R estimation, then reaggegates to match the original object</p>
+<p>The serial interval for cholera has previously been defined as a gamma distribution with shape 0.5 and rate 0.1 (<a href="https://www.pnas.org/doi/10.1073/pnas.1913052117">Kahn et al, PNAS, 2020</a>), so we can convert this into mean and standard deviation as follows:</p>
+<pre><code>epiparameter::convert_params_to_summary_stats(
+  distribution = &quot;gamma&quot;, shape = 0.5, scale = 1/0.1
+)</code></pre>
+<p>This assumption gives serial interval = 5 days with s.d. = 7.1. We currently calculate R based on total hospitalisations by date of notification.</p>
+<p><strong>Issue suggestion: Would be useful to move the definition of <code>date_var = &quot;date_notification&quot;</code> outside <code>server.R</code> to make easier for user to define events of interest, and have flexibility in how <code>estimate_func()</code> handles different aggregations. Would also be useful to have option for which outcome/group to target in the R estimation (e.g. deaths vs hospitalisations).</strong></p>
+<p>We then edit <code>transmission_server()</code> in <code>01b_transmission.R</code> to output patient numbers from existing CFR calculation, then pass the data.frame for R estimation and store in the <code>ratio</code> column previously used to store CFR values:</p>
+<pre><code>  ... %&gt;%
+  dplyr::select(!!date, n1, N, ratio)
+  
+  df &lt;- df %&gt;% dplyr::left_join(df_ratio, by = input$date)
 
-...
-
-# Estimate R
-df_line$ratio &lt;- estimate_func(df_line$n1)</code></pre>
-<p><strong>Question: is this the optimal place to introduce this functionality (i.e. using ratio as placeholder for timeseries)</strong></p>
-<p><strong>Issue suggestion: seems to be some duplication of plotting within the <code>(isolate(isTruthy(input$show_ratio_line)))</code> if statement, which makes customisation more challenging.</strong></p>
+  # Estimate R
+  #df$ratio &lt;- estimate_func(df)</code></pre>
+<p><strong>Question: is this the optimal place to introduce this functionality (i.e. using ratio as placeholder for timeseries)? Because weekly data required interpolation, it slows down app loading, so may be better to have as pre-processed input?</strong></p>
+<p><strong>Issue suggestion: The above code outputs the same R value (=<code>ratio</code> column) across geographical areas (it does the same for the original CFR calculation). Not all areas have data for all dates, so this requires some alignment. Could be neater to have a separate ratio object with one national timeseries - this would also allow flexibility in what is plotted (i.e. daily R estimates rather than weekly).</strong></p>
+<p><strong>Issue suggestion: There is some duplication of same plotting code within the <code>(isolate(isTruthy(input$show_ratio_line)))</code> if statement, once when plot displayed and again when updated in observed object, which makes customisation more challenging. Also not sure how to display overlaid R by default on plot, rather than requiring user to select Options &gt; Show R? in the app.</strong></p>
+<p>Note that currently the R plots show only the mean from EpiEstim, but ideally would include uncertainty and/or disclaimer.</p>
+<p>**Issue suggestion: Add uncertainty to R estimates, which would require editing the <code>estimate_func()</code> function as well as the <code>01b_transmission.R</code> server functions to display additional shaded region with uncertainty interval.</p>
 </div>
 </div>
 <div id="how-to-add-an-edited-module" class="section level2">
 <h2>How to add an edited module</h2>
 <p>It could also be useful to have ability to edit features of a module locally (i.e. <code>01_time.R</code>), then deploy this in an app. But from quick check, doesn’t seem to overwrite the loaded package functions if place an edited R file in within the app folder, e.g. <code>demo/demo_add_module/R</code></p>
-<p><strong>Issue suggestion: have option for user to load edited version of existing modules locally, beyond options that can already be defined in <code>global.R</code>? Although this may add too much instability, in which case it might be better to expand as module options that can be defined in as app globals.</strong></p>
+<p><strong>Issue suggestion: Could be useful to have option for user to load edited version of existing modules locally, beyond display options that can already be defined in <code>global.R</code>. Although this may add some instability (e.g. if edited modules have bugs), in which case it might be better to expand as module options that can be defined in as app globals for common use cases.</strong></p>
 <div id="try-out-the-app" class="section level4">
 <h4>Try out the app</h4>
 <p>To use app locally, point to app folder and run shiny:</p>
@@ -231,7 +243,7 @@ df_line$ratio &lt;- estimate_func(df_line$n1)</code></pre>
 <li><p>Unclear why default option in <code>launch_module()</code> is <code>module = c(&quot;time&quot;, &quot;place&quot;, &quot;person&quot;)</code> when it only takes single argument</p></li>
 <li><p>App loading is currently quite slow. Wonder if there are particular dependencies or processing tasks that could be optimised. Could check what <code>waiter()</code> is wrapped around?</p></li>
 <li><p><code>date</code> is a base function in R, so redefining it as a variable in the code potentially creates challenges for users to edit and test functions.</p></li>
-<li><p><strong>Issue suggestion (for EpiEstim): option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths (see <code>estimate_func()</code> above)</strong></p></li>
+<li><p><strong>Issue suggestion (for EpiEstim): Add option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths (see <code>estimate_func()</code> above). Also aggregate weekly estimates back to weekly (e.g. via</strong></p></li>
 </ul>
 </div>
 </div>

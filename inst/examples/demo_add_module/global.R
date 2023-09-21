@@ -4,7 +4,6 @@ library(epishiny)
 
 # Additional packages
 library(EpiEstim)
-library(epiparameter)
 
 # options(
 #   "epishiny.na.label" = "(Manquant)",
@@ -63,15 +62,35 @@ epi_pal <- list(
 )
 
 # R estimation function
+# Serial interval source: https://www.pnas.org/doi/10.1073/pnas.1913052117
 
 estimate_func <- function(x){
-  output_R <- estimate_R(incid = x,
+  
+  # Group by date
+  x_incidence <- x %>%
+    dplyr::group_by(date_notification) %>%
+    dplyr::summarise(total_counts = sum(N))
+  
+  # Calculate values required for alignment with original ratio vector
+  date_count <- as.numeric(table(x$date_notification)) # Tally up original dates
+  ratio_vector <- rep(x_incidence$total_counts,date_count)
+
+  # Calculate R
+  output_R <- estimate_R(incid = x_incidence$total_counts, # Choose sum of outcomes
+                         dt = 7L,
+                         dt_out = 7L,
+                         recon_opt = "match",
                          method = "parametric_si",
                          config = make_config(list(
-                           mean_si = 5, std_si = 1)))
+                           mean_si = 5, std_si = 7.1)))
   
   out_R <- c(rep(NA,7),output_R$R$`Mean(R)`) # Add buffer so length is the same
-  out_R
+  out_R <- out_R[seq(0, length(out_R), by=7)+1] # Extract weekly values
+  
+  # Align with original data file
+  out_R_ratio_vector <- rep(out_R,date_count)
+
+  out_R_ratio_vector
 }
 
 
