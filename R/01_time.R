@@ -1,6 +1,6 @@
 #' Time module
 #'
-#' Visualise data over time with an interactive 'epicurve'.
+#' @description Visualise data over time with an interactive 'epicurve'.
 #'
 #' @rdname time
 #'

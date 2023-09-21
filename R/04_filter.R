@@ -1,4 +1,3 @@
-
 #' Filter module
 #'
 #' Filter linelist data using a sidebar with shiny inputs.
