@@ -1,0 +1,39 @@
+---
+title: "Structure of epishiny"
+output:
+  bookdown::html_vignette2:
+    fig_caption: yes
+    code_folding: show
+pkgdown:
+  as_is: true
+vignette: >
+  %\VignetteIndexEntry{Structure of epishiny}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Structure of the shiny app
+
+The app is composed of five core modules:
+
+1) Time module
+
+This module allows the user to visualise incidence data over time with an interactive
+'epicurve'. The user can select the level of temporal aggregation that the data has,
+either daily, weekly, or monthly.
+
+
+2) Place module
+
+3) Person module
+
+4) Filter module
+
+5) Launch module
+
+
+Each module is made up of a UI (user interface) function and a server function.
+Both functions are linked by a unique module id, which means that different modules
+will not interfere with each other.
+
+
