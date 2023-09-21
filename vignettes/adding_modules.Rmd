@@ -99,7 +99,7 @@ To use app locally, point to app folder and run shiny:
 setwd("~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/"); runApp()
 ```
 
-#### Miscellaenous notes and bugs
+## Miscellaenous notes about broader potential improvements
 
 - Unclear why default option in `launch_module()` is `module = c("time", "place", "person")` when it only takes single argument
 
@@ -107,5 +107,4 @@ setwd("~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/
 
 - `date` is a base function in R, so redefining it as a variable in the code potentially creates challenges for users to edit and test functions.
 
-- **Issue suggestion (for EpiEstim): Add option to complete the output vector of moving average with NA values, to save additional coding to match vector lengths (see `estimate_func()` above). Also aggregate weekly estimates back to weekly (e.g. via**
 
