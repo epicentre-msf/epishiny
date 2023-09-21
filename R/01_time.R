@@ -13,6 +13,7 @@
 #' @param date_int_lab text label for the date interval input.
 #' @param day_week_month_labs character vector with text labels for day, week and month, respectively.
 #' @param groups_lab text label for the grouping variable input.
+#' @param n_lab The label for the raw count variable.
 #' @param ratio_line_lab text label for the ratio line input. If not supplied the input is not included.
 #' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
@@ -31,6 +32,7 @@ time_ui <- function(
     date_int_lab = "Date interval",
     day_week_month_labs = c("Day", "Week", "Month"),
     groups_lab = "Group data by",
+    n_lab = "N patients",
     ratio_line_lab = NULL,
     full_screen = TRUE
 ) {
@@ -77,7 +79,7 @@ time_ui <- function(
           selectInput(
             ns("group"),
             label = groups_lab,
-            choices = group_vars,
+            choices = c(purrr::set_names("n", n_lab), group_vars),
             multiple = FALSE,
             selectize = FALSE,
             width = 200
@@ -124,9 +126,10 @@ time_ui <- function(
 
 
 #' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
-#' @param y_lab Text label for y-axis of chart.
+#' @param y_lab The label for y-axis of chart.
+#' @param n_lab The label for the raw count variable.
 #' @param ratio_var Character string of variable name to use for ratio calculation.
-#' @param ratio_lab Text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
+#' @param ratio_lab The label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
 #' @param ratio_numer Value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
 #' @param ratio_denom Values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
@@ -142,6 +145,7 @@ time_server <- function(
     date_vars,
     group_vars,
     y_lab = "Patients",
+    n_lab = "N patients",
     ratio_var = NULL,
     ratio_lab = NULL,
     ratio_numer = NULL,
@@ -179,9 +183,17 @@ time_server <- function(
             lubridate::as_date(!!date),
             unit = input$date_interval,
             week_start = getOption("epishiny.week.start", 1)
-          )) %>%
-          dplyr::count(!!date, !!group) %>%
-          tidyr::drop_na()
+          ))
+
+        if (group == "n") {
+          df <- df %>%
+            dplyr::count(!!date) %>%
+            tidyr::drop_na()
+        } else {
+          df <- df %>%
+            dplyr::count(!!date, !!group) %>%
+            tidyr::drop_na()
+        }
 
         if (!is.null(ratio_var)) {
           if (is.null(ratio_numer) || is.null(ratio_denom)) {
@@ -218,26 +230,41 @@ time_server <- function(
         group_sym <- isolate(rv$group_sym)
         missing_dates <- isolate(rv$missing_dates)
 
+        shiny::validate(shiny::need(nrow(df) > 0, "No data to display"))
+
         date_lab <- ifelse(
           is.null(names(date_vars[date_vars == date])),
           date,
           names(date_vars[date_vars == date])
         )
 
-        group_lab <- ifelse(
-          is.null(names(group_vars[group_vars == group])),
-          group,
-          names(group_vars[group_vars == group])
-        )
+        if (group == "n") {
+          hc <- highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, n), name = n_lab)
+        } else {
+          group_lab <- ifelse(
+            is.null(names(group_vars[group_vars == group])),
+            group,
+            names(group_vars[group_vars == group])
+          )
 
-        text_legend <- glue::glue(
-          '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'
-        )
+          text_legend <- glue::glue(
+            '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'
+          )
 
-        shiny::validate(shiny::need(nrow(df) > 0, "No data to display"))
+          hc <-
+            highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, n, group = !!group_sym)) %>%
+            highcharter::hc_legend(
+              title = list(text = text_legend),
+              layout = "vertical",
+              align = "right",
+              verticalAlign = "top",
+              x = -10,
+              y = 40,
+              itemStyle = list(textOverflow = "ellipsis", width = 150)
+            )
+        }
 
-        hc <-
-          highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, n, group = !!group_sym)) %>%
+        hc <- hc %>%
           highcharter::hc_add_event_point(event = "click") %>%
           highcharter::hc_title(text = NULL) %>%
           highcharter::hc_chart(zoomType = "x", alignTicks = TRUE) %>%
@@ -259,15 +286,6 @@ time_server <- function(
             )
           ) %>%
           highcharter::hc_tooltip(shared = TRUE) %>%
-          highcharter::hc_legend(
-            title = list(text = text_legend),
-            layout = "vertical",
-            align = "right",
-            verticalAlign = "top",
-            x = -10,
-            y = 40,
-            itemStyle = list(textOverflow = "ellipsis", width = 150)
-          ) %>%
           my_hc_export(caption = isolate(filter_info()))
 
         if (isolate(input$date_interval == "week")) {
@@ -376,55 +394,6 @@ time_server <- function(
       shiny::reactive({
         input$chart_click
       })
-
-      # output$chart <- echarts4r::renderEcharts4r({
-      #
-      #   df_curve <- df_curve()
-      #   date <- isolate(input$date)
-      #   group <- isolate(input$group)
-      #   date_sym <- rlang::sym(date)
-      #   group_sym <- rlang::sym(group)
-      #   missing_dates <- isolate(missing_dates())
-      #
-      #   date_lab <- ifelse(
-      #     is.null(names(date_vars[date_vars == date])),
-      #     date,
-      #     names(date_vars[date_vars == date])
-      #   )
-      #
-      #   group_lab <- ifelse(
-      #     is.null(names(group_vars[group_vars == group])),
-      #     group,
-      #     names(group_vars[group_vars == group])
-      #   )
-      #
-      #   df_curve %>%
-      #     mutate(!!group_sym := forcats::fct_explicit_na(!!group_sym)) %>%
-      #     group_by(!!group_sym) %>%
-      #     echarts4r::e_charts_(date, dispose = FALSE) %>%
-      #     echarts4r::e_bar_("n", stack = "group") %>%
-      #     echarts4r::e_axis_labels(x = date_lab, y = "Cases") %>%
-      #     echarts4r::e_tooltip(trigger = "axis") %>%
-      #     echarts4r::e_x_axis(type = "category") %>%
-      #     echarts4r::e_grid(
-      #       left = '2%',
-      #       top = '10%',
-      #       right = '10%',
-      #       bottom = '10%',
-      #       containLabel = FALSE
-      #     )
-      #
-      # })
-      #
-      # observeEvent(input$label_week, {
-      #   if (input$label_week) {
-      #     echarts4r::echarts4rProxy("epicurve") %>%
-      #       echarts4r::e_x_axis(type = "category", formatter = weekLabels())
-      #   } else {
-      #     echarts4r::echarts4rProxy("epicurve") %>%
-      #       echarts4r::e_x_axis(type = "category")
-      #   }
-      # })
 
     }
   )

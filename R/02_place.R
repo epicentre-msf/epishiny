@@ -87,7 +87,8 @@ place_ui <- function(
       bslib::card_body(
         padding = 0,
         leaflet::leafletOutput(ns("map"))
-      )
+      ),
+      bslib::card_footer(uiOutput(ns("footer")))
     )
   )
 }
@@ -191,10 +192,16 @@ place_server <- function(
 
       observe({
         boundaries <- rv$sf
-        req(nrow(boundaries) > 0)
+
         leaflet::leafletProxy("map", session) %>%
           leaflet::clearGroup("Boundaries") %>%
-          leaflet.minicharts::clearMinicharts() %>%
+          leaflet.minicharts::clearMinicharts()
+
+        req(nrow(boundaries) > 0)
+
+        bbox <- sf::st_bbox(boundaries)
+
+        leaflet::leafletProxy("map", session) %>%
           leaflet::addPolygons(
             data = boundaries,
             stroke = TRUE,
@@ -203,8 +210,10 @@ place_server <- function(
             fillOpacity = 0,
             label = boundaries[[rv$geo_name_col]],
             group = "Boundaries",
+            highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
             options = leaflet::pathOptions(pane = "boundaries")
           ) %>%
+          leaflet::flyToBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]]) %>%
           leaflet.minicharts::addMinicharts(
             boundaries$lon,
             boundaries$lat,
@@ -267,6 +276,31 @@ place_server <- function(
         }
       }) %>% bindEvent(df_geo_counts(), input$circle_size_mult)
 
+      # Missing data information ==================================================
+      missing_text <- reactive({
+        df_missing <- df_mod() %>%
+          dplyr::summarise(
+            N = dplyr::n(),
+            n = sum(is.na(.data[[rv$geo_col]]))
+          ) %>%
+          dplyr::mutate(percent = n / N)
+
+        if (df_missing$n == 0) {
+          return(NULL)
+        } else {
+          n_missing <- glue::glue("{scales::number(df_missing$n)} ({scales::percent(df_missing$percent, accuracy = 1)})")
+          glue::glue("{rv$geo_level_name} data missing/unknown for {n_missing} patients")
+        }
+      })
+
+      output$footer <- renderUI({
+        req(missing_text())
+        tags$span(
+          HTML('<i class="fa fa-exclamation-triangle" style="color:red;"></i>'),
+          missing_text()
+        )
+      })
+
       # Map image export ==========================================================
       output$dl <- downloadHandler(
         filename = function() {
@@ -308,7 +342,9 @@ place_server <- function(
               options = leaflet::scaleBarOptions(imperial = FALSE)
             ) %>%
             leaflet::addControl(
-              html = shiny::HTML(filter_info()),
+              html = shiny::HTML(
+                glue::glue_collapse(c(missing_text(), filter_info()), sep = "</br>")
+              ),
               className = "leaflet-control-attribution",
               position = "bottomleft"
             ) %>%
