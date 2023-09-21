@@ -17,6 +17,32 @@ dashboard for those who are unfamiliar with shiny apps.
 
 ## Structure of the shiny app
 
+
+├── LICENSE            <-
+├── data               <- 
+├── data-raw           <- 
+├── README.md          <- The top-level README for developers using this project.
+├── DESCRIPTION        <- 
+├── inst               <- 
+│
+├── man                <- 
+│
+├── NAMESPACE          <-
+│
+├── R                  <- Scripts to generate shiny app modules
+│   ├── 01_time.R      <- Script to generate the time module
+│   ├── 02_place.R     <- Script to generate the place module
+│   ├── 01_person.R    <- Script to generate the person module
+│   ├── 04_filter.R    <- 
+│   ├── 05_launch.R    <- 
+│   ├── utils.R        <- 
+│   └── zzz.R          <- 
+│
+├── vignettes                     <- 
+│   ├── epishiny_structure.R      <- Overview of the epishiny app structure
+│   ├── external_data.R           <- Overview of how to use external data
+│   └── etc                       <- 
+
 # R folder
 
 The app is composed of core modules located within the `R` folder:
