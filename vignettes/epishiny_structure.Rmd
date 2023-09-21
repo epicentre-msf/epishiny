@@ -41,7 +41,8 @@ chooses to group the data, the number of cases
 3) Person module (`03_person.R`)
 
 The person module visualises the age and sex demographics in a population pyramid
-chart and a summary table. 
+chart and a summary table. There is an option to display overall case counts and
+proportion of cases in each age group.
 
 4) Filter module (`04_filter.R`)
 
