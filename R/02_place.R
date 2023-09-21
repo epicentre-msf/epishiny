@@ -1,3 +1,18 @@
+#' @title Place module
+#'
+#' @description Visualise the spatial distribution.
+#'
+#' @name place
+#'
+#' @param id
+#' @param geo_data
+#' @param group_vars
+#' @param title
+#' @param geo_lab
+#' @param groups_lab
+#' @param n_lab
+#' @param full_screen
+#'
 #' @export
 place_ui <- function(
     id,
