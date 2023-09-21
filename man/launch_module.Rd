@@ -2,23 +2,23 @@
 % Please edit documentation in R/05_launch.R
 \name{launch_module}
 \alias{launch_module}
-\title{Launch a single epishiny module as a standalone shiny app}
+\title{Launch a single 'epishiny' module as a standalone shiny app}
 \usage{
 launch_module(module = c("time", "place", "person"), ...)
 }
 \arguments{
-\item{module}{name of the module to launch. Current options are
-'time', 'place' or 'person'}
+\item{module}{Name of the module to launch. Current options are
+\link{time}, \link{place} or \link{person}.}
 
-\item{...}{other named arguments passed to the relevant module
-UI and Server functions. See each module's documenation for details
+\item{...}{Other named arguments passed to the relevant module
+UI and Server functions. See each module's documentation for details
 of the arguments required.}
 }
 \value{
 No return value, a shiny app is launched.
 }
 \description{
-Use this function to quickly launch any of the 3 epishiny interactive
+Use this function to quickly launch any of the 3 'epishiny' interactive
 visualisation modules (time, place, person) independently, allowing for
 incorporation into exploratory data analysis workflows in R.
 }

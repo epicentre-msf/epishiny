@@ -1,20 +1,22 @@
 #' @title Place module
 #'
-#' @description Visualise the spatial distribution of cases.
+#' @description Visualise geographical distribution across multiple administrative boundaries on an interactive leaflet map.
 #'
-#' @name place
+#' @rdname place
 #'
-#' @param id module id. Must be the same in both the UI and server function to link the two.
-#' @param geo_data list of the geo data required to match the linelist to the shapefile.
-#' @param group_vars named character vector of categorical variables for the data
-#' grouping input. Names are used as variable labels.
-#' @param title header title for the card.
-#' @param geo_lab text label for the option to select geo boundaries.
-#' @param groups_lab text label for the option to group data.
-#' @param n_lab text label for the groups e.g. "N patients".
-#' @param full_screen add full-screen button to the card.
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
+#' @param geo_data A list of spatial sf dataframes with information for different geographical levels.
+#' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param title The title for the card.
+#' @param geo_lab The label for the geographical level selection.
+#' @param groups_lab The label for the group data by selection.
+#' @param n_lab The label for the raw count variable.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
+#'
+#' @return A [bslib::card] UI element with options and download button and a leaflet map.
 #'
 #' @export
+#' @example inst/examples/docs/app.R
 place_ui <- function(
     id,
     geo_data,
@@ -92,16 +94,20 @@ place_ui <- function(
 }
 
 #' @param id module id. Must be the same in both the UI and server function to link the two.
-#' @param df_ll linelist dataframe.
-#' @param geo_data list of the geo data required to match the linelist to the shapefile.
+#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param geo_data A list of spatial sf dataframes with information for different geographical levels.
 #' @param group_vars named character vector of categorical variables for the data
-#' grouping input. Names are used as variable labels.
-#' @param n_lab text label for the groups e.g. "N patients".
-#' @param full_screen add full-screen button to the card.
-#' @param export_width dimensions of the width of the exported map
-#' @param export_height dimensions of the height of the exported map
-#' @param filter_info if contained within an app using [filter_server()], supply the `filter_info` element
+#' #' grouping input. Names are used as variable labels.
+#' @param n_lab The label for the raw count variable.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
+#' @param export_width The width of the exported map image.
+#' @param export_height The height of the exported map image.
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#'
+#' @rdname place
+#'
+#' @return The server function returns the leaflet map's shape click information as a list.
 #'
 #' @export
 place_server <- function(
@@ -147,6 +153,7 @@ place_server <- function(
 
       observe({
         geo_join <- geo_select()$join_by
+        join_cols <- names(geo_join)
         geo_col <- unname(geo_join)
         geo_col_sym <- rlang::sym(geo_col)
         geo_name_col <- geo_select()$name_var
@@ -160,6 +167,7 @@ place_server <- function(
 
         # save as reactive values
         rv$geo_join <- geo_join
+        rv$join_cols <- join_cols
         rv$geo_col <- geo_col
         rv$geo_col_sym <- geo_col_sym
         rv$geo_name_col <- geo_name_col
@@ -209,7 +217,7 @@ place_server <- function(
           leaflet.minicharts::addMinicharts(
             boundaries$lon,
             boundaries$lat,
-            layerId = boundaries$pcode,
+            layerId = boundaries[[rv$geo_name_col]],
             chartdata = 1,
             width = 0,
             height = 0
@@ -231,7 +239,8 @@ place_server <- function(
         }
 
         sf::st_drop_geometry(rv$sf) %>%
-          dplyr::select(pcode, name = rv$geo_name_col, lon, lat) %>%
+          dplyr::mutate(name = !!rv$geo_name_col_sym) %>%
+          dplyr::select(all_of(rv$join_cols), name, lon, lat) %>%
           dplyr::left_join(df_counts, by = rv$geo_join) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
@@ -241,12 +250,12 @@ place_server <- function(
         df_map <- df_geo_counts()
 
         if (isTruthy(nrow(df_map) > 0)) {
-          chart_data <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
+          chart_data <- df_map %>% dplyr::select(-all_of(rv$join_cols), -name, -lon, -lat, -total)
           pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::updateMinicharts(
-              layerId = df_map$pcode,
+              layerId = df_map$name,
               chartdata = chart_data,
               opacity = .7,
               fillColor = epi_pals()$d310[1],
@@ -260,7 +269,7 @@ place_server <- function(
         } else {
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::updateMinicharts(
-              layerId = df_map$pcode,
+              layerId = df_map$name,
               chartdata = 1,
               width = 0,
               height = 0
@@ -281,7 +290,7 @@ place_server <- function(
           # rebuild current map shown on dashboard
           boundaries <- rv$sf
           df_map <- df_geo_counts()
-          chart_data <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
+          chart_data <- df_map %>% dplyr::select(-all_of(rv$join_cols), -name, -lon, -lat, -total)
 
           # * 7 instead of * 10 like in the app map because
           # circles are coming out larger in the image export
@@ -326,7 +335,7 @@ place_server <- function(
             leaflet.minicharts::addMinicharts(
               lng = boundaries$lon,
               lat = boundaries$lat,
-              layerId = df_map$pcode,
+              layerId = df_map$name,
               chartdata = chart_data,
               opacity = .8,
               fillColor = epi_pals()$d310[1],
@@ -374,6 +383,11 @@ place_server <- function(
           )
         }
       )
+
+      # return map shape click information to main app
+      shiny::reactive({
+        input$map_shape_click
+      })
     }
   )
 }

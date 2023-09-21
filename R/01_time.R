@@ -1,10 +1,10 @@
-#' @title Time module
+#' Time module
 #'
-#' @description Visualise data over time with an interactive 'epicurve'.
+#' Visualise data over time with an interactive 'epicurve'.
 #'
-#' @name time
+#' @rdname time
 #'
-#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param date_vars named character vector of date variables for the date axis input. Names are used as variable labels.
 #' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
 #' @param title header title for the card.
@@ -14,14 +14,13 @@
 #' @param day_week_month_labs character vector with text labels for day, week and month, respectively.
 #' @param groups_lab text label for the grouping variable input.
 #' @param ratio_line_lab text label for the ratio line input. If not supplied the input is not included.
-#' @param full_screen add full-screen button to the card.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
 #' @return the module server function returns any point click event data of the highchart.
 #'   see [highcharter::hc_add_event_point] for details.
 #' @import shiny
-#' @importFrom dplyr .data
 #' @export
-#' @example inst/examples/docs/app.R
+
 time_ui <- function(
     id,
     date_vars,
@@ -125,15 +124,17 @@ time_ui <- function(
 
 
 #' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
-#' @param y_lab text label for y-axis of chart.
-#' @param ratio_var character string of variable name to use for ratio calculation.
-#' @param ratio_lab text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
-#' @param ratio_numer value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
-#' @param ratio_denom values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
-#' @param filter_info if contained within an app using [filter_server()], supply the `filter_info` element
+#' @param y_lab Text label for y-axis of chart.
+#' @param ratio_var Character string of variable name to use for ratio calculation.
+#' @param ratio_lab Text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
+#' @param ratio_numer Value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
+#' @param ratio_denom Values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
 #'
 #' @rdname time
+#'
+#' @importFrom dplyr .data
 #' @export
 time_server <- function(
     id,

@@ -1,16 +1,18 @@
-#' @title Person Module
+#' Person module
 #'
-#' @description Pyramid chart to visualise the age and sex of the population
+#' @description Visualise age and sex demographics in a population pyramid chart and summary table.
 #'
-#' @name population
+#' @rdname person
 #'
-#' @param id module id. Must be the same in both the UI and server function to link the two.
-#' @param title header title for the card.
-#' @param icon icon for the card.
-#' @param opts_btn_lab text label for the dropdown menu button.
-#' @param full_screen add full-screen button to the card.
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
+#' @param title The title for the card.
+#' @param icon The icon to display next to the title.
+#' @param opts_btn_lab The text label for the options dropdown menu button.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
+#' @return A [bslib::navset_card_tab] UI element with chart and table tabs.
 #' @export
+#' @example inst/examples/docs/app.R
 person_ui <- function(
     id,
     title = "Person",
@@ -49,20 +51,21 @@ person_ui <- function(
 
 }
 
-#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
-#' @param age_var named vector of age variables for the age axis input.
-#' @param sex_var named vector of sex variables for the sex axis input.
-#' @param male_level value in `sex_var` to be used for males.
-#' @param female_level value in `sex_var` to be used for females.
-#' @param age_breaks age group breaks for the pyramid age categories.
-#' @param age_labels age group labels for the pyramid age categories.
-#' @param age_var_lab variable name for age group in the table view.
-#' @param age_group_lab age group labels in the table view.
-#' @param filter_info if contained within an app using [filter_server()], supply the `filter_info` element
+#' @param age_var The name of the age variable in the data.
+#' @param sex_var The name of the sex variable in the data.
+#' @param male_level The level representing males in the sex variable.
+#' @param female_level The level representing females in the sex variable.
+#' @param age_breaks A numeric vector specifying age breaks for age groups.
+#' @param age_labels Labels corresponding to the age breaks in the pyramid age categories.
+#' @param age_var_lab The label for the age variable in the table view.
+#' @param age_group_lab The label for the age group variable in the table view.
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
 #'
 #' @rdname person
+#'
 #' @export
 person_server <- function(
     id,
