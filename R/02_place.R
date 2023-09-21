@@ -1,17 +1,18 @@
 #' @title Place module
 #'
-#' @description Visualise the spatial distribution.
+#' @description Visualise the spatial distribution of cases.
 #'
 #' @name place
 #'
-#' @param id
-#' @param geo_data
-#' @param group_vars
-#' @param title
-#' @param geo_lab
-#' @param groups_lab
-#' @param n_lab
-#' @param full_screen
+#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param geo_data list of the geo data required to match the linelist to the shapefile.
+#' @param group_vars named character vector of categorical variables for the data
+#' grouping input. Names are used as variable labels.
+#' @param title header title for the card.
+#' @param geo_lab text label for the option to select geo boundaries.
+#' @param groups_lab text label for the option to group data.
+#' @param n_lab text label for the groups e.g. "N patients".
+#' @param full_screen add full-screen button to the card.
 #'
 #' @export
 place_ui <- function(
@@ -90,6 +91,18 @@ place_ui <- function(
   )
 }
 
+#' @param id module id. Must be the same in both the UI and server function to link the two.
+#' @param df_ll linelist dataframe.
+#' @param geo_data list of the geo data required to match the linelist to the shapefile.
+#' @param group_vars named character vector of categorical variables for the data
+#' grouping input. Names are used as variable labels.
+#' @param n_lab text label for the groups e.g. "N patients".
+#' @param full_screen add full-screen button to the card.
+#' @param export_width dimensions of the width of the exported map
+#' @param export_height dimensions of the height of the exported map
+#' @param filter_info if contained within an app using [filter_server()], supply the `filter_info` element
+#'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#'
 #' @export
 place_server <- function(
     id,

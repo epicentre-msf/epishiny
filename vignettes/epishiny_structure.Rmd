@@ -12,28 +12,48 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+This vignette is intended as an introduction to the epishiny
+dashboard for those who are unfamiliar with shiny apps.
+
 ## Structure of the shiny app
 
-The app is composed of five core modules:
+The app is composed of five core modules located within the `R` folder:
 
 1) Time module
 
-This module allows the user to visualise incidence data over time with an interactive
-'epicurve'. The user can select the level of temporal aggregation that the data has,
-either daily, weekly, or monthly.
-
+The time module allows the user to visualise incidence data over time with an
+interactive 'epicurve'. The user has multiple options: 1) to select the incidence
+by axis of the epicurve, where incidence can be displayed for the "date of notification", 
+"date of onset", "date of hospitalisation", and "date of outcome"; 2) to select the 
+level of temporal aggregation that the data has using the "date interval" setting,
+where they can choose either daily, weekly, or monthly; 3) the ability to overlay 
+a CFR estimate as a line over the incidence data.
 
 2) Place module
 
+The place module allows the user to visualise the distribution of cases across
+an interactive map. The map can be displayed with governorate and district
+boundaries with circles displaying the number of cases in each area. If the user
+chooses to group the data, the number of cases
+
 3) Person module
+
+The person module 
 
 4) Filter module
 
+The filter module allows the user to filter the data set by date range and by group.
+When filtering by date range there is a tick box option to include/exclude patients
+with missing dates. The groups with the option to filter by are: 1) governerate,
+2) sex, 3) hospitalisation, 4) vaccination status, and 5) outcome.
+
 5) Launch module
 
+The launch module contains the functions used to launch individual modules and to
+launch a demo dashboard for the app.
 
-Each module is made up of a UI (user interface) function and a server function.
-Both functions are linked by a unique module id, which means that different modules
-will not interfere with each other.
+Aside from the launch module, each module is made up of a UI (user interface)
+function and a server function. Both functions are linked by a unique module id,
+which means that different modules will not interfere with each other.
 
 
