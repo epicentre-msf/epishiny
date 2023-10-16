@@ -147,6 +147,7 @@ place_server <- function(
 
       observe({
         geo_join <- geo_select()$join_by
+        join_cols <- names(geo_join)
         geo_col <- unname(geo_join)
         geo_col_sym <- rlang::sym(geo_col)
         geo_name_col <- geo_select()$name_var
@@ -160,6 +161,7 @@ place_server <- function(
 
         # save as reactive values
         rv$geo_join <- geo_join
+        rv$join_cols <- join_cols
         rv$geo_col <- geo_col
         rv$geo_col_sym <- geo_col_sym
         rv$geo_name_col <- geo_name_col
@@ -239,7 +241,8 @@ place_server <- function(
         }
 
         sf::st_drop_geometry(rv$sf) %>%
-          dplyr::select(pcode, name = rv$geo_name_col, lon, lat) %>%
+          dplyr::mutate(name = !!rv$geo_name_col_sym) %>%
+          dplyr::select(all_of(rv$join_cols), name, lon, lat) %>%
           dplyr::left_join(df_counts, by = rv$geo_join) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
@@ -249,7 +252,7 @@ place_server <- function(
         df_map <- df_geo_counts()
 
         if (isTruthy(nrow(df_map) > 0)) {
-          chart_data <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
+          chart_data <- df_map %>% dplyr::select(-all_of(rv$join_cols), -name, -lon, -lat, -total)
           pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
           leaflet::leafletProxy("map", session) %>%
@@ -314,7 +317,7 @@ place_server <- function(
           # rebuild current map shown on dashboard
           boundaries <- rv$sf
           df_map <- df_geo_counts()
-          chart_data <- df_map %>% dplyr::select(-pcode, -name, -lon, -lat, -total)
+          chart_data <- df_map %>% dplyr::select(-all_of(rv$join_cols), -name, -lon, -lat, -total)
 
           # * 7 instead of * 10 like in the app map because
           # circles are coming out larger in the image export
