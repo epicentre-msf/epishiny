@@ -30,22 +30,22 @@ from epidemiological linelist data using R’s
 ## Installation
 
 You can install the development version of epishiny from GitHub with
-either the [remotes](https://remotes.r-lib.org/) or
-[pak](https://pak.r-lib.org/) package:
+either the [pak](https://pak.r-lib.org/) or
+[remotes](https://remotes.r-lib.org/) package:
 
 ``` r
-# install.packages("remotes")
-remotes::install_github("epicentre-msf/epishiny")
-
 # install.packages("pak")
 pak::pkg_install("epicentre-msf/epishiny")
+
+# install.packages("remotes")
+remotes::install_github("epicentre-msf/epishiny")
 ```
 
 ## Demo Dashboard
 
-You can launch a demo dashboard with examples of every epishiny module
-with the `launch_demo_dashboard()` function. The code for this dashboard
-can be found in [inst/examples/demo](inst/examples/demo).
+Launch a demo dashboard with examples of every epishiny module with the
+`launch_demo_dashboard()` function. The code for this dashboard can be
+found in [inst/examples/demo](inst/examples/demo).
 
 <img src="inst/examples/docs/img/dashboard.png" width="100%" />
 

@@ -26,9 +26,9 @@ geo_yem <- c(
 # path_export <- system.file("extdata", "ll_export.xlsx", package = "obtdata")
 # ll_export <- ll_read(path_export) %>% ll_translate(from = "FR", to = "EN")
 
-path_ll <- here::here("data-raw", "ll_export_measles_Yemen_20230127 English 20230127-1520.xlsx")
+path_ll <- here::here("data-raw", "linelist-example.xlsx")
 df_ll_raw <- qxl::qread(
-  here::here("data-raw", "ll_export_measles_Yemen_20230127 English 20230127-1520.xlsx"),
+  here::here("data-raw", "linelist-example.xlsx"),
   sheet = "Linelist patients"
 )
 
