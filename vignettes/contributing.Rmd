@@ -34,8 +34,55 @@ which will then be reviewed by package maintainers.
 
 Below is the current package structure at 2 levels of recursion:
 
-```{r echo=FALSE}
-fs::dir_tree(here::here(), recurse = 2)
+```{r echo=FALSE, eval=FALSE}
+fs::dir_tree(recurse = 2)
+```
+
+```
+.
+├── DESCRIPTION
+├── LICENSE
+├── LICENSE.md
+├── NAMESPACE
+├── R
+│   ├── 01_time.R
+│   ├── 02_place.R
+│   ├── 03_person.R
+│   ├── 04_filter.R
+│   ├── 05_launch.R
+│   ├── utils.R
+│   └── zzz.R
+├── README.Rmd
+├── README.md
+├── _pkgdown.yml
+├── data
+│   ├── df_ll.rda
+│   └── sf_yem.rda
+├── data-raw
+│   ├── data.R
+│   └── linelist-example.xlsx
+├── epishiny.Rproj
+├── inst
+│   ├── assets
+│   │   ├── img
+│   │   └── js
+│   └── examples
+│       ├── demo
+│       └── docs
+├── man
+│   ├── figures
+│   │   ├── dashboard.png
+│   │   ├── person.png
+│   │   ├── place.png
+│   │   └── time.png
+│   ├── filter.Rd
+│   ├── launch_demo_dashboard.Rd
+│   ├── launch_module.Rd
+│   ├── person.Rd
+│   ├── place.Rd
+│   └── time.Rd
+└── vignettes
+    └── contributing.Rmd
 ```
 
 The important directory is the `R` directory. This is the source code of the package and where any code contributions must live. 
@@ -68,16 +115,16 @@ There are no specific requirements for the module server code to meet other than
 
 The package currently uses the [highcharter](https://jkunst.com/highcharter/index.html) package for interactive graphics, 
 [leaflet](https://rstudio.github.io/leaflet/) for interactive maps and [reactable](https://glin.github.io/reactable/index.html) and 
-[gtsummary](https://www.danieldsjoberg.com/gtsummary/) packages for tables. It is recommended to use one of these packages for your outputs if possible to maintain style and functionality
-across modules and reduce the number of dependencies (more below).
-
-### Code style
-
-Please follow the [Tidyverse style guide](https://style.tidyverse.org/index.html) as much as possible. Use the [style](https://styler.r-lib.org/) 
-package to restyle code before submitting a pull-request.
+[gtsummary](https://www.danieldsjoberg.com/gtsummary/) packages for tables. It is recommended to use one of these packages for your outputs, 
+if possible, to maintain style and functionality across modules, and to reduce the number of dependencies (more below).
 
 ### Dependencies
 
 Due to the large scope of this package the number of dependencies is already large with multiple htmlwidget libraries being used.
 Efforts should be made to keep only include essential dependencies in your contribution. For example, if you import a library to use a 
 single simple function, it is recommended to code this as your own utility function within the package and avoid importing the external package.
+
+### Code style
+
+Please follow the [Tidyverse style guide](https://style.tidyverse.org/index.html) as much as possible. Use the [styler](https://styler.r-lib.org/) 
+package to restyle code before submitting a pull-request.
