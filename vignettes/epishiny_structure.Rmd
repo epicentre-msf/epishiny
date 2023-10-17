@@ -1,0 +1,97 @@
+---
+title: "Structure of epishiny"
+output:
+  bookdown::html_vignette2:
+    fig_caption: yes
+    code_folding: show
+pkgdown:
+  as_is: true
+vignette: >
+  %\VignetteIndexEntry{Structure of epishiny}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette is intended as an introduction to the backend of the epishiny
+dashboard for those who are unfamiliar with shiny apps.
+
+## Structure of the shiny app
+
+
+├── LICENSE            <-
+├── data               <- 
+├── data-raw           <- 
+├── README.md          <- The top-level README for developers using this project.
+├── DESCRIPTION        <- 
+├── inst               <- 
+│
+├── man                <- 
+│
+├── NAMESPACE          <-
+│
+├── R                  <- Scripts to generate shiny app modules
+│   ├── 01_time.R      <- Script to generate the time module
+│   ├── 02_place.R     <- Script to generate the place module
+│   ├── 01_person.R    <- Script to generate the person module
+│   ├── 04_filter.R    <- 
+│   ├── 05_launch.R    <- 
+│   ├── utils.R        <- 
+│   └── zzz.R          <- 
+│
+├── vignettes                     <- 
+│   ├── epishiny_structure.R      <- Overview of the epishiny app structure
+│   ├── external_data.R           <- Overview of how to use external data
+│   └── etc                       <- 
+
+# R folder
+
+The app is composed of core modules located within the `R` folder:
+
+1) Time module (`01_time.R`)
+
+The time module allows the user to visualise incidence data over time with an
+interactive 'epicurve'. The user has multiple options: 1) to select the incidence
+by axis of the epicurve, where incidence can be displayed for the "date of notification", 
+"date of onset", "date of hospitalisation", and "date of outcome"; 2) to select the 
+level of temporal aggregation that the data has using the "date interval" setting,
+where they can choose either daily, weekly, or monthly; and 3) the ability to overlay 
+a CFR estimate as a line over the incidence data.
+
+2) Place module (`02_place.R`)
+
+The place module allows the user to visualise the distribution of cases across
+an interactive map. The map can be displayed with governorate and district
+boundaries with circles displaying the number of cases in each area. If the user
+chooses to group the data, the number of cases
+
+3) Person module (`03_person.R`)
+
+The person module visualises the age and sex demographics in a population pyramid
+chart and a summary table. There is an option to display overall case counts and
+proportion of cases in each age group.
+
+4) Filter module (`04_filter.R`)
+
+The filter module allows the user to filter the data set by date range and by group.
+When filtering by date range there is a tick box option to include/exclude patients
+with missing dates. The groups with the option to filter by are: 1) governerate,
+2) sex, 3) hospitalisation, 4) vaccination status, and 5) outcome.
+
+5) Launch module (`05_launch.R`)
+
+The launch module contains the functions used to launch individual modules and to
+launch a demo dashboard for the app.
+
+Aside from the launch module, each module is made up of a UI (user interface)
+function and a server function. The UI function defines the layout, labels, input
+controls (e.g., buttons, sliders, text inputs), and output displays (e.g., plots,
+tables, text). The server function defines the behaviour of the module and how 
+this changes depending on the inputs that the user specifies.
+Both functions are linked together by a unique module id, which means that different
+modules will not interfere with each other.
+
+For a module to be used within epishiny, the module's UI function is called in
+the main app's UI, and the module's server function is called in the main app's
+server logic.
+
+#TODO: outline utils and zzz scripts

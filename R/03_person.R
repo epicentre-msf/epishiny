@@ -1,16 +1,17 @@
-
 #' Person module
 #'
-#' Visualise age and sex demographics in a population pyramid chart and summary table.
+#' @description Visualise age and sex demographics in a population pyramid chart and summary table.
 #'
 #' @rdname person
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param title The title for the card.
 #' @param icon The icon to display next to the title.
-#' @param opts_btn_lab The label for the options button.
+#' @param opts_btn_lab The text label for the options dropdown menu button.
 #' @param full_screen Add button to card to with the option to enter full screen mode?
-#'
+#' @param label
+#' @param date_lab
+#' @param date_vars
 #' @return A [bslib::navset_card_tab] UI element with chart and table tabs.
 #' @export
 #' @example inst/examples/docs/app.R
@@ -19,6 +20,9 @@ person_ui <- function(
     title = "Person",
     icon = "users",
     opts_btn_lab = "options",
+    label = date_lab,
+    date_lab = "Display by",
+    date_vars = c("Number of cases", "% of population"),
     full_screen = TRUE
 ) {
   ns <- shiny::NS(id)
@@ -32,7 +36,22 @@ person_ui <- function(
       class = "d-flex justify-content-start align-items-center",
       tags$span(shiny::icon(icon), title, class = "pe-2"),
       shinyWidgets::dropMenu(
-        actionButton(ns("dropdown"), icon = shiny::icon("sliders"), label = opts_btn_lab, class = "btn-sm")
+        actionButton(
+          ns("dropdown"),
+          icon = icon("sliders"),
+          label = opts_btn_lab,
+          class = "btn-sm"
+        ),
+        options = shinyWidgets::dropMenuOptions(flip = TRUE),
+        selectInput(
+          ns("axis_x"),
+          label = date_lab,
+          choices = date_vars,
+          multiple = FALSE,
+          selectize = FALSE,
+          width = 200
+        ),
+        tags$br()
       )
     ),
 
@@ -52,15 +71,16 @@ person_ui <- function(
 
 }
 
+#' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
 #' @param age_var The name of the age variable in the data.
 #' @param sex_var The name of the sex variable in the data.
 #' @param male_level The level representing males in the sex variable.
 #' @param female_level The level representing females in the sex variable.
 #' @param age_breaks A numeric vector specifying age breaks for age groups.
-#' @param age_labels Labels corresponding to the age breaks.
-#' @param age_var_lab The label for the age variable.
-#' @param age_group_lab The label for the age group variable.
+#' @param age_labels Labels corresponding to the age breaks in the pyramid age categories.
+#' @param age_var_lab The label for the age variable in the table view.
+#' @param age_group_lab The label for the age group variable in the table view.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
 #'
@@ -104,8 +124,18 @@ person_server <- function(
         df_ll
       })
 
+      # Create a reactive expression for the selected display option
+      selected_display <- reactive({
+        input$axis_x
+      })
+
       output$as_pyramid <- highcharter::renderHighchart({
         shiny::validate(shiny::need(nrow(df_mod()) > 0, "No data to display"))
+
+        value_name <- if (selected_display() == "Number of cases") "cases" else "percent"
+
+        # Create a highchart for Number of cases
+
         hc_as_pyramid(
           df_ll = df_mod(),
           age_var,
@@ -114,6 +144,7 @@ person_server <- function(
           female_level,
           age_breaks,
           age_labels,
+          value_name = value_name,
           filter_info = filter_info(),
           ...
         )
@@ -174,7 +205,7 @@ hc_as_pyramid <- function(
     female_level = "f",
     age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
     age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
-    value_name = "Patients",
+    value_name = value_name,
     value_digit = 0,
     value_unit = "",
     title = NULL,
@@ -200,22 +231,38 @@ hc_as_pyramid <- function(
     )) %>%
     dplyr::count(.data[[sex_var]], age_group) %>%
     dplyr::mutate(n = dplyr::if_else(.data[[sex_var]] == male_level, -n, n)) %>%
+    dplyr::mutate(n_tot = nrow(df_ll)) %>%
+    dplyr::mutate(n_prop = n/n_tot * 100) %>%
     tidyr::complete(.data[[sex_var]], age_group, fill = list(n = 0)) %>%
     dplyr::filter(!is.na(.data[[sex_var]]), !is.na(age_group)) %>%
     dplyr::arrange(.data[[sex_var]], age_group)
 
-  max_value <- max(abs(df_age_sex$n))
+  max_value <- dplyr::if_else(value_name =="percent", max(abs(df_age_sex$n_prop)), max(abs(df_age_sex$n)))
   x_levels <- levels(df_age_sex$age_group)
   x_levels <- x_levels[x_levels != "(Unknown)"]
   xaxis <- list(categories = x_levels, reversed = FALSE, title = list(text = ylab))
 
-  series <- df_age_sex %>%
-    dplyr::group_by(.data[[sex_var]]) %>%
-    dplyr::arrange(age_group) %>%
-    dplyr::do(data = .$n) %>%
-    dplyr::ungroup() %>%
-    dplyr::rename(name = .data[[sex_var]]) %>%
-    highcharter::list_parse()
+  if(value_name == "percent"){
+
+    series <- df_age_sex %>%
+      dplyr::group_by(.data[[sex_var]]) %>%
+      dplyr::arrange(age_group) %>%
+      dplyr::do(data = .$n_prop) %>%
+      dplyr::ungroup() %>%
+      dplyr::rename(name = .data[[sex_var]]) %>%
+      highcharter::list_parse()
+
+  }else{
+
+    series <- df_age_sex %>%
+      dplyr::group_by(.data[[sex_var]]) %>%
+      dplyr::arrange(age_group) %>%
+      dplyr::do(data = .$n) %>%
+      dplyr::ungroup() %>%
+      dplyr::rename(name = .data[[sex_var]]) %>%
+      highcharter::list_parse()
+
+  }
 
   hc_out <- highcharter::highchart() %>%
     highcharter::hc_chart(type = "bar") %>%

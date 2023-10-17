@@ -1,0 +1,189 @@
+---
+title: "Using epishiny with your own data set"
+author: "Sebastian Funk"
+date: "`r Sys.Date()`"
+bibliography: references.bib
+nocite: '@*'
+link-citations: true
+output:
+  rmarkdown::html_vignette: 
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Using epishiny with your own data set}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+library("knitr")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The _epishiny_ package works with line lists, i.e. data sets in the form of tables that contain cases as one line per individual.
+The package provides a range of visualisations of different aggregations of the data and displays them on a shiny dashboard that can be deployed on a server.
+
+# Load in data
+
+The package comes with a range of example line lists, but a user can also bring their own data.
+Here we will use a line list of Ebola in Sierra Leone published in @Fang2016.
+
+```{r load_data}
+library("readr")
+url <- paste(
+  "https://raw.githubusercontent.com/parksw3/epidist-paper/main/data-raw/",
+  "pnas.1518587113.sd02.csv", 
+  sep = "/"
+)
+df <- read_csv(url)
+head(df)
+```
+
+# Set up geo data
+
+We next need geological data if we want to show maps.
+Unfortunately there is no systematic availability of subnational data.
+A search on the HDX platform reveals that subnational data are available at https://data.humdata.org/dataset/cod-ab-sle
+
+The line list contains Districts (admin 2 level) and Governorates (admin 3 level).
+We can download the corresponding data sets from HDX.
+
+```{r load_geo_data}
+## load required libraries
+library("purrr")
+library("sf")
+
+## common element of both shapefile URLs
+hdx_dir <-
+  "https://data.humdata.org/dataset/a4816317-a913-4619-b1e9-d89e21c056b4"
+## shapefile names and resource ID (from URL)
+shapefiles <- list(
+  adm2 = list(
+    filename = "sle_admbnda_adm2_1m_gov_ocha.zip",
+    resource = "b3963917-8550-478d-9363-736492bf209a"
+  ),
+  adm3 = list(
+    filename = "sle_admbnda_adm3_1m_gov_ocha_20161017.zip", 
+    resource = "e2aa661d-af2f-42d8-bdea-c7e16a00bdb2"
+  )
+)
+## create temporary dir for downloading
+tmpdir <- tempdir()
+
+## download and load shapefiles
+shapes <- map(shapefiles, \(x) {
+  ## construct URL
+  url <- paste(
+    hdx_dir, "resource", x$resource, "download", x$filename, sep = "/"
+  )
+  ## construct file name
+  ## (`read_sf` expects ending `.shp.zip` for zipped shapefiles)
+  destfile <- sub("\\.zip$", ".shp.zip", file.path(tmpdir, x$filename))
+  download.file(url, destfile = destfile)
+  return(read_sf(destfile))
+})
+
+map(shapes, head)
+```
+
+The _epishiny_ package takes shapefiles that associate each region with a geographical point as latitude (`lat`)  and longitude (`lon`).
+The files we downloaded do not contain this information.
+We add the centroids of each area using the routines contained in the `sf` package.
+
+```{r}
+library("dplyr")
+shapes <- map(shapes, \(x) {
+  coords <- x |>
+    st_centroid() |>
+    st_coordinates() |>
+    as_tibble() |>
+    rename(lon = X, lat = Y)
+  return(cbind(x, coords))
+})
+```
+
+# Modules
+
+Before we launch the modules we can define some grouping variables.
+In our example we use sex and district as a variable:
+
+```{r group_vars}
+group_vars <- c(Sex = "Sex", "District" = "District")
+```
+
+## Place module
+
+Now that we have the shapefiles we can collate the information contained in the format that _epishiny_ expects:
+
+```{r geo_data}
+geo_data <- list(
+  "adm2" = list(
+    level_name = "District",
+    sf = shapes$adm2, 
+    name_var = "admin2Name",
+    join_by = c("admin2Name" = "District")
+  ),
+  "adm3" = list(
+    level_name = "Governorate",
+    sf = shapes$adm3,
+    name_var = "admin3Name",
+    join_by = c("admin3Name" = "Governorate")
+  )
+)
+```
+
+We use this to launch the place module:
+
+```{r place_module, eval = FALSE}
+launch_module(
+  module = "place",
+  df_ll = df,
+  geo_data = geo_data,
+  group_vars = group_vars
+)
+```
+
+## Time module
+
+To launch the time module, we need to define the date variables in the line list.
+In our case we use the already quite descriptive column names of the data.
+
+```{r date_vars}
+date_vars <- c(
+  `Date of symptom onset` = "Date of symptom onset",
+  `Date of sample tested` = "Date of sample tested"
+)
+```
+
+We use this to launch the time module:
+
+```{r time_module, eval = FALSE}
+launch_module(
+  module = "time",
+  df_ll = df,
+  date_vars = date_vars,
+  group_vars = group_vars
+)
+```
+
+## Person module
+
+We can plot an age/sex pyramid using the person module
+
+```{r person_module, eval = FALSE}
+launch_module(
+  module = "person",
+  df_ll = df,
+  age_var = "Age",
+  sex_var = "Sex",
+  male_level = "M",
+  female_level = "F"
+)
+```
+
+
+# References
+
+

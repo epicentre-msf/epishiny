@@ -1,6 +1,6 @@
-#' Place module
+#' @title Place module
 #'
-#' Visualise geographical distribution across multiple administrative boundaries on an interactive leaflet map.
+#' @description Visualise geographical distribution across multiple administrative boundaries on an interactive leaflet map.
 #'
 #' @rdname place
 #'
@@ -14,6 +14,7 @@
 #' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
 #' @return A [bslib::card] UI element with options and download button and a leaflet map.
+#'
 #' @export
 #' @example inst/examples/docs/app.R
 place_ui <- function(
@@ -93,7 +94,13 @@ place_ui <- function(
   )
 }
 
+#' @param id module id. Must be the same in both the UI and server function to link the two.
 #' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param geo_data A list of spatial sf dataframes with information for different geographical levels.
+#' @param group_vars named character vector of categorical variables for the data
+#' #' grouping input. Names are used as variable labels.
+#' @param n_lab The label for the raw count variable.
+#' @param full_screen Add button to card to with the option to enter full screen mode?
 #' @param export_width The width of the exported map image.
 #' @param export_height The height of the exported map image.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
