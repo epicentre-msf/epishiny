@@ -100,75 +100,50 @@ maintainers.</p>
 <h2 id="package-structure">Package Structure<a class="anchor" aria-label="anchor" href="#package-structure"></a>
 </h2>
 <p>Below is the current package structure at 2 levels of recursion:</p>
-<pre><code><span><span class="co">#&gt; <span style="color: #0000BB; font-weight: bold;">/home/runner/work/epishiny/epishiny</span></span></span>
-<span><span class="co">#&gt; ├── DESCRIPTION</span></span>
-<span><span class="co">#&gt; ├── LICENSE</span></span>
-<span><span class="co">#&gt; ├── LICENSE.md</span></span>
-<span><span class="co">#&gt; ├── NAMESPACE</span></span>
-<span><span class="co">#&gt; ├── <span style="color: #0000BB; font-weight: bold;">R</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">01_time.R</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">02_place.R</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">03_person.R</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">04_filter.R</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">05_launch.R</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">utils.R</span></span></span>
-<span><span class="co">#&gt; │   └── <span style="color: #00BB00;">zzz.R</span></span></span>
-<span><span class="co">#&gt; ├── <span style="color: #00BB00;">README.Rmd</span></span></span>
-<span><span class="co">#&gt; ├── README.md</span></span>
-<span><span class="co">#&gt; ├── _pkgdown.yml</span></span>
-<span><span class="co">#&gt; ├── <span style="color: #0000BB; font-weight: bold;">data</span></span></span>
-<span><span class="co">#&gt; │   ├── df_ll.rda</span></span>
-<span><span class="co">#&gt; │   └── sf_yem.rda</span></span>
-<span><span class="co">#&gt; ├── <span style="color: #0000BB; font-weight: bold;">data-raw</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #00BB00;">data.R</span></span></span>
-<span><span class="co">#&gt; │   └── linelist-example.xlsx</span></span>
-<span><span class="co">#&gt; ├── <span style="color: #0000BB; font-weight: bold;">docs</span></span></span>
-<span><span class="co">#&gt; │   ├── 404.html</span></span>
-<span><span class="co">#&gt; │   ├── LICENSE-text.html</span></span>
-<span><span class="co">#&gt; │   ├── LICENSE.html</span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #0000BB; font-weight: bold;">articles</span></span></span>
-<span><span class="co">#&gt; │   │   └── index.html</span></span>
-<span><span class="co">#&gt; │   ├── authors.html</span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #0000BB; font-weight: bold;">deps</span></span></span>
-<span><span class="co">#&gt; │   │   ├── <span style="color: #0000BB; font-weight: bold;">bootstrap-5.2.2</span></span></span>
-<span><span class="co">#&gt; │   │   ├── data-deps.txt</span></span>
-<span><span class="co">#&gt; │   │   └── <span style="color: #0000BB; font-weight: bold;">jquery-3.6.0</span></span></span>
-<span><span class="co">#&gt; │   ├── index.html</span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #BB00BB; font-weight: bold;">link.svg</span></span></span>
-<span><span class="co">#&gt; │   ├── pkgdown.js</span></span>
-<span><span class="co">#&gt; │   ├── pkgdown.yml</span></span>
-<span><span class="co">#&gt; │   └── <span style="color: #0000BB; font-weight: bold;">reference</span></span></span>
-<span><span class="co">#&gt; │       ├── <span style="color: #BB00BB; font-weight: bold;">Rplot001.png</span></span></span>
-<span><span class="co">#&gt; │       ├── <span style="color: #0000BB; font-weight: bold;">figures</span></span></span>
-<span><span class="co">#&gt; │       ├── filter.html</span></span>
-<span><span class="co">#&gt; │       ├── index.html</span></span>
-<span><span class="co">#&gt; │       ├── launch_demo_dashboard.html</span></span>
-<span><span class="co">#&gt; │       ├── launch_module.html</span></span>
-<span><span class="co">#&gt; │       ├── person.html</span></span>
-<span><span class="co">#&gt; │       ├── place.html</span></span>
-<span><span class="co">#&gt; │       └── time.html</span></span>
-<span><span class="co">#&gt; ├── epishiny.Rproj</span></span>
-<span><span class="co">#&gt; ├── <span style="color: #0000BB; font-weight: bold;">inst</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #0000BB; font-weight: bold;">assets</span></span></span>
-<span><span class="co">#&gt; │   │   ├── <span style="color: #0000BB; font-weight: bold;">img</span></span></span>
-<span><span class="co">#&gt; │   │   └── <span style="color: #0000BB; font-weight: bold;">js</span></span></span>
-<span><span class="co">#&gt; │   └── <span style="color: #0000BB; font-weight: bold;">examples</span></span></span>
-<span><span class="co">#&gt; │       ├── <span style="color: #0000BB; font-weight: bold;">demo</span></span></span>
-<span><span class="co">#&gt; │       └── <span style="color: #0000BB; font-weight: bold;">docs</span></span></span>
-<span><span class="co">#&gt; ├── <span style="color: #0000BB; font-weight: bold;">man</span></span></span>
-<span><span class="co">#&gt; │   ├── <span style="color: #0000BB; font-weight: bold;">figures</span></span></span>
-<span><span class="co">#&gt; │   │   ├── <span style="color: #BB00BB; font-weight: bold;">dashboard.png</span></span></span>
-<span><span class="co">#&gt; │   │   ├── <span style="color: #BB00BB; font-weight: bold;">person.png</span></span></span>
-<span><span class="co">#&gt; │   │   ├── <span style="color: #BB00BB; font-weight: bold;">place.png</span></span></span>
-<span><span class="co">#&gt; │   │   └── <span style="color: #BB00BB; font-weight: bold;">time.png</span></span></span>
-<span><span class="co">#&gt; │   ├── filter.Rd</span></span>
-<span><span class="co">#&gt; │   ├── launch_demo_dashboard.Rd</span></span>
-<span><span class="co">#&gt; │   ├── launch_module.Rd</span></span>
-<span><span class="co">#&gt; │   ├── person.Rd</span></span>
-<span><span class="co">#&gt; │   ├── place.Rd</span></span>
-<span><span class="co">#&gt; │   └── time.Rd</span></span>
-<span><span class="co">#&gt; └── <span style="color: #0000BB; font-weight: bold;">vignettes</span></span></span>
-<span><span class="co">#&gt;     └── <span style="color: #00BB00;">contributing.Rmd</span></span></span></code></pre>
+<pre><code>.
+├── DESCRIPTION
+├── LICENSE
+├── LICENSE.md
+├── NAMESPACE
+├── R
+│   ├── 01_time.R
+│   ├── 02_place.R
+│   ├── 03_person.R
+│   ├── 04_filter.R
+│   ├── 05_launch.R
+│   ├── utils.R
+│   └── zzz.R
+├── README.Rmd
+├── README.md
+├── _pkgdown.yml
+├── data
+│   ├── df_ll.rda
+│   └── sf_yem.rda
+├── data-raw
+│   ├── data.R
+│   └── linelist-example.xlsx
+├── epishiny.Rproj
+├── inst
+│   ├── assets
+│   │   ├── img
+│   │   └── js
+│   └── examples
+│       ├── demo
+│       └── docs
+├── man
+│   ├── figures
+│   │   ├── dashboard.png
+│   │   ├── person.png
+│   │   ├── place.png
+│   │   └── time.png
+│   ├── filter.Rd
+│   ├── launch_demo_dashboard.Rd
+│   ├── launch_module.Rd
+│   ├── person.Rd
+│   ├── place.Rd
+│   └── time.Rd
+└── vignettes
+    └── contributing.Rmd</code></pre>
 <p>The important directory is the <code>R</code> directory. This is the
 source code of the package and where any code contributions must live.
 To contribute a new module, create a new R script inside this directory
@@ -215,15 +190,8 @@ other than to try to be as efficienct and fast as possible.</p>
 for interactive graphics, <a href="https://rstudio.github.io/leaflet/" class="external-link">leaflet</a> for interactive
 maps and <a href="https://glin.github.io/reactable/index.html" class="external-link">reactable</a> and <a href="https://www.danieldsjoberg.com/gtsummary/" class="external-link">gtsummary</a> packages
 for tables. It is recommended to use one of these packages for your
-outputs if possible to maintain style and functionality across modules
-and reduce the number of dependencies (more below).</p>
-</div>
-<div class="section level3">
-<h3 id="code-style">Code style<a class="anchor" aria-label="anchor" href="#code-style"></a>
-</h3>
-<p>Please follow the <a href="https://style.tidyverse.org/index.html" class="external-link">Tidyverse style guide</a>
-as much as possible. Use the <a href="https://styler.r-lib.org/" class="external-link">style</a> package to restyle code
-before submitting a pull-request.</p>
+outputs, if possible, to maintain style and functionality across
+modules, and to reduce the number of dependencies (more below).</p>
 </div>
 <div class="section level3">
 <h3 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
@@ -235,6 +203,13 @@ contribution. For example, if you import a library to use a single
 simple function, it is recommended to code this as your own utility
 function within the package and avoid importing the external
 package.</p>
+</div>
+<div class="section level3">
+<h3 id="code-style">Code style<a class="anchor" aria-label="anchor" href="#code-style"></a>
+</h3>
+<p>Please follow the <a href="https://style.tidyverse.org/index.html" class="external-link">Tidyverse style guide</a>
+as much as possible. Use the <a href="https://styler.r-lib.org/" class="external-link">styler</a> package to restyle code
+before submitting a pull-request.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
