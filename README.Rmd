@@ -68,14 +68,14 @@ if (update_imgs) {
 
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
-  fs::file_copy(img_path, "inst/examples/docs/img/dashboard.png", overwrite = TRUE)
+  fs::file_copy(img_path, "man/figures/dashboard.png", overwrite = TRUE)
 
   app$stop()
 }
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("inst/examples/docs/img/dashboard.png")
+knitr::include_graphics("man/figures/dashboard.png")
 ```
 
 ## Launching individual modules
@@ -109,14 +109,14 @@ if (update_imgs) {
 
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
-  fs::file_copy(img_path, "inst/examples/docs/img/time.png", overwrite = TRUE)
+  fs::file_copy(img_path, "man/figures/time.png", overwrite = TRUE)
 
   app$stop()
 }
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("inst/examples/docs/img/time.png")
+knitr::include_graphics("man/figures/time.png")
 ```
 
 ### Place module
@@ -139,14 +139,14 @@ if (update_imgs) {
 
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
-  fs::file_copy(img_path, "inst/examples/docs/img/place.png", overwrite = TRUE)
+  fs::file_copy(img_path, "man/figures/place.png", overwrite = TRUE)
 
   app$stop()
 }
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("inst/examples/docs/img/place.png")
+knitr::include_graphics("man/figures/place.png")
 ```
 
 ### Person module
@@ -171,12 +171,12 @@ if (update_imgs) {
 
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
-  fs::file_copy(img_path, "inst/examples/docs/img/person.png", overwrite = TRUE)
+  fs::file_copy(img_path, "man/figures/person.png", overwrite = TRUE)
 
   app$stop()
 }
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("inst/examples/docs/img/person.png")
+knitr::include_graphics("man/figures/person.png")
 ```

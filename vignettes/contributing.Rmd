@@ -66,8 +66,9 @@ There are no specific requirements for the module server code to meet other than
 
 ### Outputs
 
-The package currently uses the [highcharter] package for interactive graphics, [leaflet] for interactive maps and [reactable] and 
-[gtsummary] packages for tables. It is recommended to use one of these packages for your outputs if possible to maintain style and functionality
+The package currently uses the [highcharter](https://jkunst.com/highcharter/index.html) package for interactive graphics, 
+[leaflet](https://rstudio.github.io/leaflet/) for interactive maps and [reactable](https://glin.github.io/reactable/index.html) and 
+[gtsummary](https://www.danieldsjoberg.com/gtsummary/) packages for tables. It is recommended to use one of these packages for your outputs if possible to maintain style and functionality
 across modules and reduce the number of dependencies (more below).
 
 ### Code style

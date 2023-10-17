@@ -47,7 +47,7 @@ Launch a demo dashboard with examples of every epishiny module with the
 `launch_demo_dashboard()` function. The code for this dashboard can be
 found in [inst/examples/demo](inst/examples/demo).
 
-<img src="inst/examples/docs/img/dashboard.png" width="100%" />
+<img src="man/figures/dashboard.png" width="100%" />
 
 ## Launching individual modules
 
@@ -114,7 +114,7 @@ launch_module(
 )
 ```
 
-<img src="inst/examples/docs/img/time.png" width="100%" />
+<img src="man/figures/time.png" width="100%" />
 
 ### Place module
 
@@ -128,7 +128,7 @@ launch_module(
 )
 ```
 
-<img src="inst/examples/docs/img/place.png" width="100%" />
+<img src="man/figures/place.png" width="100%" />
 
 ### Person module
 
@@ -144,4 +144,4 @@ launch_module(
 )
 ```
 
-<img src="inst/examples/docs/img/person.png" width="100%" />
+<img src="man/figures/person.png" width="100%" />
