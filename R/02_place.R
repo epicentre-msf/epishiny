@@ -119,6 +119,9 @@ place_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
+      # sf settings
+      sf::sf_use_s2(FALSE)
+
       # loading spinner for map export
       w_map <- waiter::Waiter$new(
         id = ns("map"),
@@ -198,6 +201,24 @@ place_server <- function(
           leaflet.minicharts::clearMinicharts()
 
         req(nrow(boundaries) > 0)
+
+        # if not first admin level, map borders of lower admin levels
+        gd <- force_reactive(geo_data)
+        geo_level <- which(names(gd) == isolate(input$geo_level))
+        if (geo_level > 1) {
+          lower_levels <- 1:(geo_level-1)
+          purrr::walk(lower_levels, ~{
+            stroke_width <- (geo_level - .x) + 1
+            borders <- sf::st_filter(gd[[.x]]$sf, boundaries)
+            leaflet::leafletProxy("map", session) %>%
+              leaflet::addPolylines(
+                data = borders,
+                group = "Boundaries",
+                color = "grey",
+                weight = stroke_width
+              )
+          })
+        }
 
         bbox <- sf::st_bbox(boundaries)
 
@@ -320,6 +341,11 @@ place_server <- function(
           # circles are coming out larger in the image export
           pie_width <- (input$circle_size_mult * 7) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
+          missing_data_text <- missing_text()
+          if (!is.null(missing_data_text)) {
+            missing_data_text <- glue::glue("<b>Missing data</b></br>{missing_data_text}")
+          } 
+
           leaf_out <- leaflet::leaflet() %>%
             leaflet::fitBounds(
               input$map_bounds$east,
@@ -343,7 +369,7 @@ place_server <- function(
             ) %>%
             leaflet::addControl(
               html = shiny::HTML(
-                glue::glue_collapse(c(missing_text(), filter_info()), sep = "</br>")
+                glue::glue_collapse(c(missing_data_text, filter_info()), sep = "</br>")
               ),
               className = "leaflet-control-attribution",
               position = "bottomleft"
@@ -372,6 +398,25 @@ place_server <- function(
               type = "pie",
               width = pie_width
             )
+
+          # if not first admin level, map borders of lower admin levels
+          gd <- force_reactive(geo_data)
+          geo_level <- which(names(gd) == isolate(input$geo_level))
+          if (geo_level > 1) {
+            lower_levels <- 1:(geo_level-1)
+            for (i in lower_levels) {
+              stroke_width <- (geo_level - i) + 1
+              borders <- sf::st_filter(gd[[i]]$sf, boundaries)
+              leaf_out <- leaf_out %>%
+                leaflet::addPolylines(
+                  data = borders,
+                  group = "Boundaries",
+                  color = "grey",
+                  weight = stroke_width,
+                  options = leaflet::pathOptions(pane = "boundaries")
+                )
+            }
+          }
 
           tiles <- dplyr::recode(
             input$map_groups[[1]],

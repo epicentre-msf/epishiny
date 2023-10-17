@@ -38,36 +38,40 @@ using R's [`shiny`](https://shiny.posit.co/) web-framework.
 
 ## Installation
 
-You can install the development version of epishiny from GitHub with either the [remotes](https://remotes.r-lib.org/) or [pak](https://pak.r-lib.org/) package:
+You can install the development version of epishiny from GitHub with either the [pak](https://pak.r-lib.org/) or [remotes](https://remotes.r-lib.org/) package:
 
 ``` r
-# install.packages("remotes")
-remotes::install_github("epicentre-msf/epishiny")
-
 # install.packages("pak")
 pak::pkg_install("epicentre-msf/epishiny")
+
+# install.packages("remotes")
+remotes::install_github("epicentre-msf/epishiny")
 ```
 
 ```{r include=FALSE}
 library(shinytest2)
 pkgload::load_all()
+# set to TRUE to take new app screenshots
+update_imgs <- FALSE
 ```
 
 ## Demo Dashboard
 
-You can launch a demo dashboard with examples of every epishiny module with the `launch_demo_dashboard()` function.
+Launch a demo dashboard with examples of every epishiny module with the `launch_demo_dashboard()` function.
 The code for this dashboard can be found in [inst/examples/demo](inst/examples/demo).
 
 ```{r include=FALSE}
-app_path <- here::here("inst/examples/demo")
+if (update_imgs) {
+  app_path <- here::here("inst/examples/demo")
 
-app <- AppDriver$new(app_path, width = 1600, height = 900)
+  app <- AppDriver$new(app_path, width = 1600, height = 900)
 
-img_path <- tempfile(fileext = ".png")
-app$get_screenshot(file = img_path, delay = 1)
-fs::file_copy(img_path, "inst/examples/docs/img/dashboard.png", overwrite = TRUE)
+  img_path <- tempfile(fileext = ".png")
+  app$get_screenshot(file = img_path, delay = 1)
+  fs::file_copy(img_path, "inst/examples/docs/img/dashboard.png", overwrite = TRUE)
 
-app$stop()
+  app$stop()
+}
 ```
 
 ```{r echo=FALSE}
@@ -98,15 +102,17 @@ launch_module(
 ```
 
 ```{r include=FALSE}
-app_path <- here::here("inst/examples/docs/time")
+if (update_imgs) {
+  app_path <- here::here("inst/examples/docs/time")
 
-app <- AppDriver$new(app_path, width = 1000, height = 600)
+  app <- AppDriver$new(app_path, width = 1000, height = 600)
 
-img_path <- tempfile(fileext = ".png")
-app$get_screenshot(file = img_path, delay = 1)
-fs::file_copy(img_path, "inst/examples/docs/img/time.png", overwrite = TRUE)
+  img_path <- tempfile(fileext = ".png")
+  app$get_screenshot(file = img_path, delay = 1)
+  fs::file_copy(img_path, "inst/examples/docs/img/time.png", overwrite = TRUE)
 
-app$stop()
+  app$stop()
+}
 ```
 
 ```{r echo=FALSE}
@@ -126,15 +132,17 @@ launch_module(
 ```
 
 ```{r include=FALSE}
-app_path <- here::here("inst/examples/docs/place")
+if (update_imgs) {
+  app_path <- here::here("inst/examples/docs/place")
 
-app <- AppDriver$new(app_path, width = 1000, height = 600)
+  app <- AppDriver$new(app_path, width = 1000, height = 600)
 
-img_path <- tempfile(fileext = ".png")
-app$get_screenshot(file = img_path, delay = 1)
-fs::file_copy(img_path, "inst/examples/docs/img/place.png", overwrite = TRUE)
+  img_path <- tempfile(fileext = ".png")
+  app$get_screenshot(file = img_path, delay = 1)
+  fs::file_copy(img_path, "inst/examples/docs/img/place.png", overwrite = TRUE)
 
-app$stop()
+  app$stop()
+}
 ```
 
 ```{r echo=FALSE}
@@ -156,15 +164,17 @@ launch_module(
 ```
 
 ```{r include=FALSE}
-app_path <- here::here("inst/examples/docs/person")
+if (update_imgs) {
+  app_path <- here::here("inst/examples/docs/person")
 
-app <- AppDriver$new(app_path, width = 1000, height = 600)
+  app <- AppDriver$new(app_path, width = 1000, height = 600)
 
-img_path <- tempfile(fileext = ".png")
-app$get_screenshot(file = img_path, delay = 1)
-fs::file_copy(img_path, "inst/examples/docs/img/person.png", overwrite = TRUE)
+  img_path <- tempfile(fileext = ".png")
+  app$get_screenshot(file = img_path, delay = 1)
+  fs::file_copy(img_path, "inst/examples/docs/img/person.png", overwrite = TRUE)
 
-app$stop()
+  app$stop()
+}
 ```
 
 ```{r echo=FALSE}
