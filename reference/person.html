@@ -165,12 +165,14 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"Governorate"</span>,</span></span>
 <span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>,</span></span>
 <span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>,</span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm1_pop"</span>,</span></span>
 <span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="st">"adm2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"District"</span>,</span></span>
 <span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm2</span>,</span></span>
 <span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm2_name"</span>,</span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm2_pop"</span>,</span></span>
 <span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm2_pcode"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>

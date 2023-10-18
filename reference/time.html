@@ -64,6 +64,7 @@
 <span>  date_int_lab <span class="op">=</span> <span class="st">"Date interval"</span>,</span>
 <span>  day_week_month_labs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Day"</span>, <span class="st">"Week"</span>, <span class="st">"Month"</span><span class="op">)</span>,</span>
 <span>  groups_lab <span class="op">=</span> <span class="st">"Group data by"</span>,</span>
+<span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
 <span>  ratio_line_lab <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -74,6 +75,7 @@
 <span>  <span class="va">date_vars</span>,</span>
 <span>  <span class="va">group_vars</span>,</span>
 <span>  y_lab <span class="op">=</span> <span class="st">"Patients"</span>,</span>
+<span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
 <span>  ratio_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ratio_lab <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ratio_numer <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -120,6 +122,10 @@
 <dd><p>text label for the grouping variable input.</p></dd>
 
 
+<dt>n_lab</dt>
+<dd><p>The label for the raw count variable.</p></dd>
+
+
 <dt>ratio_line_lab</dt>
 <dd><p>text label for the ratio line input. If not supplied the input is not included.</p></dd>
 
@@ -133,7 +139,7 @@
 
 
 <dt>y_lab</dt>
-<dd><p>Text label for y-axis of chart.</p></dd>
+<dd><p>The label for y-axis of chart.</p></dd>
 
 
 <dt>ratio_var</dt>
@@ -141,7 +147,7 @@
 
 
 <dt>ratio_lab</dt>
-<dd><p>Text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.</p></dd>
+<dd><p>The label to describe the computed ratio i.e. 'CFR' for case fatality ratio.</p></dd>
 
 
 <dt>ratio_numer</dt>

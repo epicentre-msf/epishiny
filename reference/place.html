@@ -71,6 +71,9 @@
 <span>  <span class="va">geo_data</span>,</span>
 <span>  <span class="va">group_vars</span>,</span>
 <span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
+<span>  show_parent_borders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  choro_lab <span class="op">=</span> <span class="st">"Attack rate&lt;br&gt;per 100 000"</span>,</span>
+<span>  choro_pal <span class="op">=</span> <span class="st">"Reds"</span>,</span>
 <span>  export_width <span class="op">=</span> <span class="fl">1200</span>,</span>
 <span>  export_height <span class="op">=</span> <span class="fl">650</span>,</span>
 <span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -115,6 +118,19 @@
 <dd><p>Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.</p></dd>
 
 
+<dt>show_parent_borders</dt>
+<dd><p>Show borders of parent boundary levels?</p></dd>
+
+
+<dt>choro_lab</dt>
+<dd><p>Label for attack rate choropleth (only applicable if <code>geo_data</code> contains population data)</p></dd>
+
+
+<dt>choro_pal</dt>
+<dd><p>Colour palette passed to <code><a href="https://rdrr.io/pkg/leaflet/man/colorNumeric.html" class="external-link">leaflet::colorBin()</a></code> for attack rate choropleth
+(only applicable if <code>geo_data</code> contains population data)</p></dd>
+
+
 <dt>export_width</dt>
 <dd><p>The width of the exported map image.</p></dd>
 
@@ -155,12 +171,14 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"Governorate"</span>,</span></span>
 <span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>,</span></span>
 <span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>,</span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm1_pop"</span>,</span></span>
 <span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="st">"adm2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"District"</span>,</span></span>
 <span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm2</span>,</span></span>
 <span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm2_name"</span>,</span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm2_pop"</span>,</span></span>
 <span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm2_pcode"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
