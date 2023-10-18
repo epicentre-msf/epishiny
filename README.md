@@ -68,17 +68,22 @@ data("sf_yem")
 
 # setup geo data for adm1 and adm2 in the format
 # required for epishiny map module
+# if population variable is provided, attack rates
+# will be shown on the map as a choropleth
 geo_data <- list(
   "adm1" = list(
-    level_name = "Governorate",
-    sf = sf_yem$adm1,
-    name_var = "adm1_name",
-    join_by = c("pcode" = "adm1_pcode")
+    level_name = "Governorate", # name of the boundary level
+    sf = sf_yem$adm1, # sf object with boundary polygons
+    name_var = "adm1_name", # variable with place names
+    pop_var = "adm1_pop", # variable with population data (optional)
+    join_by = c("pcode" = "adm1_pcode") # geo to data join vars: LHS = sf, RHS = data
   ),
+  # same for admin 2 level
   "adm2" = list(
     level_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
+    pop_var = "adm2_pop",
     join_by = c("pcode" = "adm2_pcode")
   )
 )

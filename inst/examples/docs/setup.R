@@ -6,6 +6,8 @@ data("sf_yem")
 
 # setup geo data for adm1 and adm2 in the format
 # required for epishiny map module
+# if population variable is provided, attack rates
+# will be shown on the map as a choropleth
 geo_data <- list(
   "adm1" = list(
     level_name = "Governorate", # name of the boundary level
