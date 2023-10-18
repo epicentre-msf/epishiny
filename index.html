@@ -108,17 +108,22 @@
 <span></span>
 <span><span class="co"># setup geo data for adm1 and adm2 in the format</span></span>
 <span><span class="co"># required for epishiny map module</span></span>
+<span><span class="co"># if population variable is provided, attack rates</span></span>
+<span><span class="co"># will be shown on the map as a choropleth</span></span>
 <span><span class="va">geo_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"adm1"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    level_name <span class="op">=</span> <span class="st">"Governorate"</span>,</span>
-<span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>,</span>
-<span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>,</span>
-<span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span></span>
+<span>    level_name <span class="op">=</span> <span class="st">"Governorate"</span>, <span class="co"># name of the boundary level</span></span>
+<span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>, <span class="co"># sf object with boundary polygons</span></span>
+<span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>, <span class="co"># variable with place names</span></span>
+<span>    pop_var <span class="op">=</span> <span class="st">"adm1_pop"</span>, <span class="co"># variable with population data (optional)</span></span>
+<span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span> <span class="co"># geo to data join vars: LHS = sf, RHS = data</span></span>
 <span>  <span class="op">)</span>,</span>
+<span>  <span class="co"># same for admin 2 level</span></span>
 <span>  <span class="st">"adm2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    level_name <span class="op">=</span> <span class="st">"District"</span>,</span>
 <span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm2</span>,</span>
 <span>    name_var <span class="op">=</span> <span class="st">"adm2_name"</span>,</span>
+<span>    pop_var <span class="op">=</span> <span class="st">"adm2_pop"</span>,</span>
 <span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm2_pcode"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
