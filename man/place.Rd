@@ -22,6 +22,9 @@ place_server(
   geo_data,
   group_vars,
   n_lab = "N patients",
+  show_parent_borders = TRUE,
+  choro_lab = "Attack rate<br>per 100 000",
+  choro_pal = "Reds",
   export_width = 1200,
   export_height = 650,
   filter_info = shiny::reactiveVal()
@@ -45,6 +48,13 @@ place_server(
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 
 \item{df_ll}{Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.}
+
+\item{show_parent_borders}{Show borders of parent boundary levels?}
+
+\item{choro_lab}{Label for attack rate choropleth (only applicable if \code{geo_data} contains population data)}
+
+\item{choro_pal}{Colour palette passed to \code{\link[leaflet:colorNumeric]{leaflet::colorBin()}} for attack rate choropleth
+(only applicable if \code{geo_data} contains population data)}
 
 \item{export_width}{The width of the exported map image.}
 
@@ -77,12 +87,14 @@ geo_data <- list(
     level_name = "Governorate",
     sf = sf_yem$adm1,
     name_var = "adm1_name",
+    pop_var = "adm1_pop",
     join_by = c("pcode" = "adm1_pcode")
   ),
   "adm2" = list(
     level_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
+    pop_var = "adm2_pop",
     join_by = c("pcode" = "adm2_pcode")
   )
 )

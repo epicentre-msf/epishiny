@@ -227,11 +227,10 @@ leaf_basemap <- function(
 ) {
   lf <- leaflet::leaflet() %>%
     leaflet::fitBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]]) %>%
-    leaflet::addMapPane(name = "boundaries", zIndex = 300) %>%
     leaflet::addMapPane(name = "choropleth", zIndex = 310) %>%
     leaflet::addMapPane(name = "circles", zIndex = 410) %>%
-    leaflet::addMapPane(name = "region_highlight", zIndex = 420) %>%
-    leaflet::addMapPane(name = "place_labels", zIndex = 320) %>%
+    leaflet::addMapPane(name = "boundaries", zIndex = 420) %>%
+    leaflet::addMapPane(name = "place_labels", zIndex = 430) %>%
     leaflet::addProviderTiles("CartoDB.PositronNoLabels", group = "Light") %>%
     leaflet::addProviderTiles(
       "CartoDB.PositronOnlyLabels",
@@ -256,4 +255,31 @@ leaf_basemap <- function(
   }
 
   return(lf)
+}
+
+make_leaf_tooltip <- function(
+    df,
+    name_col = "name",
+    n_col = "total",
+    n_lab = "N patients",
+    pop_col = NULL,
+    pop_lab = "Population",
+    ar_col = NULL,
+    ar_lab = "Attack rate"
+) {
+  if (all(!is.null(pop_col), !is.null(ar_col))) {
+    pop <- ifelse(is.na(df[[pop_col]]), "Unknown", scales::number(df[[pop_col]], accuracy = 1))
+    ar <- ifelse(is.na(df[[ar_col]]), "0", scales::number(df[[ar_col]], accuracy = .1))
+    glue::glue(
+      "<b>{df[[name_col]]}</b><br>
+       {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>
+       {pop_lab}: <b>{pop}</b><br>
+       {ar_lab}: <b>{ar}</b> / 100 000<br>"
+    ) %>% purrr::map(htmltools::HTML)
+  } else {
+    glue::glue(
+      "<b>{df[[name_col]]}</b><br>
+       {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>"
+    ) %>% purrr::map(htmltools::HTML)
+  }
 }

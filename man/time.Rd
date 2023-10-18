@@ -15,6 +15,7 @@ time_ui(
   date_int_lab = "Date interval",
   day_week_month_labs = c("Day", "Week", "Month"),
   groups_lab = "Group data by",
+  n_lab = "N patients",
   ratio_line_lab = NULL,
   full_screen = TRUE
 )
@@ -25,6 +26,7 @@ time_server(
   date_vars,
   group_vars,
   y_lab = "Patients",
+  n_lab = "N patients",
   ratio_var = NULL,
   ratio_lab = NULL,
   ratio_numer = NULL,
@@ -51,17 +53,19 @@ time_server(
 
 \item{groups_lab}{text label for the grouping variable input.}
 
+\item{n_lab}{The label for the raw count variable.}
+
 \item{ratio_line_lab}{text label for the ratio line input. If not supplied the input is not included.}
 
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 
 \item{df_ll}{Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.}
 
-\item{y_lab}{Text label for y-axis of chart.}
+\item{y_lab}{The label for y-axis of chart.}
 
 \item{ratio_var}{Character string of variable name to use for ratio calculation.}
 
-\item{ratio_lab}{Text label to describe the computed ratio i.e. 'CFR' for case fatality ratio.}
+\item{ratio_lab}{The label to describe the computed ratio i.e. 'CFR' for case fatality ratio.}
 
 \item{ratio_numer}{Value(s) in \code{ratio_var} to be used for the ratio numerator i.e. 'Death'.}
 

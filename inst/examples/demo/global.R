@@ -21,12 +21,14 @@ geo_data <- list(
     level_name = "Governorate",
     sf = sf_yem$adm1,
     name_var = "adm1_name",
+    pop_var = "adm1_pop",
     join_by = c("pcode" = "adm1_pcode")
   ),
   "adm2" = list(
     level_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
+    pop_var = "adm2_pop",
     join_by = c("pcode" = "adm2_pcode")
   )
 )
