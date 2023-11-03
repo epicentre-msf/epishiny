@@ -36,7 +36,6 @@ place_ui <- function(
   tagList(
     use_epishiny(),
     bslib::card(
-      # min_height = 300,
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
@@ -77,12 +76,14 @@ place_ui <- function(
             )
           )
         ),
-        downloadButton(
-          ns("dl"),
-          label = "Download",
-          icon = shiny::icon("camera"),
-          class = "btn-sm pe-2 me-2"
-        )
+        if (!is.null(chromote::find_chrome())) { 
+          downloadButton(
+            ns("dl"),
+            label = "Download",
+            icon = shiny::icon("camera"),
+            class = "btn-sm pe-2 me-2"
+          )
+        } 
       ),
       bslib::card_body(
         padding = 0,
@@ -98,6 +99,7 @@ place_ui <- function(
 #' @param choro_lab Label for attack rate choropleth (only applicable if `geo_data` contains population data)
 #' @param choro_pal Colour palette passed to [`leaflet::colorBin()`] for attack rate choropleth 
 #'  (only applicable if `geo_data` contains population data)
+#' @param choro_opacity Opacity of choropleth colour (only applicable if `geo_data` contains population data)
 #' @param export_width The width of the exported map image.
 #' @param export_height The height of the exported map image.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
@@ -117,6 +119,7 @@ place_server <- function(
     show_parent_borders = TRUE,
     choro_lab = "Attack rate<br>per 100 000",
     choro_pal = "Reds",
+    choro_opacity = .7,
     export_width = 1200,
     export_height = 650,
     filter_info = shiny::reactiveVal()
@@ -125,6 +128,13 @@ place_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
+
+      # check for chrome browser for map exports
+      chrome_browser <- chromote::find_chrome()
+      if (is.null(chrome_browser)) {
+        message("epishiny: Install a chrome or chromium browser on the system your app is running on to enable place module map exports.")
+        message("See ?chromote::find_chrome() for details.")
+      }
 
       # sf settings
       sf::sf_use_s2(FALSE)
@@ -146,11 +156,7 @@ place_server <- function(
 
       geo_select <- reactive({
         gd <- force_reactive(geo_data)
-        if (length(gd) == 1) {
-          gd[[1]]
-        } else {
-          gd[[input$geo_level]]
-        }
+        gd[[input$geo_level]]
       })
 
       rv <- reactiveValues()
@@ -164,7 +170,6 @@ place_server <- function(
         geo_name_col_sym <- rlang::sym(geo_name_col)
         geo_level_name <- geo_select()$level_name
         geo_pop_var <- geo_select()$pop_var
-        # geo_pop_var_sym <- rlang::sym(geo_pop_var)
         map_var <- input$var
         map_var_sym <- rlang::sym(map_var)
         sf <- geo_select()$sf
@@ -180,10 +185,18 @@ place_server <- function(
         rv$geo_name_col_sym <- geo_name_col_sym
         rv$geo_level_name <- geo_level_name
         rv$geo_pop_var <- geo_pop_var
-        # rv$geo_pop_var_sym <- geo_pop_var_sym
         rv$map_var <- map_var
         rv$map_var_sym <- map_var_sym
         rv$map_var_lab <- map_var_lab
+      })
+
+      observe({
+        geo_join <- geo_select()$join_by
+        geo_col <- unname(geo_join)
+        geo_col_sym <- rlang::sym(geo_col)
+        sf <- geo_select()$sf
+        affected <- sf %>% dplyr::semi_join(df_mod() %>% dplyr::filter(!is.na(!!geo_col_sym)), by = geo_join)
+        sf <- suppressMessages(sf::st_filter(sf, affected))
         rv$sf <- sf
       })
 
@@ -194,17 +207,6 @@ place_server <- function(
         bbox <- sf::st_bbox(geo_data[[1]]$sf)
         leaf_basemap(bbox, miniMap = TRUE)
       })
-
-      # observe({
-      #   leaflet::leafletProxy("map", session) %>%
-      #     leaflet::removeControl("var-lab") %>%
-      #     leaflet::addControl(
-      #       html = tags$div(tag_map_title, shiny::HTML(rv$map_var_lab)),
-      #       className = "map-title",
-      #       position = "topright",
-      #       layerId = "var-lab"
-      #     )
-      # })
 
       # join ll data to boundaries
       df_geo_counts <- reactive({
@@ -236,34 +238,27 @@ place_server <- function(
         return(df_out)
       }) %>% bindEvent(df_mod(), rv$sf, rv$map_var)
 
-      # add empty minicharts to update later
-      observe({
-        boundaries <- rv$sf
-
-        leaflet::leafletProxy("map", session) %>%
-          leaflet.minicharts::clearMinicharts()
-
-        req(nrow(boundaries) > 0)
-
-        leaflet::leafletProxy("map", session) %>%
-          leaflet.minicharts::addMinicharts(
-            boundaries$lon,
-            boundaries$lat,
-            layerId = boundaries[[rv$geo_name_col]],
-            chartdata = 1,
-            width = 0,
-            height = 0
-          )
-
-      }) %>% bindEvent(rv$sf)
-
       # add polygon boundaries with tooltip data info
       observe({
         req(df_geo_counts())
         boundaries <- df_geo_counts()
 
         leaflet::leafletProxy("map", session) %>%
-          leaflet::clearGroup("Boundaries") 
+          leaflet::clearGroup("Boundaries") %>% 
+          leaflet::clearControls()
+        
+        if (is.null(geo_select()$pop_var)) {
+          ogs <- c("Boundaries", "Circles")
+        } else {
+          ogs <- c("Boundaries", "Attack rate", "Circles")
+        }
+
+        leaflet::leafletProxy("map", session) %>%
+          leaflet::addLayersControl(
+            baseGroups = c("Light", "OSM", "OSM HOT"),
+            overlayGroups = ogs,
+            position = "topleft"
+          )
 
         req(nrow(boundaries) > 0)
 
@@ -319,8 +314,6 @@ place_server <- function(
           leaflet::clearGroup("Attack rate") %>%
           leaflet::removeControl(layerId = "attack_legend")
 
-        # cols <- c("#D4BEB4", "#D7A184", "#C17651", "#9C4628", "#74211F")
-        choro_opacity <- .7
         # only plot polygons with incidence
         df_map <- df_geo_counts() %>% dplyr::filter(total > 0)
 
@@ -361,17 +354,31 @@ place_server <- function(
       }) %>% bindEvent(df_geo_counts())
 
       # minichart circles/pies
+      minicharts_init <- reactiveVal(TRUE)
+      minicharts_on <- reactiveVal(TRUE)
       observe({
         req(df_geo_counts())
         df_map <- sf::st_drop_geometry(df_geo_counts())
+        leaflet::leafletProxy("map", session) %>% leaflet.minicharts::clearMinicharts()
 
-        if (isTruthy(nrow(df_map) > 0)) {
-          chart_data <- df_map %>% 
-            dplyr::select(-dplyr::any_of(c(rv$join_cols, rv$geo_pop_var, "attack_rate", "name", "lon", "lat", "total")))
+        if (isTruthy("Circles" %in% isolate(input$map_groups)) | minicharts_init()) {
+          chart_data <- df_map %>%
+            dplyr::select(-dplyr::any_of(c(
+              rv$join_cols,
+              rv$geo_pop_var,
+              "attack_rate",
+              "name",
+              "lon",
+              "lat",
+              "total"
+            )))
+
           pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
           leaflet::leafletProxy("map", session) %>%
-            leaflet.minicharts::updateMinicharts(
+            leaflet.minicharts::addMinicharts(
+              lng = df_map$lon,
+              lat = df_map$lat,
               layerId = df_map$name,
               chartdata = chart_data,
               opacity = .7,
@@ -383,16 +390,48 @@ place_server <- function(
               type = "pie",
               width = pie_width
             )
-        } else {
-          leaflet::leafletProxy("map", session) %>%
-            leaflet.minicharts::updateMinicharts(
-              layerId = df_map$name,
-              chartdata = 1,
-              width = 0,
-              height = 0
-            )
+
+          minicharts_init(FALSE)
         }
       }) %>% bindEvent(df_geo_counts(), input$circle_size_mult)
+
+      observeEvent(input$map_groups, {
+        if (!"Circles" %in% input$map_groups) {
+          leaflet::leafletProxy("map", session) %>%
+            leaflet.minicharts::clearMinicharts()
+          minicharts_on(FALSE)
+        } else if (!minicharts_on()) {
+          df_map <- sf::st_drop_geometry(df_geo_counts())
+          req(nrow(df_map) > 0)
+          chart_data <- df_map %>%
+            dplyr::select(-dplyr::any_of(c(
+              rv$join_cols,
+              rv$geo_pop_var,
+              "attack_rate",
+              "name",
+              "lon",
+              "lat",
+              "total"
+            )))
+          pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
+          leaflet::leafletProxy("map", session) %>%
+            leaflet.minicharts::addMinicharts(
+              lng = df_map$lon,
+              lat = df_map$lat,
+              layerId = df_map$name,
+              chartdata = chart_data,
+              opacity = .7,
+              fillColor = epi_pals()$d310[1],
+              colorPalette = epi_pals()$d310,
+              legend = TRUE,
+              showLabels = TRUE,
+              labelStyle = htmltools::css(font_family = "'Roboto Mono',sans-serif"),
+              type = "pie",
+              width = pie_width
+            )
+          minicharts_on(TRUE)
+        }
+      })
 
       # Missing data information ==================================================
       missing_text <- reactive({
@@ -429,7 +468,26 @@ place_server <- function(
           w_map$show()
           on.exit(w_map$hide())
 
-          # browser()
+          # check for chrome browser before attempting mapview::mapshot2
+          if (is.null(chrome_browser)) {
+            shiny::showModal(
+              shiny::modalDialog(
+                title = "No Chrome or Chromium browser found",
+                paste(
+                  "The place module map export requires a Chrome or Chromium browser (Google Chrome, Chromium, Microsoft Edge and others)",
+                  "to be installed on the system running the shiny app in order to work."
+                )
+              )
+            )
+          }
+          req(chrome_browser)
+
+          showNotification(
+            "Generating map export. This can take up to a minute...",
+            type = "default",
+            duration = 8
+          )
+
           # rebuild current map shown on dashboard
           boundaries <- rv$sf
           df_map <- df_geo_counts()
@@ -497,23 +555,57 @@ place_server <- function(
               type = "pie",
               width = pie_width
             )
+          
+          if (!is.null(rv$geo_pop_var)) {
+            pal <- leaflet::colorBin(
+              palette = choro_pal,
+              domain = df_map$attack_rate,
+              bins = 5,
+              na.color = "transparent"
+            )
+            leaf_out <- leaf_out %>%
+              leaflet::addPolygons(
+                data = df_map,
+                stroke = TRUE,
+                color = "grey",
+                weight = 1,
+                fillColor = ~ pal(attack_rate),
+                fillOpacity = choro_opacity,
+                highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
+                layerId = ~pcode,
+                group = "Attack rate",
+                options = leaflet::pathOptions(pane = "choropleth")
+              ) %>%
+              leaflet::addLegend(
+                title = choro_lab,
+                data = df_map,
+                pal = pal,
+                values = ~attack_rate,
+                opacity = choro_opacity,
+                position = "bottomright",
+                group = "Attack rate",
+                layerId = "attack_legend"
+              )
+          }
 
           # if not first admin level, map borders of lower admin levels
-          gd <- force_reactive(geo_data)
-          geo_level <- which(names(gd) == isolate(input$geo_level))
-          if (geo_level > 1) {
-            lower_levels <- 1:(geo_level-1)
-            for (i in lower_levels) {
-              stroke_width <- (geo_level - i) + 1
-              borders <- sf::st_filter(gd[[i]]$sf, boundaries)
-              leaf_out <- leaf_out %>%
-                leaflet::addPolylines(
-                  data = borders,
-                  group = "Boundaries",
-                  color = "grey",
-                  weight = stroke_width,
-                  options = leaflet::pathOptions(pane = "boundaries")
-                )
+          if (show_parent_borders) {
+            gd <- force_reactive(geo_data)
+            geo_level <- which(names(gd) == isolate(input$geo_level))
+            if (geo_level > 1) {
+              lower_levels <- 1:(geo_level - 1)
+              for (i in lower_levels) {
+                stroke_width <- (geo_level - i) + 1
+                borders <- sf::st_filter(gd[[i]]$sf, boundaries)
+                leaf_out <- leaf_out %>%
+                  leaflet::addPolylines(
+                    data = borders,
+                    group = "Boundaries",
+                    color = "grey",
+                    weight = stroke_width,
+                    options = leaflet::pathOptions(pane = "boundaries")
+                  )
+              }
             }
           }
 

@@ -25,6 +25,7 @@ place_server(
   show_parent_borders = TRUE,
   choro_lab = "Attack rate<br>per 100 000",
   choro_pal = "Reds",
+  choro_opacity = 0.7,
   export_width = 1200,
   export_height = 650,
   filter_info = shiny::reactiveVal()
@@ -55,6 +56,8 @@ place_server(
 
 \item{choro_pal}{Colour palette passed to \code{\link[leaflet:colorNumeric]{leaflet::colorBin()}} for attack rate choropleth
 (only applicable if \code{geo_data} contains population data)}
+
+\item{choro_opacity}{Opacity of choropleth colour (only applicable if \code{geo_data} contains population data)}
 
 \item{export_width}{The width of the exported map image.}
 

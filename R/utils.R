@@ -228,9 +228,9 @@ leaf_basemap <- function(
   lf <- leaflet::leaflet() %>%
     leaflet::fitBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]]) %>%
     leaflet::addMapPane(name = "choropleth", zIndex = 310) %>%
+    leaflet::addMapPane(name = "place_labels", zIndex = 320) %>%
     leaflet::addMapPane(name = "circles", zIndex = 410) %>%
     leaflet::addMapPane(name = "boundaries", zIndex = 420) %>%
-    leaflet::addMapPane(name = "place_labels", zIndex = 430) %>%
     leaflet::addProviderTiles("CartoDB.PositronNoLabels", group = "Light") %>%
     leaflet::addProviderTiles(
       "CartoDB.PositronOnlyLabels",
