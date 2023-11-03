@@ -74,6 +74,7 @@
 <span>  show_parent_borders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  choro_lab <span class="op">=</span> <span class="st">"Attack rate&lt;br&gt;per 100 000"</span>,</span>
 <span>  choro_pal <span class="op">=</span> <span class="st">"Reds"</span>,</span>
+<span>  choro_opacity <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  export_width <span class="op">=</span> <span class="fl">1200</span>,</span>
 <span>  export_height <span class="op">=</span> <span class="fl">650</span>,</span>
 <span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -129,6 +130,10 @@
 <dt>choro_pal</dt>
 <dd><p>Colour palette passed to <code><a href="https://rdrr.io/pkg/leaflet/man/colorNumeric.html" class="external-link">leaflet::colorBin()</a></code> for attack rate choropleth
 (only applicable if <code>geo_data</code> contains population data)</p></dd>
+
+
+<dt>choro_opacity</dt>
+<dd><p>Opacity of choropleth colour (only applicable if <code>geo_data</code> contains population data)</p></dd>
 
 
 <dt>export_width</dt>
