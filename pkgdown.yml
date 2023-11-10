@@ -3,7 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   contributing: contributing.html
-last_built: 2023-11-03T16:37Z
+last_built: 2023-11-10T17:15Z
 urls:
   reference: https://epicentre-msf.github.io/epishiny/reference
   article: https://epicentre-msf.github.io/epishiny/articles
