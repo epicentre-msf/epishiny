@@ -1,31 +1,24 @@
 # code to prepare package example data
 library(tidyverse)
-library(obtdata)
-library(rmapshaper)
 library(fs)
 
+# adds a lon lat point that falls within each feature
+# better than st_centroid because this is not guaranteed to be within the feature
+set_coords <- function(sf) {
+  coords <- sf::st_coordinates(suppressWarnings(sf::st_point_on_surface(sf::st_zm(sf))))
+  sf %>% dplyr::mutate(lon = coords[, 1], lat = coords[, 2])
+}
+
 # Yemen admin 1 and 2
-dir_geo <- max(dir_ls("~/MSF/OutbreakTools - GeoBase/YEM"))
-ref <- read_rds(path(dir_geo, "adm_reference_YEM.rds")) %>%
-  filter(level %in% 1:2) %>%
-  select(-adm3_name, -adm4_name)
+dir_geo <- max(dir_ls("~/Library/CloudStorage/OneDrive-SharedLibraries-MSF/OutbreakTools - GeoBase/YEM"))
 
-dir_shps <- path(max(dir_ls("~/MSF/OutbreakTools - GeoBase/YEM")), "sf")
 sf_yem <-
-  dir_ls(dir_shps, regexp = "adm[1-2]") %>%
-  set_names(path_file(.) %>% path_ext_remove() %>% str_remove("YEM_")) %>%
+  dir_ls(path(dir_geo, "sf"), regexp = "adm[1-2]") %>%
+  set_names(c("adm1", "adm2")) %>% 
   map(read_rds) %>%
-  map(rmapshaper::ms_simplify, keep = 0.01, keep_shapes = TRUE, explode = FALSE, sys = FALSE)
-
-geo_yem <- c(
-  list(ref = ref),
-  sf_yem
-)
+  map(set_coords)
 
 # path to example Outbreak Tools linelist export: a measles dataset with linelist "Linelist patients"
-# path_export <- system.file("extdata", "ll_export.xlsx", package = "obtdata")
-# ll_export <- ll_read(path_export) %>% ll_translate(from = "FR", to = "EN")
-
 path_ll <- here::here("data-raw", "linelist-example.xlsx")
 df_ll_raw <- qxl::qread(
   here::here("data-raw", "linelist-example.xlsx"),

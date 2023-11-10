@@ -48,32 +48,31 @@ place_ui <- function(
             class = "btn-sm pe-2 me-2"
           ),
           options = shinyWidgets::dropMenuOptions(flip = TRUE),
-          bslib::layout_columns(
-            col_widths = 12,
-            shinyWidgets::radioGroupButtons(
-              ns("geo_level"),
-              label = geo_lab,
-              size = "sm",
-              status = "outline-dark",
-              choices = geo_levels
-            ),
-            selectInput(
-              ns("var"),
-              label = groups_lab,
-              choices = c(purrr::set_names("n", n_lab), group_vars),
-              multiple = FALSE,
-              selectize = FALSE,
-              width = 200
-            ),
-            sliderInput(
-              ns("circle_size_mult"),
-              label = "Circle size multiplyer",
-              min = 0,
-              max = 10,
-              value = 6,
-              step = 1,
-              width = 200
-            )
+          shinyWidgets::radioGroupButtons(
+            ns("geo_level"),
+            label = geo_lab,
+            size = "sm",
+            status = "outline-dark",
+            choices = geo_levels
+          ),
+          tags$br(),
+          selectInput(
+            ns("var"),
+            label = groups_lab,
+            choices = c(purrr::set_names("n", n_lab), group_vars),
+            multiple = FALSE,
+            selectize = FALSE,
+            width = 200
+          ),
+          tags$br(),
+          sliderInput(
+            ns("circle_size_mult"),
+            label = "Circle size multiplyer",
+            min = 0,
+            max = 10,
+            value = 6,
+            step = 1,
+            width = 200
           )
         ),
         if (!is.null(chromote::find_chrome())) { 
@@ -208,6 +207,56 @@ place_server <- function(
         leaf_basemap(bbox, miniMap = TRUE)
       })
 
+      # reactive val boolean to indicate if a shape has been selected
+      map_click <- reactiveVal(FALSE)
+      region_select <- reactiveVal("all")
+
+      observeEvent(input$geo_level, ignoreInit = TRUE, {
+        region_select("all")
+      })
+
+      # if region is selected from map, update region_select value
+      observeEvent(input$map_shape_click, {
+        map_click(TRUE)
+        id <- input$map_shape_click$id
+        if (id == region_select()) {
+          region_select("all")
+        } else {
+          region_select(id)
+        }
+      })
+
+      observeEvent(input$map_click, {
+        if (map_click()) {
+          map_click(FALSE)
+        } else {
+          region_select("all")
+        }
+      })
+
+      # highlight and zoom to selected region
+      observeEvent(region_select(), {
+        leaflet::leafletProxy("map", session) %>% leaflet::removeShape("highlight")
+        r <- region_select()
+        if (r != "all") {
+          shp <- rv$sf %>% dplyr::filter(.data[[rv$join_cols]] == r)
+          rv$region_select_name <- dplyr::pull(shp, rv$geo_name_col)
+          leaflet::leafletProxy("map", session) %>%
+            # leaflet::flyTo(lng = shp$lon, lat = shp$lat, zoom = input$map_zoom) %>%
+            leaflet::addPolylines(
+              data = shp,
+              layerId = "highlight",
+              stroke = TRUE,
+              opacity = 1,
+              weight = 3,
+              color = "red",
+              options = leaflet::pathOptions(pane = "geo_highlight")
+            )
+        } else {
+          rv$region_select_name <- "All"
+        }
+      })
+
       # join ll data to boundaries
       df_geo_counts <- reactive({
         if (rv$map_var == "n") {
@@ -294,6 +343,7 @@ place_server <- function(
         leaflet::leafletProxy("map", session) %>%
           leaflet::addPolygons(
             data = boundaries,
+            layerId = boundaries[[rv$join_cols]],
             stroke = TRUE,
             color = "grey",
             weight = 1,
@@ -336,7 +386,6 @@ place_server <- function(
               fillColor = ~ pal(attack_rate),
               fillOpacity = choro_opacity,
               highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
-              layerId = ~pcode,
               group = "Attack rate",
               options = leaflet::pathOptions(pane = "choropleth")
             ) %>%
@@ -492,7 +541,15 @@ place_server <- function(
           boundaries <- rv$sf
           df_map <- df_geo_counts()
           chart_data <- sf::st_drop_geometry(df_map) %>% 
-            dplyr::select(-dplyr::any_of(c(rv$join_cols, rv$geo_pop_var, "attack_rate", "name", "lon", "lat", "total")))
+            dplyr::select(-dplyr::any_of(c(
+              rv$join_cols,
+              rv$geo_pop_var,
+              "attack_rate",
+              "name",
+              "lon",
+              "lat",
+              "total"
+            )))
 
           # * 7 instead of * 10 like in the app map because
           # circles are coming out larger in the image export
@@ -503,13 +560,24 @@ place_server <- function(
             missing_data_text <- glue::glue("<b>Missing data</b></br>{missing_data_text}")
           } 
 
+          # get the centroid coordinates of current onscreen map view 
+          # to set the view in export map
+          bbox <- sf::st_bbox(c(
+            xmin = input$map_bounds$east,
+            xmax = input$map_bounds$west,
+            ymax = input$map_bounds$north,
+            ymin = input$map_bounds$south
+          ), crs = sf::st_crs(4326))
+          sv <- dplyr::as_tibble(sf::st_coordinates(suppressWarnings(sf::st_centroid(sf::st_as_sfc(bbox)))))
+
           leaf_out <- leaflet::leaflet() %>%
-            leaflet::fitBounds(
-              input$map_bounds$east,
-              input$map_bounds$south,
-              input$map_bounds$west,
-              input$map_bounds$north
-            ) %>%
+            leaflet::setView(sv$X, sv$Y, zoom = input$map_zoom) %>% 
+            # leaflet::fitBounds(
+            #   input$map_bounds$east,
+            #   input$map_bounds$south,
+            #   input$map_bounds$west,
+            #   input$map_bounds$north
+            # ) %>%
             leaflet::addMapPane(name = "boundaries", zIndex = 300) %>%
             leaflet::addMapPane(name = "choropleth", zIndex = 310) %>%
             leaflet::addMapPane(name = "circles", zIndex = 410) %>%
@@ -646,9 +714,14 @@ place_server <- function(
         }
       )
 
-      # return map shape click information to main app
+      # return region select click information to main app
       shiny::reactive({
-        input$map_shape_click
+        list(
+          region_select = region_select(),
+          geo_col = rv$geo_col,
+          level_name = rv$geo_level_name,
+          region_name = rv$region_select_name
+        )
       })
     }
   )

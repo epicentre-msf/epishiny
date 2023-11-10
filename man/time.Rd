@@ -15,6 +15,8 @@ time_ui(
   date_int_lab = "Date interval",
   day_week_month_labs = c("Day", "Week", "Month"),
   groups_lab = "Group data by",
+  bar_stacking_lab = "Bar stacking",
+  cumul_data_lab = "Show cumulative data?",
   n_lab = "N patients",
   ratio_line_lab = NULL,
   full_screen = TRUE
@@ -52,6 +54,10 @@ time_server(
 \item{day_week_month_labs}{character vector with text labels for day, week and month, respectively.}
 
 \item{groups_lab}{text label for the grouping variable input.}
+
+\item{bar_stacking_lab}{text label for bar stacking option.}
+
+\item{cumul_data_lab}{text label for cumulative data option.}
 
 \item{n_lab}{The label for the raw count variable.}
 

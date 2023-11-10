@@ -231,6 +231,7 @@ leaf_basemap <- function(
     leaflet::addMapPane(name = "place_labels", zIndex = 320) %>%
     leaflet::addMapPane(name = "circles", zIndex = 410) %>%
     leaflet::addMapPane(name = "boundaries", zIndex = 420) %>%
+    leaflet::addMapPane(name = "geo_highlight", zIndex = 430) %>%
     leaflet::addProviderTiles("CartoDB.PositronNoLabels", group = "Light") %>%
     leaflet::addProviderTiles(
       "CartoDB.PositronOnlyLabels",

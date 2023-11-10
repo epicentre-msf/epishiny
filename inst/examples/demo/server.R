@@ -7,13 +7,18 @@ server <- function(input, output, session) {
     group_vars = group_vars
   )
 
-  place_server(
+  map_click <- place_server(
     id = "map",
     df_ll = reactive(app_data()$df_ll),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
+
+  # uncomment to see data returned from map click events
+  # observe({
+  #   print(map_click())
+  # })
 
   epicurve_click <- time_server(
     id = "curve",
@@ -27,6 +32,7 @@ server <- function(input, output, session) {
     filter_info = reactive(app_data()$filter_info)
   )
 
+  # uncomment to see data returned from chart click events
   # observe({
   #   print(epicurve_click())
   # })
