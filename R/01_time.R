@@ -13,6 +13,8 @@
 #' @param date_int_lab text label for the date interval input.
 #' @param day_week_month_labs character vector with text labels for day, week and month, respectively.
 #' @param groups_lab text label for the grouping variable input.
+#' @param bar_stacking_lab text label for bar stacking option.
+#' @param cumul_data_lab text label for cumulative data option.
 #' @param n_lab The label for the raw count variable.
 #' @param ratio_line_lab text label for the ratio line input. If not supplied the input is not included.
 #' @param full_screen Add button to card to with the option to enter full screen mode?
@@ -32,6 +34,8 @@ time_ui <- function(
     date_int_lab = "Date interval",
     day_week_month_labs = c("Day", "Week", "Month"),
     groups_lab = "Group data by",
+    bar_stacking_lab = "Bar stacking",
+    cumul_data_lab = "Show cumulative data?",
     n_lab = "N patients",
     ratio_line_lab = NULL,
     full_screen = TRUE
@@ -83,6 +87,22 @@ time_ui <- function(
             multiple = FALSE,
             selectize = FALSE,
             width = 200
+          ),
+          tags$br(),
+          shinyWidgets::radioGroupButtons(
+            ns("bar_stacking"),
+            label = bar_stacking_lab,
+            size = "sm",
+            status = "outline-dark",
+            choices = c("Count" = "normal", "Percent" = "percent"),
+            selected = "normal"
+          ),
+          tags$br(),
+          shiny::checkboxInput(
+            ns("cumulative"),
+            cumul_data_lab,
+            value = FALSE,
+            width = "100%"
           ),
           tags$br(),
           if (!is.null(ratio_line_lab)) {
@@ -185,14 +205,20 @@ time_server <- function(
             week_start = getOption("epishiny.week.start", 1)
           ))
 
-        if (group == "n") {
+        if (input$group == "n") {
           df <- df %>%
             dplyr::count(!!date) %>%
-            tidyr::drop_na()
+            tidyr::drop_na() %>% 
+            dplyr::arrange(!!date) %>% 
+            dplyr::mutate(n_c = cumsum(n))
         } else {
           df <- df %>%
             dplyr::count(!!date, !!group) %>%
-            tidyr::drop_na()
+            tidyr::drop_na() %>% 
+            dplyr::group_by(!!group) %>% 
+            dplyr::arrange(!!date) %>%
+            dplyr::mutate(n_c = cumsum(n)) %>% 
+            dplyr::ungroup()
         }
 
         if (!is.null(ratio_var)) {
@@ -203,17 +229,19 @@ time_server <- function(
           df_ratio <- df_mod() %>%
             dplyr::mutate(!!date := lubridate::floor_date(
               lubridate::as_date(!!date),
-              input$date_interval,
+              unit = input$date_interval,
               week_start = getOption("epishiny.week.start", 1)
             )) %>%
             dplyr::group_by(!!date) %>%
             dplyr::summarise(
-              n = sum(.data[[ratio_var]] %in% ratio_numer),
+              n1 = sum(.data[[ratio_var]] %in% ratio_numer),
               N = sum(.data[[ratio_var]] %in% ratio_denom),
-              ratio = (n / N) * 100,
+              ratio = (n1 / N) * 100,
               .groups = "drop"
             ) %>%
-            dplyr::select(!!date, ratio)
+            dplyr::arrange(!!date) %>% 
+            dplyr::mutate(ratio_c = cumsum(n1) / cumsum(N) * 100) %>% 
+            dplyr::select(!!date, ratio, ratio_c)
 
           df <- df %>% dplyr::left_join(df_ratio, by = input$date)
         }
@@ -222,13 +250,16 @@ time_server <- function(
       })
 
       output$chart <- highcharter::renderHighchart({
-
+        req(df_curve())
         df <- df_curve()
         date <- isolate(rv$date)
         group <- isolate(rv$group)
         date_sym <- isolate(rv$date_sym)
         group_sym <- isolate(rv$group_sym)
         missing_dates <- isolate(rv$missing_dates)
+        n_var <- dplyr::if_else(
+          isolate(input$cumulative), "n_c", "n"
+        )
 
         shiny::validate(shiny::need(nrow(df) > 0, "No data to display"))
 
@@ -239,7 +270,13 @@ time_server <- function(
         )
 
         if (group == "n") {
-          hc <- highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, n), name = n_lab)
+          hc <- highcharter::hchart(
+            df,
+            "column",
+            highcharter::hcaes(!!date_sym, !!rlang::sym(n_var)),
+            id = "n_bars",
+            name = n_lab
+          )
         } else {
           group_lab <- ifelse(
             is.null(names(group_vars[group_vars == group])),
@@ -252,7 +289,7 @@ time_server <- function(
           )
 
           hc <-
-            highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, n, group = !!group_sym)) %>%
+            highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, !!n_var, group = !!group_sym)) %>%
             highcharter::hc_legend(
               title = list(text = text_legend),
               layout = "vertical",
@@ -264,10 +301,15 @@ time_server <- function(
             )
         }
 
+        stacked_tooltip <- '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>'
+
         hc <- hc %>%
           highcharter::hc_add_event_point(event = "click") %>%
           highcharter::hc_title(text = NULL) %>%
           highcharter::hc_chart(zoomType = "x", alignTicks = TRUE) %>%
+          highcharter::hc_plotOptions(
+            column = list(stacking = isolate(input$bar_stacking))
+          ) %>% 
           highcharter::hc_xAxis(
             title = list(text = date_lab),
             allowDecimals = FALSE,
@@ -285,7 +327,7 @@ time_server <- function(
               gridLineWidth = 0
             )
           ) %>%
-          highcharter::hc_tooltip(shared = TRUE) %>%
+          highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip) %>%
           my_hc_export(caption = isolate(filter_info()))
 
         if (isolate(input$date_interval == "week")) {
@@ -301,6 +343,11 @@ time_server <- function(
         }
 
         if (isolate(isTruthy(input$show_ratio_line))) {
+          r_var <- ifelse(
+            isolate(input$cumulative),
+            rlang::sym("ratio_c"),
+            rlang::sym("ratio")
+          )
           hc <- hc %>%
             highcharter::hc_yAxis_multiples(
               list(
@@ -317,7 +364,7 @@ time_server <- function(
             highcharter::hc_add_series(
               data = df,
               "line",
-              highcharter::hcaes(x =!!date, y = ratio),
+              highcharter::hcaes(x =!!date, y = !!r_var),
               id = "ratio_line",
               name = ratio_lab,
               yAxis = 1,
@@ -336,12 +383,66 @@ time_server <- function(
         }
 
         hc
-      })
+      }) %>% bindEvent(df_curve())
+
+      # update bar stacking type
+      observe({
+        highcharter::highchartProxy(ns("chart")) %>%
+          highcharter::hcpxy_update(
+            plotOptions = list(column = list(stacking = input$bar_stacking))
+          )
+      }) %>% bindEvent(input$bar_stacking, ignoreInit = TRUE)
+
+      # update data between cumul/non-cumul
+      shiny::observe({
+        df <- df_curve()
+        date <- isolate(rv$date)
+        group <- isolate(rv$group)
+        date_sym <- isolate(rv$date_sym)
+        group_sym <- isolate(rv$group_sym)
+
+        if (input$cumulative) {
+          n_var <- "n_c"
+          r_var <- "ratio_c"
+        } else {
+          n_var <- "n"
+          r_var <- "ratio"
+        }
+
+        if (group == "n") {
+          highcharter::highchartProxy(ns("chart")) %>%
+            highcharter::hcpxy_update_series(
+              id = "n_bars",
+              data = df[[n_var]]
+            )
+        } else {
+          highcharter::highchartProxy(ns("chart")) %>%
+            highcharter::hcpxy_set_data(
+              type = "column",
+              data = df,
+              mapping = highcharter::hcaes(!!date_sym, !!rlang::sym(n_var), group = !!group_sym),
+              redraw = TRUE
+            )
+        }
+
+        if (input$show_ratio_line) {
+          highcharter::highchartProxy(ns("chart")) %>%
+            highcharter::hcpxy_update_series(
+              id = "ratio_line",
+              data = df[[r_var]]
+            )
+        }
+      }) %>% shiny::bindEvent(input$cumulative, ignoreInit = TRUE)
 
       shiny::observe({
         if (isTruthy(input$show_ratio_line)) {
 
           df_line <- df_curve()
+          r_var <- ifelse(
+            input$cumulative, 
+            rlang::sym("ratio_c"), 
+            rlang::sym("ratio")
+          )
 
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_remove_series(id = "ratio_line") %>%
@@ -362,7 +463,7 @@ time_server <- function(
             highcharter::hcpxy_add_series(
               data = df_line,
               "line",
-              highcharter::hcaes(x = !!rv$date_sym, y = ratio),
+              highcharter::hcaes(x = !!rv$date_sym, y = !!r_var),
               id = "ratio_line",
               name = ratio_lab,
               yAxis = 1,
