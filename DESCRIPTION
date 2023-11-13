@@ -34,14 +34,15 @@ Imports:
     janitor,
     glue,
     highcharter,
-    rlist,
     gt,
     gtsummary,
     sf,
     leaflet,
     leaflet.extras,
     leaflet.minicharts,
-    chromote
+    chromote,
+    mapview,
+    cli
 Remotes:
     r-spatial/mapview
 Depends: 

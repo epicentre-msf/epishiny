@@ -8,7 +8,7 @@ launch_module(module = c("time", "place", "person"), ...)
 }
 \arguments{
 \item{module}{Name of the module to launch. Current options are
-\link{time}, \link{place} or \link{person}.}
+"time", "place" or "person".}
 
 \item{...}{Other named arguments passed to the relevant module
 UI and Server functions. See each module's documentation for details

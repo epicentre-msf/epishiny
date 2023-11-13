@@ -2,10 +2,10 @@ library(shiny)
 library(bslib)
 library(epishiny)
 
-# options(
-#   "epishiny.na.label" = "(Manquant)",
-#   "epishiny.week.letter" = "S"
-# )
+options(
+  "epishiny.na.label" = "(Missing)",
+  "epishiny.week.letter" = "W"
+)
 
 app_title = "epishiny modules"
 app_font <- "Roboto Mono"

@@ -6,8 +6,11 @@
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param date_vars named character vector of date variables for the date axis input. Names are used as variable labels.
-#' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param group_vars Character vector of categorical variable names. If provided, a select input will appear
+#'  in the options dropdown allowing for data groups to be visualised as stacked bars on the epicurve.
+#'  If named, names are used as variable labels.
 #' @param title header title for the card.
+#' @param icon The icon to display next to the title.
 #' @param opts_btn_lab text label for the dropdown menu button.
 #' @param date_lab text label for the date variable input.
 #' @param date_int_lab text label for the date interval input.
@@ -27,8 +30,9 @@
 time_ui <- function(
     id,
     date_vars,
-    group_vars,
+    group_vars = NULL,
     title = "Time",
+    icon = bsicons::bs_icon("bar-chart-line-fill"),
     opts_btn_lab = "options",
     date_lab = "Date axis",
     date_int_lab = "Date interval",
@@ -49,16 +53,17 @@ time_ui <- function(
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
 
-        tags$span(shiny::icon("chart-column"), title, class = "pe-2"),
+        tags$span(icon, title, class = "pe-2"),
 
-        shinyWidgets::dropMenu(
-          actionButton(
+        # options button and dropdown menu
+        bslib::popover(
+          title =  tags$span(shiny::icon("sliders"), opts_btn_lab),
+          trigger = actionButton(
             ns("dropdown"),
-            icon = icon("sliders"),
+            icon = shiny::icon("sliders"),
             label = opts_btn_lab,
-            class = "btn-sm"
+            class = "btn-sm pe-2 me-2"
           ),
-          options = shinyWidgets::dropMenuOptions(flip = TRUE),
           selectInput(
             ns("date"),
             label = date_lab,
@@ -67,7 +72,6 @@ time_ui <- function(
             selectize = FALSE,
             width = 200
           ),
-          tags$br(),
           shinyWidgets::radioGroupButtons(
             ns("date_interval"),
             label = date_int_lab,
@@ -79,7 +83,6 @@ time_ui <- function(
             ),
             selected = "week"
           ),
-          tags$br(),
           selectInput(
             ns("group"),
             label = groups_lab,
@@ -88,7 +91,6 @@ time_ui <- function(
             selectize = FALSE,
             width = 200
           ),
-          tags$br(),
           shinyWidgets::radioGroupButtons(
             ns("bar_stacking"),
             label = bar_stacking_lab,
@@ -97,14 +99,13 @@ time_ui <- function(
             choices = c("Count" = "normal", "Percent" = "percent"),
             selected = "normal"
           ),
-          tags$br(),
           shiny::checkboxInput(
             ns("cumulative"),
             cumul_data_lab,
             value = FALSE,
             width = "100%"
           ),
-          tags$br(),
+          # only show ratio line option if label provided
           if (!is.null(ratio_line_lab)) {
             shiny::checkboxInput(
               ns("show_ratio_line"),
@@ -114,28 +115,9 @@ time_ui <- function(
             )
           }
         )
-
-        # class = "d-flex align-items-center gap-1",
-        # tags$span(
-        #   shiny::icon("chart-column"),
-        #   title,
-        #   bslib::tooltip(
-        #     bsicons::bs_icon("info-circle"),
-        #     "Patient origin/residence",
-        #     placement = "right"
-        #   ),
-        #   class = "pe-2"
-        # ),
-        # bslib::popover(
-        #   trigger = bsicons::bs_icon("gear"),
-        #   title = opts_btn_lab,
-
-        # )
       ),
       bslib::card_body(
         padding = 0,
-        # min_height = 300,
-        # echarts4r::echarts4rOutput(ns("epicurve"), height = "100%")
         highcharter::highchartOutput(ns("chart"))
       )
     )
@@ -163,7 +145,7 @@ time_server <- function(
     id,
     df_ll,
     date_vars,
-    group_vars,
+    group_vars = NULL,
     y_lab = "Patients",
     n_lab = "N patients",
     ratio_var = NULL,
@@ -176,6 +158,10 @@ time_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
+
+      if (is.null(group_vars)) {
+        shinyjs::hide("group")
+      }
 
       df_mod <- reactive({
         force_reactive(df_ll)
@@ -210,14 +196,14 @@ time_server <- function(
             dplyr::count(!!date) %>%
             tidyr::drop_na() %>% 
             dplyr::arrange(!!date) %>% 
-            dplyr::mutate(n_c = cumsum(n))
+            dplyr::mutate(n_c = cumsum(.data$n))
         } else {
           df <- df %>%
             dplyr::count(!!date, !!group) %>%
             tidyr::drop_na() %>% 
             dplyr::group_by(!!group) %>% 
             dplyr::arrange(!!date) %>%
-            dplyr::mutate(n_c = cumsum(n)) %>% 
+            dplyr::mutate(n_c = cumsum(.data$n)) %>% 
             dplyr::ungroup()
         }
 
@@ -236,12 +222,12 @@ time_server <- function(
             dplyr::summarise(
               n1 = sum(.data[[ratio_var]] %in% ratio_numer),
               N = sum(.data[[ratio_var]] %in% ratio_denom),
-              ratio = (n1 / N) * 100,
+              ratio = (.data$n1 / .data$N) * 100,
               .groups = "drop"
             ) %>%
             dplyr::arrange(!!date) %>% 
-            dplyr::mutate(ratio_c = cumsum(n1) / cumsum(N) * 100) %>% 
-            dplyr::select(!!date, ratio, ratio_c)
+            dplyr::mutate(ratio_c = cumsum(.data$n1) / cumsum(.data$N) * 100) %>% 
+            dplyr::select(!!date, .data$ratio, .data$ratio_c)
 
           df <- df %>% dplyr::left_join(df_ratio, by = input$date)
         }
@@ -425,7 +411,7 @@ time_server <- function(
             )
         }
 
-        if (input$show_ratio_line) {
+        if (isTruthy(input$show_ratio_line)) {
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_update_series(
               id = "ratio_line",

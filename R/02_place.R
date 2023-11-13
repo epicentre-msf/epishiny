@@ -5,11 +5,17 @@
 #' @rdname place
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
-#' @param geo_data A list of spatial sf dataframes with information for different geographical levels.
-#' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param geo_data A list of named lists containing spatial sf dataframes and other information for different geographical levels.
+#' @param group_vars Character vector of categorical variable names. If provided, a select input will appear
+#'  in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit. 
+#'  If named, names are used as variable labels.
 #' @param title The title for the card.
+#' @param icon The icon to be displayed next to the title
 #' @param geo_lab The label for the geographical level selection.
 #' @param groups_lab The label for the group data by selection.
+#' @param circle_size_lab text label for the circle size slider input.
+#' @param opts_btn_lab text label for the dropdown menu button.
+#' @param download_lab text label for the download button.
 #' @param n_lab The label for the raw count variable.
 #' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
@@ -19,18 +25,29 @@
 place_ui <- function(
     id,
     geo_data,
-    group_vars,
+    group_vars = NULL,
     title = "Place",
+    icon = bsicons::bs_icon("geo-fill"),
     geo_lab = "Geo boundaries",
     groups_lab = "Group data by",
+    circle_size_lab = "Circle size multiplyer",
+    opts_btn_lab = "options",
+    download_lab = "download",
     n_lab = "N patients",
     full_screen = TRUE
 ) {
   ns <- shiny::NS(id)
 
+  # check geo_data meets criteria for use
+  geo_data <- validate_geo_data(geo_data)
+  # use level_name for display names if found, otherwise list item name
   geo_levels <- purrr::set_names(
     names(geo_data),
-    unname(purrr::map_chr(geo_data, "level_name"))
+    purrr::map2_chr(
+      unname(geo_data),
+      names(geo_data),
+      function(x, y) purrr::pluck(x, "level_name", .default = y)
+    )
   )
 
   tagList(
@@ -39,15 +56,17 @@ place_ui <- function(
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
-        tags$span(shiny::icon("globe-africa"), title, class = "pe-2"),
-        shinyWidgets::dropMenu(
-          actionButton(
+        tags$span(icon, title, class = "pe-2"),
+
+        # options button and dropdown menu
+        bslib::popover(
+          title =  tags$span(shiny::icon("sliders"), opts_btn_lab),
+          trigger = actionButton(
             ns("dropdown"),
             icon = shiny::icon("sliders"),
-            label = "options",
+            label = opts_btn_lab,
             class = "btn-sm pe-2 me-2"
           ),
-          options = shinyWidgets::dropMenuOptions(flip = TRUE),
           shinyWidgets::radioGroupButtons(
             ns("geo_level"),
             label = geo_lab,
@@ -55,7 +74,6 @@ place_ui <- function(
             status = "outline-dark",
             choices = geo_levels
           ),
-          tags$br(),
           selectInput(
             ns("var"),
             label = groups_lab,
@@ -64,10 +82,9 @@ place_ui <- function(
             selectize = FALSE,
             width = 200
           ),
-          tags$br(),
           sliderInput(
             ns("circle_size_mult"),
-            label = "Circle size multiplyer",
+            label = circle_size_lab,
             min = 0,
             max = 10,
             value = 6,
@@ -75,10 +92,11 @@ place_ui <- function(
             width = 200
           )
         ),
+        # only show download button if chrome available
         if (!is.null(chromote::find_chrome())) { 
           downloadButton(
             ns("dl"),
-            label = "Download",
+            label = download_lab,
             icon = shiny::icon("camera"),
             class = "btn-sm pe-2 me-2"
           )
@@ -103,6 +121,8 @@ place_ui <- function(
 #' @param export_height The height of the exported map image.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#' 
+#' @importFrom mapview mapshot2
 #'
 #' @rdname place
 #'
@@ -113,7 +133,7 @@ place_server <- function(
     id,
     df_ll,
     geo_data,
-    group_vars,
+    group_vars = NULL,
     n_lab = "N patients",
     show_parent_borders = TRUE,
     choro_lab = "Attack rate<br>per 100 000",
@@ -128,15 +148,20 @@ place_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
+      if (is.null(group_vars)) {
+        shinyjs::hide("var")
+      }
+
       # check for chrome browser for map exports
       chrome_browser <- chromote::find_chrome()
       if (is.null(chrome_browser)) {
-        message("epishiny: Install a chrome or chromium browser on the system your app is running on to enable place module map exports.")
-        message("See ?chromote::find_chrome() for details.")
+        cli::cli_alert_warning("epishiny place module map exports disabled")
+        cli::cli_alert_info("To enable exports, install a chrome or chromium browser on your system")
+        cli::cli_alert("see ?chromote::find_chrome() for details")
       }
 
       # sf settings
-      sf::sf_use_s2(FALSE)
+      # sf::sf_use_s2(FALSE)
 
       # loading spinner for map export
       w_map <- waiter::Waiter$new(
@@ -153,6 +178,13 @@ place_server <- function(
         force_reactive(df_ll)
       })
 
+      # add point on surface lon lat coords if not already present
+      # required for circle/pie position on map
+      geo_data <- purrr::map(geo_data, function(x) {
+        x$sf <- add_coords(x$sf)
+        return(x)
+      })
+
       geo_select <- reactive({
         gd <- force_reactive(geo_data)
         gd[[input$geo_level]]
@@ -160,9 +192,10 @@ place_server <- function(
 
       rv <- reactiveValues()
 
+      # update reactive values whenever inputs change
       observe({
         geo_join <- geo_select()$join_by
-        join_cols <- names(geo_join)
+        join_cols <- dplyr::if_else(rlang::is_named(geo_join), names(geo_join), unname(geo_join))
         geo_col <- unname(geo_join)
         geo_col_sym <- rlang::sym(geo_col)
         geo_name_col <- geo_select()$name_var
@@ -171,9 +204,13 @@ place_server <- function(
         geo_pop_var <- geo_select()$pop_var
         map_var <- input$var
         map_var_sym <- rlang::sym(map_var)
-        sf <- geo_select()$sf
         var_list <- c(purrr::set_names("n", n_lab), group_vars)
-        map_var_lab <- names(var_list[var_list == map_var])
+        map_var_lab <- ifelse(
+          is.null(names(var_list[var_list == map_var])),
+          map_var,
+          names(var_list[var_list == map_var])
+        )
+        
 
         # save as reactive values
         rv$geo_join <- geo_join
@@ -189,6 +226,7 @@ place_server <- function(
         rv$map_var_lab <- map_var_lab
       })
 
+      # filter geo boundaries to only those with incidence + their neighbours
       observe({
         geo_join <- geo_select()$join_by
         geo_col <- unname(geo_join)
@@ -202,12 +240,14 @@ place_server <- function(
       # ==========================================================================
       # MAP
       # ==========================================================================
+
+      # basemap
       output$map <- leaflet::renderLeaflet({
         bbox <- sf::st_bbox(geo_data[[1]]$sf)
         leaf_basemap(bbox, miniMap = TRUE)
       })
 
-      # reactive val boolean to indicate if a shape has been selected
+      # manage map click events to return selected regions
       map_click <- reactiveVal(FALSE)
       region_select <- reactiveVal("all")
 
@@ -234,7 +274,7 @@ place_server <- function(
         }
       })
 
-      # highlight and zoom to selected region
+      # highlight selected region
       observeEvent(region_select(), {
         leaflet::leafletProxy("map", session) %>% leaflet::removeShape("highlight")
         r <- region_select()
@@ -272,15 +312,16 @@ place_server <- function(
 
         df_out <- rv$sf %>%
           dplyr::mutate(name = !!rv$geo_name_col_sym) %>%
-          dplyr::select(dplyr::any_of(c(rv$join_cols, rv$geo_pop_var)), name, lon, lat) %>%
+          dplyr::select(dplyr::any_of(c(rv$join_cols, rv$geo_pop_var, "name", "lon", "lat"))) %>%
           dplyr::left_join(df_counts, by = rv$geo_join) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
 
+        # add attack rate if there is population data
         if (!is.null(rv$geo_pop_var)) {
           df_out <- df_out %>%
             dplyr::mutate(
-              attack_rate = dplyr::na_if((total / .data[[rv$geo_pop_var]]) * 1e5, 0)
+              attack_rate = dplyr::na_if((.data$total / .data[[rv$geo_pop_var]]) * 1e5, 0)
             ) # attack rate per 100 000
         }
 
@@ -296,6 +337,7 @@ place_server <- function(
           leaflet::clearGroup("Boundaries") %>% 
           leaflet::clearControls()
         
+        # change group layers depening on if attack rate is available
         if (is.null(geo_select()$pop_var)) {
           ogs <- c("Boundaries", "Circles")
         } else {
@@ -311,15 +353,15 @@ place_server <- function(
 
         req(nrow(boundaries) > 0)
 
+        # if not first admin level, map borders of parent admin levels
         if (show_parent_borders) {
-          # if not first admin level, map borders of lower admin levels
           gd <- force_reactive(geo_data)
           geo_level <- which(names(gd) == isolate(input$geo_level))
           if (geo_level > 1) {
             lower_levels <- 1:(geo_level - 1)
             purrr::walk(lower_levels, ~ {
               stroke_width <- (geo_level - .x) + 1
-              borders <- sf::st_filter(gd[[.x]]$sf, boundaries)
+              borders <- suppressMessages(sf::st_filter(gd[[.x]]$sf, boundaries))
               leaflet::leafletProxy("map", session) %>%
                 leaflet::addPolylines(
                   data = borders,
@@ -331,8 +373,10 @@ place_server <- function(
           }
         }
 
+        # get bbox for fly to step
         bbox <- sf::st_bbox(boundaries)
 
+        # tooltip hover labels for each polygon
         tt <- make_leaf_tooltip(
           boundaries,
           n_lab = n_lab,
@@ -365,7 +409,7 @@ place_server <- function(
           leaflet::removeControl(layerId = "attack_legend")
 
         # only plot polygons with incidence
-        df_map <- df_geo_counts() %>% dplyr::filter(total > 0)
+        df_map <- df_geo_counts() %>% dplyr::filter(.data$total > 0)
 
         if (isTruthy(nrow(df_map) > 0) & !is.null(rv$geo_pop_var)) {
           # lvls <- levels(df_map$ar_bin)
@@ -402,13 +446,15 @@ place_server <- function(
         }
       }) %>% bindEvent(df_geo_counts())
 
-      # minichart circles/pies
+      # minichart circles/pies 
       minicharts_init <- reactiveVal(TRUE)
       minicharts_on <- reactiveVal(TRUE)
       observe({
         req(df_geo_counts())
         df_map <- sf::st_drop_geometry(df_geo_counts())
         leaflet::leafletProxy("map", session) %>% leaflet.minicharts::clearMinicharts()
+
+        req(nrow(df_map) > 0)
 
         if (isTruthy("Circles" %in% isolate(input$map_groups)) | minicharts_init()) {
           chart_data <- df_map %>%
@@ -444,6 +490,7 @@ place_server <- function(
         }
       }) %>% bindEvent(df_geo_counts(), input$circle_size_mult)
 
+      # show/hide circles when selected/unselected from map groups
       observeEvent(input$map_groups, {
         if (!"Circles" %in% input$map_groups) {
           leaflet::leafletProxy("map", session) %>%
@@ -489,7 +536,7 @@ place_server <- function(
             N = dplyr::n(),
             n = sum(is.na(.data[[rv$geo_col]]))
           ) %>%
-          dplyr::mutate(percent = n / N)
+          dplyr::mutate(percent = .data$n / .data$N)
 
         if (df_missing$n == 0) {
           return(NULL)
@@ -656,7 +703,7 @@ place_server <- function(
               )
           }
 
-          # if not first admin level, map borders of lower admin levels
+          # if not first admin level, map borders of parent admin levels
           if (show_parent_borders) {
             gd <- force_reactive(geo_data)
             geo_level <- which(names(gd) == isolate(input$geo_level))
@@ -725,4 +772,61 @@ place_server <- function(
       })
     }
   )
+}
+
+#' @noRd
+validate_geo_data <- function(geo_data) {
+  gdv <- all(
+    # check geo_data is a list of named lists
+    rlang::is_list(geo_data),
+    rlang::is_named(geo_data),
+    all(purrr::map_lgl(geo_data, rlang::is_list)),
+    # check each item
+    purrr::map_lgl(geo_data, validate_geo_data_item)
+  )
+  if (gdv) {
+    geo_data
+  } else {
+    cli::cli_abort(c(
+      "x" = "`geo_data` does not meet the required specification.
+      It must be a list of named lists each containing the following named items:",
+      ">" = "`sf`: geographical data of class 'sf' (simple features)",
+      ">" = "`name_var`: character string of the variable name in `sf` containing the names of each geographical feature",
+      ">" = "`join_by`: named character vector of variable names to use when joining to linelist data.
+      For example `c(''pcode' = 'adm1_pcode')` where 'pcode' is a variable in `sf` to be joined with 'adm1_pcode'
+      a variable in the linelist data.",
+      " " = "Other optional items include:",
+      ">" = "`layer_name`: the name of the geographical boundary, for example 'State', 'Department' etc",
+      ">" = "`pop_var`: character string of the variable name in `sf` containing population data for each feature.
+      If provided, attack rates will be shown on the map as a choropleth",
+      "See ?epishiny::place_server for examples"
+    ))
+  }
+}
+
+#' @noRd 
+validate_geo_data_item <- function(gd) {
+  all(
+    # is an sf object
+    "sf" %in% class(gd$sf),
+    # name var is a character length 1
+    rlang::is_character(gd$name_var),
+    length(gd$name_var) == 1,
+    gd$name_var %in% colnames(gd$sf),
+    # join_by is a named character vector
+    rlang::is_character(gd$join_by),
+    rlang::is_named(gd$join_by),
+    # join cols are present in sf data
+    all(names(gd$join_by) %in% colnames(gd$sf))
+  )
+}
+
+#' @noRd 
+add_coords <- function(sf) {
+  if (all(c("lon", "lat") %in% colnames(sf))) {
+    sf
+  } else {
+    coords <- sf::st_coordinates(suppressWarnings(sf::st_point_on_surface(sf::st_zm(sf))))
+    sf %>% dplyr::mutate(lon = coords[, 1], lat = coords[, 2], .before = dplyr::last_col())
+  }
 }

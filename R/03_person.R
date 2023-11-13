@@ -17,23 +17,29 @@
 person_ui <- function(
     id,
     title = "Person",
-    icon = "users",
+    icon = bsicons::bs_icon("people-fill"),
     opts_btn_lab = "options",
     full_screen = TRUE
-) {
+) { 
   ns <- shiny::NS(id)
 
   bslib::navset_card_tab(
-    wrapper = \(...) {bslib::card_body(..., padding = 0, class = "person-container")}, # min_height = 300,
+    wrapper = function(...) {bslib::card_body(..., padding = 0, class = "person-container")}, 
     full_screen = full_screen,
     id = ns("tabs"),
 
     title = tags$div(
       class = "d-flex justify-content-start align-items-center",
-      tags$span(shiny::icon(icon), title, class = "pe-2"),
-      shinyWidgets::dropMenu(
-        actionButton(ns("dropdown"), icon = shiny::icon("sliders"), label = opts_btn_lab, class = "btn-sm")
-      )
+      tags$span(icon, title, class = "pe-2")
+      # bslib::popover(
+      #   title = tags$span(shiny::icon("sliders"), opts_btn_lab),
+      #   trigger = actionButton(
+      #     ns("dropdown"),
+      #     icon = shiny::icon("sliders"),
+      #     label = opts_btn_lab,
+      #     class = "btn-sm"
+      #   )
+      # )
     ),
 
     bslib::nav_panel(
@@ -61,6 +67,8 @@ person_ui <- function(
 #' @param age_labels Labels corresponding to the age breaks.
 #' @param age_var_lab The label for the age variable.
 #' @param age_group_lab The label for the age group variable.
+#' @param n_lab The label for the raw count variable.
+#' @param colours Vector of 2 colours to represent male and female, respectively.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
 #'
@@ -78,8 +86,9 @@ person_server <- function(
     age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
     age_var_lab = "Age (years)",
     age_group_lab = "Age group",
-    filter_info = shiny::reactiveVal(),
-    ...
+    n_lab = "N patients",
+    colours = c("#f15f36", "#19a0aa"),
+    filter_info = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
     id,
@@ -114,8 +123,10 @@ person_server <- function(
           female_level,
           age_breaks,
           age_labels,
-          filter_info = filter_info(),
-          ...
+          colours = colours,
+          ylab = age_group_lab,
+          value_name = n_lab,
+          filter_info = filter_info()
         )
       })
 
@@ -134,7 +145,6 @@ person_server <- function(
               age_var ~ age_var_lab,
               "age_group" ~ age_group_lab
             ),
-            # type = gtsummary::all_continuous() ~ "continuous2",
             type = list(age_var ~ "continuous2"),
             digits = list(age_var ~ c(2, 0, 0, 0, 0, 0)),
             missing_text = getOption("epishiny.na.label", "(Missing)"),
@@ -149,15 +159,15 @@ person_server <- function(
           gtsummary::italicize_levels() %>%
           gtsummary::modify_footnote(update = gtsummary::everything() ~ NA) %>%
           gtsummary::bold_labels() %>%
-          gtsummary::as_gt() %>%
-          gt::opt_interactive(
-            use_compact_mode = TRUE,
-            use_pagination = FALSE,
-            use_pagination_info = FALSE,
-            use_page_size_select = FALSE,
-            use_sorting = FALSE,
-            use_highlight = TRUE
-          )
+          gtsummary::as_gt() # %>%
+          # gt::opt_interactive(
+          #   use_compact_mode = TRUE,
+          #   use_pagination = FALSE,
+          #   use_pagination_info = FALSE,
+          #   use_page_size_select = FALSE,
+          #   use_sorting = FALSE,
+          #   use_highlight = TRUE
+          # )
       })
 
     }
@@ -184,7 +194,6 @@ hc_as_pyramid <- function(
     filter_info = NULL
 ) {
 
-  # missing_sex <- sum(!df_ll[[age_var]] %in% c(male_level, female_level) | is.na(df_ll[[age_var]]))
   missing_sex <- nrow(dplyr::filter(df_ll, !.data[[sex_var]] %in% c(male_level, female_level) | is.na(.data[[sex_var]])))
   missing_age <- sum(is.na(df_ll[[age_var]]))
 
@@ -198,11 +207,11 @@ hc_as_pyramid <- function(
       include.lowest = TRUE,
       right = FALSE
     )) %>%
-    dplyr::count(.data[[sex_var]], age_group) %>%
-    dplyr::mutate(n = dplyr::if_else(.data[[sex_var]] == male_level, -n, n)) %>%
-    tidyr::complete(.data[[sex_var]], age_group, fill = list(n = 0)) %>%
-    dplyr::filter(!is.na(.data[[sex_var]]), !is.na(age_group)) %>%
-    dplyr::arrange(.data[[sex_var]], age_group)
+    dplyr::count(.data[[sex_var]], .data$age_group) %>%
+    dplyr::mutate(n = dplyr::if_else(.data[[sex_var]] == male_level, -.data$n, .data$n)) %>%
+    tidyr::complete(.data[[sex_var]], .data$age_group, fill = list(n = 0)) %>%
+    dplyr::filter(!is.na(.data[[sex_var]]), !is.na(.data$age_group)) %>%
+    dplyr::arrange(.data[[sex_var]], .data$age_group)
 
   max_value <- max(abs(df_age_sex$n))
   x_levels <- levels(df_age_sex$age_group)
@@ -211,8 +220,8 @@ hc_as_pyramid <- function(
 
   series <- df_age_sex %>%
     dplyr::group_by(.data[[sex_var]]) %>%
-    dplyr::arrange(age_group) %>%
-    dplyr::do(data = .$n) %>%
+    dplyr::arrange(.data$age_group) %>% 
+    dplyr::do(data = .data$n) %>%
     dplyr::ungroup() %>%
     dplyr::rename(name = .data[[sex_var]]) %>%
     highcharter::list_parse()
@@ -235,14 +244,14 @@ hc_as_pyramid <- function(
     ) %>%
     highcharter::hc_xAxis(
       xaxis,
-      rlist::list.merge(xaxis, list(opposite = TRUE, linkedTo = 0))
+      purrr::list_modify(xaxis, opposite = TRUE, linkedTo = 0)
     ) %>%
     highcharter::hc_colors(colours) %>%
     highcharter::hc_tooltip(
       shared = FALSE,
       formatter = highcharter::JS(
         sprintf(
-          "function () { return '<b>' + this.series.name + ', age ' + this.point.category + 'y</b><br/>' + '%s: ' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}",
+          "function () { return '<b>' + this.series.name + ', age ' + this.point.category + '</b><br/>' + '%s: ' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}",
           value_name,
           value_digit,
           value_unit

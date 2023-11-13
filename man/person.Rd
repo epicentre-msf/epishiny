@@ -8,7 +8,7 @@
 person_ui(
   id,
   title = "Person",
-  icon = "users",
+  icon = bsicons::bs_icon("people-fill"),
   opts_btn_lab = "options",
   full_screen = TRUE
 )
@@ -24,8 +24,9 @@ person_server(
   age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
   age_var_lab = "Age (years)",
   age_group_lab = "Age group",
-  filter_info = shiny::reactiveVal(),
-  ...
+  n_lab = "N patients",
+  colours = c("#f15f36", "#19a0aa"),
+  filter_info = shiny::reactiveVal()
 )
 }
 \arguments{
@@ -56,6 +57,10 @@ person_server(
 \item{age_var_lab}{The label for the age variable.}
 
 \item{age_group_lab}{The label for the age group variable.}
+
+\item{n_lab}{The label for the raw count variable.}
+
+\item{colours}{Vector of 2 colours to represent male and female, respectively.}
 
 \item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
 returned by that function here as a shiny reactive to add filter information to chart exports.}

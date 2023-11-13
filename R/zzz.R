@@ -65,3 +65,34 @@
     )
   )
 }
+
+#' Example Linelist Data
+#'
+#' A 'linelist' is a (tidy) data format used in public health data collection 
+#' with each row representing an individual (patient, participant, etc) and 
+#' each column representing a variable associated with said individual.
+#'
+#' `df_ll` is an example linelist dataset containing data for a fake measles
+#' outbreak in Yemen. The data contains temporal, demographic, and geographic
+#' information for each patient, as well as other medical indicators.
+#'
+#' @format a tibble dataframe
+#' @examples
+#' df_ll
+"df_ll"
+
+#' Yemen Governorate (adm1) and District (adm2) Administrative Boundaries
+#'
+#' A list of length 2 containing geographic administrative boundary data
+#' for Yemen, stored as simple features (sf) objects. 
+#' 
+#' Each admin level can be joined to the example [`df_ll`] dataset with a join by
+#' specification of `c("pcode" = "adm1_pcode")` and `c("pcode" = "adm2_pcode")`
+#' respectively. These should be passed as the `join_by` field in each `geo_data`
+#' specification passed to [place_ui] and [place_server].
+#'
+#' @format named list of sf objects
+#' @examples
+#' sf_yem$adm1
+#' sf_yem$adm2
+"sf_yem"

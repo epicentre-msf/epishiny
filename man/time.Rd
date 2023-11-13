@@ -8,8 +8,9 @@
 time_ui(
   id,
   date_vars,
-  group_vars,
+  group_vars = NULL,
   title = "Time",
+  icon = bsicons::bs_icon("bar-chart-line-fill"),
   opts_btn_lab = "options",
   date_lab = "Date axis",
   date_int_lab = "Date interval",
@@ -26,7 +27,7 @@ time_server(
   id,
   df_ll,
   date_vars,
-  group_vars,
+  group_vars = NULL,
   y_lab = "Patients",
   n_lab = "N patients",
   ratio_var = NULL,
@@ -41,9 +42,13 @@ time_server(
 
 \item{date_vars}{named character vector of date variables for the date axis input. Names are used as variable labels.}
 
-\item{group_vars}{named character vector of categorical variables for the data grouping input. Names are used as variable labels.}
+\item{group_vars}{Character vector of categorical variable names. If provided, a select input will appear
+in the options dropdown allowing for data groups to be visualised as stacked bars on the epicurve.
+If named, names are used as variable labels.}
 
 \item{title}{header title for the card.}
+
+\item{icon}{The icon to display next to the title.}
 
 \item{opts_btn_lab}{text label for the dropdown menu button.}
 

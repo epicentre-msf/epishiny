@@ -5,7 +5,7 @@
 #' incorporation into exploratory data analysis workflows in R.
 #'
 #' @param module Name of the module to launch. Current options are
-#'  [time], [place] or [person].
+#'  "time", "place" or "person".
 #' @param ... Other named arguments passed to the relevant module
 #'  UI and Server functions. See each module's documentation for details
 #'  of the arguments required.
@@ -35,6 +35,7 @@ launch_module <- function(module = c("time", "place", "person"), ...) {
     several.ok = TRUE
   )
   ui <- bslib::page_fillable(
+    padding = 0,
     use_epishiny(),
     do.call(mod_ui, args[ui_args]),
     waiter::waiter_preloader(html = waiter::spin_3())
@@ -43,8 +44,8 @@ launch_module <- function(module = c("time", "place", "person"), ...) {
     do.call(mod_server, args[server_args])
   }
 
-  slb <- getOption("shiny.launch.browser")
-  on.exit(options(shiny.launch.browser = slb))
+  # slb <- getOption("shiny.launch.browser")
+  # on.exit(options(shiny.launch.browser = slb))
   # if (
   #   # Make sure that {rstudioapi} is available
   #   requireNamespace("rstudioapi", quietly = TRUE) &&

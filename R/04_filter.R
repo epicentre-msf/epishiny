@@ -133,8 +133,7 @@ filter_server <- function(
         force_reactive(df_ll) %>%
           dplyr::mutate(dplyr::across(
             unname(group_vars),
-            forcats::fct_na_value_to_level,
-            level = na_label
+            \(x) forcats::fct_na_value_to_level(x, level = na_label)
           ))
       })
 

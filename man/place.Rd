@@ -8,10 +8,14 @@
 place_ui(
   id,
   geo_data,
-  group_vars,
+  group_vars = NULL,
   title = "Place",
+  icon = bsicons::bs_icon("geo-fill"),
   geo_lab = "Geo boundaries",
   groups_lab = "Group data by",
+  circle_size_lab = "Circle size multiplyer",
+  opts_btn_lab = "options",
+  download_lab = "download",
   n_lab = "N patients",
   full_screen = TRUE
 )
@@ -20,7 +24,7 @@ place_server(
   id,
   df_ll,
   geo_data,
-  group_vars,
+  group_vars = NULL,
   n_lab = "N patients",
   show_parent_borders = TRUE,
   choro_lab = "Attack rate<br>per 100 000",
@@ -34,15 +38,25 @@ place_server(
 \arguments{
 \item{id}{Module id. Must be the same in both the UI and server function to link the two.}
 
-\item{geo_data}{A list of spatial sf dataframes with information for different geographical levels.}
+\item{geo_data}{A list of named lists containing spatial sf dataframes and other information for different geographical levels.}
 
-\item{group_vars}{named character vector of categorical variables for the data grouping input. Names are used as variable labels.}
+\item{group_vars}{Character vector of categorical variable names. If provided, a select input will appear
+in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit.
+If named, names are used as variable labels.}
 
 \item{title}{The title for the card.}
+
+\item{icon}{The icon to be displayed next to the title}
 
 \item{geo_lab}{The label for the geographical level selection.}
 
 \item{groups_lab}{The label for the group data by selection.}
+
+\item{circle_size_lab}{text label for the circle size slider input.}
+
+\item{opts_btn_lab}{text label for the dropdown menu button.}
+
+\item{download_lab}{text label for the download button.}
 
 \item{n_lab}{The label for the raw count variable.}
 
