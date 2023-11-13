@@ -57,10 +57,14 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">place_ui</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
 <span>  <span class="va">geo_data</span>,</span>
-<span>  <span class="va">group_vars</span>,</span>
+<span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Place"</span>,</span>
+<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu">bs_icon</span><span class="op">(</span><span class="st">"geo-fill"</span><span class="op">)</span>,</span>
 <span>  geo_lab <span class="op">=</span> <span class="st">"Geo boundaries"</span>,</span>
 <span>  groups_lab <span class="op">=</span> <span class="st">"Group data by"</span>,</span>
+<span>  circle_size_lab <span class="op">=</span> <span class="st">"Circle size multiplyer"</span>,</span>
+<span>  opts_btn_lab <span class="op">=</span> <span class="st">"options"</span>,</span>
+<span>  download_lab <span class="op">=</span> <span class="st">"download"</span>,</span>
 <span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -69,7 +73,7 @@
 <span>  <span class="va">id</span>,</span>
 <span>  <span class="va">df_ll</span>,</span>
 <span>  <span class="va">geo_data</span>,</span>
-<span>  <span class="va">group_vars</span>,</span>
+<span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
 <span>  show_parent_borders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  choro_lab <span class="op">=</span> <span class="st">"Attack rate&lt;br&gt;per 100 000"</span>,</span>
@@ -88,15 +92,21 @@
 
 
 <dt>geo_data</dt>
-<dd><p>A list of spatial sf dataframes with information for different geographical levels.</p></dd>
+<dd><p>A list of named lists containing spatial sf dataframes and other information for different geographical levels.</p></dd>
 
 
 <dt>group_vars</dt>
-<dd><p>named character vector of categorical variables for the data grouping input. Names are used as variable labels.</p></dd>
+<dd><p>Character vector of categorical variable names. If provided, a select input will appear
+in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit.
+If named, names are used as variable labels.</p></dd>
 
 
 <dt>title</dt>
 <dd><p>The title for the card.</p></dd>
+
+
+<dt>icon</dt>
+<dd><p>The icon to be displayed next to the title</p></dd>
 
 
 <dt>geo_lab</dt>
@@ -105,6 +115,18 @@
 
 <dt>groups_lab</dt>
 <dd><p>The label for the group data by selection.</p></dd>
+
+
+<dt>circle_size_lab</dt>
+<dd><p>text label for the circle size slider input.</p></dd>
+
+
+<dt>opts_btn_lab</dt>
+<dd><p>text label for the dropdown menu button.</p></dd>
+
+
+<dt>download_lab</dt>
+<dd><p>text label for the download button.</p></dd>
 
 
 <dt>n_lab</dt>
@@ -236,6 +258,7 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>    <span class="fu"><a href="person.html">person_ui</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">"age_sex"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘bsicons’</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># app server</span></span></span>
 <span class="r-in"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span></span>

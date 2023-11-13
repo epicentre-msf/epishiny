@@ -57,8 +57,9 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">time_ui</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
 <span>  <span class="va">date_vars</span>,</span>
-<span>  <span class="va">group_vars</span>,</span>
+<span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu">bs_icon</span><span class="op">(</span><span class="st">"bar-chart-line-fill"</span><span class="op">)</span>,</span>
 <span>  opts_btn_lab <span class="op">=</span> <span class="st">"options"</span>,</span>
 <span>  date_lab <span class="op">=</span> <span class="st">"Date axis"</span>,</span>
 <span>  date_int_lab <span class="op">=</span> <span class="st">"Date interval"</span>,</span>
@@ -75,7 +76,7 @@
 <span>  <span class="va">id</span>,</span>
 <span>  <span class="va">df_ll</span>,</span>
 <span>  <span class="va">date_vars</span>,</span>
-<span>  <span class="va">group_vars</span>,</span>
+<span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  y_lab <span class="op">=</span> <span class="st">"Patients"</span>,</span>
 <span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
 <span>  ratio_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -97,11 +98,17 @@
 
 
 <dt>group_vars</dt>
-<dd><p>named character vector of categorical variables for the data grouping input. Names are used as variable labels.</p></dd>
+<dd><p>Character vector of categorical variable names. If provided, a select input will appear
+in the options dropdown allowing for data groups to be visualised as stacked bars on the epicurve.
+If named, names are used as variable labels.</p></dd>
 
 
 <dt>title</dt>
 <dd><p>header title for the card.</p></dd>
+
+
+<dt>icon</dt>
+<dd><p>The icon to display next to the title.</p></dd>
 
 
 <dt>opts_btn_lab</dt>

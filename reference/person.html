@@ -57,7 +57,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">person_ui</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Person"</span>,</span>
-<span>  icon <span class="op">=</span> <span class="st">"users"</span>,</span>
+<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu">bs_icon</span><span class="op">(</span><span class="st">"people-fill"</span><span class="op">)</span>,</span>
 <span>  opts_btn_lab <span class="op">=</span> <span class="st">"options"</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -73,8 +73,9 @@
 <span>  age_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"&lt;5"</span>, <span class="st">"5-17"</span>, <span class="st">"18-24"</span>, <span class="st">"25-34"</span>, <span class="st">"35-49"</span>, <span class="st">"50+"</span><span class="op">)</span>,</span>
 <span>  age_var_lab <span class="op">=</span> <span class="st">"Age (years)"</span>,</span>
 <span>  age_group_lab <span class="op">=</span> <span class="st">"Age group"</span>,</span>
-<span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
+<span>  colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#f15f36"</span>, <span class="st">"#19a0aa"</span><span class="op">)</span>,</span>
+<span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -134,6 +135,14 @@
 
 <dt>age_group_lab</dt>
 <dd><p>The label for the age group variable.</p></dd>
+
+
+<dt>n_lab</dt>
+<dd><p>The label for the raw count variable.</p></dd>
+
+
+<dt>colours</dt>
+<dd><p>Vector of 2 colours to represent male and female, respectively.</p></dd>
 
 
 <dt>filter_info</dt>
@@ -225,6 +234,7 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>    <span class="fu">person_ui</span><span class="op">(</span>id <span class="op">=</span> <span class="st">"age_sex"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘bsicons’</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># app server</span></span></span>
 <span class="r-in"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span></span>
