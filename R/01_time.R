@@ -5,11 +5,11 @@
 #' @rdname time
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
-#' @param date_vars named character vector of date variables for the date axis input. Names are used as variable labels.
+#' @param date_vars Character vector of date variable(s) for the date axis. If named, names are used as variable labels.
 #' @param group_vars Character vector of categorical variable names. If provided, a select input will appear
 #'  in the options dropdown allowing for data groups to be visualised as stacked bars on the epicurve.
 #'  If named, names are used as variable labels.
-#' @param title header title for the card.
+#' @param title Header title for the card.
 #' @param icon The icon to display next to the title.
 #' @param opts_btn_lab text label for the dropdown menu button.
 #' @param date_lab text label for the date variable input.
@@ -208,8 +208,13 @@ time_server <- function(
         }
 
         if (!is.null(ratio_var)) {
-          if (is.null(ratio_numer) || is.null(ratio_denom)) {
-            stop("both `ratio_numer` and `ratio_denom` must be supplied when `ratio_var` is supplied")
+          if (any(is.null(ratio_numer), is.null(ratio_denom), is.null(ratio_lab))) {
+            cli::cli_abort(c(
+              "x" = "when `ratio_var` is supplied, you must provide the following accompanying arguments:",
+              "*" = "ratio_numer`: character vector of ratio calculation numerator value(s)",
+              "*" = "ratio_denom`: character vector of ratio calculation denominator value(s)",
+              "*" = "ratio_lab`: the axis label to be used for the ratio line"
+            ))
           }
 
           df_ratio <- df_mod() %>%
@@ -221,7 +226,7 @@ time_server <- function(
             dplyr::group_by(!!date) %>%
             dplyr::summarise(
               n1 = sum(.data[[ratio_var]] %in% ratio_numer),
-              N = sum(.data[[ratio_var]] %in% ratio_denom),
+              N = sum(.data[[ratio_var]] %in% unique(c(ratio_numer, ratio_denom))),
               ratio = (.data$n1 / .data$N) * 100,
               .groups = "drop"
             ) %>%

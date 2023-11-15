@@ -211,7 +211,6 @@ place_server <- function(
           names(var_list[var_list == map_var])
         )
         
-
         # save as reactive values
         rv$geo_join <- geo_join
         rv$join_cols <- join_cols

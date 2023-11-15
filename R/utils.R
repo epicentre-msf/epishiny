@@ -244,7 +244,6 @@ leaf_basemap <- function(
       position = "bottomright",
       options = leaflet::scaleBarOptions(imperial = FALSE)
     ) %>%
-    leaflet.extras::addResetMapButton() %>%
     leaflet::addLayersControl(
       baseGroups = baseGroups,
       overlayGroups = overlayGroups,
