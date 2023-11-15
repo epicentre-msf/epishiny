@@ -57,7 +57,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">person_ui</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Person"</span>,</span>
-<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu">bs_icon</span><span class="op">(</span><span class="st">"people-fill"</span><span class="op">)</span>,</span>
+<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/bsicons/man/bs_icon.html" class="external-link">bs_icon</a></span><span class="op">(</span><span class="st">"people-fill"</span><span class="op">)</span>,</span>
 <span>  opts_btn_lab <span class="op">=</span> <span class="st">"options"</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -234,7 +234,6 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>    <span class="fu">person_ui</span><span class="op">(</span>id <span class="op">=</span> <span class="st">"age_sex"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘bsicons’</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># app server</span></span></span>
 <span class="r-in"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span></span>
