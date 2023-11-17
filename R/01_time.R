@@ -203,15 +203,8 @@ time_server <- function(
         rv$group <- group
         rv$group_sym <- rlang::sym(group)
         rv$missing_dates <- sum(is.na(df_mod()[[input$date]]))
-        if (length(count_vars)) {
-          n_lab <- ifelse(
-            is.null(names(count_vars[count_vars == input$count_var])),
-            input$count_var,
-            names(count_vars[count_vars == input$count_var])
-          )
-        } else {
-          n_lab <- getOption("epishiny.count.label", "N")
-        }
+        count_var <- input$count_var
+        n_lab <- get_label(count_var, count_vars)
         rv$n_lab <- n_lab
       })
 
@@ -272,11 +265,7 @@ time_server <- function(
 
         shiny::validate(shiny::need(nrow(df) > 0, "No data to display"))
 
-        date_lab <- ifelse(
-          is.null(names(date_vars[date_vars == date])),
-          date,
-          names(date_vars[date_vars == date])
-        )
+        date_lab <- get_label(date, date_vars)
 
         if (group == "n") {
           hc <- highcharter::hchart(
@@ -288,11 +277,7 @@ time_server <- function(
           ) %>% 
           highcharter::hc_tooltip(shared = TRUE)
         } else {
-          group_lab <- ifelse(
-            is.null(names(group_vars[group_vars == group])),
-            group,
-            names(group_vars[group_vars == group])
-          )
+          group_lab <- get_label(group, group_vars)
 
           text_legend <- glue::glue(
             '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'

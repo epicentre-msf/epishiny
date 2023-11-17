@@ -25,6 +25,25 @@ df_ll_raw <- qxl::qread(
   sheet = "Linelist patients"
 )
 
+bin_ages <- function(
+    df,
+    age_var,
+    age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
+    age_labs = c("<5", "5-17", "18-24", "25-34", "35-49", "50+")
+) {
+  dplyr::mutate(
+    df,
+    age_group = cut(
+      .data[[age_var]],
+      breaks = age_breaks,
+      labels = age_labs,
+      include.lowest = TRUE,
+      right = FALSE
+    ),
+    .after = .data[[age_var]]
+  )
+}
+
 df_ll <- df_ll_raw %>%
   left_join(
     sf::st_drop_geometry(sf_yem$adm1) %>% select(adm1_name, adm1_pcode = pcode),
@@ -47,11 +66,13 @@ df_ll <- df_ll_raw %>%
       .default = NA_real_
     )
   ) %>%
+  bin_ages(age_var = "age_years") %>% 
   select(
     case_id,
     starts_with("date"),
     sex_id,
     age_years,
+    age_group,
     starts_with("adm"),
     fever,
     rash,

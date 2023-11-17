@@ -9,7 +9,7 @@ server <- function(input, output, session) {
 
   map_click <- place_server(
     id = "map",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df_ll),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
@@ -22,9 +22,10 @@ server <- function(input, output, session) {
 
   epicurve_click <- time_server(
     id = "curve",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df_ll),
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_var = "outcome",
     ratio_lab = "CFR",
     ratio_numer = "Deceased",
@@ -39,7 +40,7 @@ server <- function(input, output, session) {
 
   person_server(
     id = "age_sex",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df_ll),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

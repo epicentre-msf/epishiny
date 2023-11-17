@@ -6,17 +6,20 @@
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param geo_data A list of named lists containing spatial sf dataframes and other information for different geographical levels.
+#' @param count_vars If data is aggregated, variable name(s) of count variable(s) in data. If more than one is variable provided,
+#'  a select input will appear in the options dropdown. If named, names are used as variable labels.
 #' @param group_vars Character vector of categorical variable names. If provided, a select input will appear
 #'  in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit. 
 #'  If named, names are used as variable labels.
 #' @param title The title for the card.
 #' @param icon The icon to be displayed next to the title
 #' @param geo_lab The label for the geographical level selection.
+#' @param count_vars_lab text label for the aggregate count variables input.
 #' @param groups_lab The label for the group data by selection.
+#' @param no_grouping_lab text label for the no grouping option in the grouping input.
 #' @param circle_size_lab text label for the circle size slider input.
 #' @param opts_btn_lab text label for the dropdown menu button.
 #' @param download_lab text label for the download button.
-#' @param n_lab The label for the raw count variable.
 #' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
 #' @return A [bslib::card] UI element with options and download button and a leaflet map.
@@ -25,30 +28,47 @@
 place_ui <- function(
     id,
     geo_data,
+    count_vars = NULL,
     group_vars = NULL,
     title = "Place",
     icon = bsicons::bs_icon("geo-fill"),
     geo_lab = "Geo boundaries",
+    count_vars_lab = "Indicator",
     groups_lab = "Group data by",
+    no_grouping_lab = "No grouping",
     circle_size_lab = "Circle size multiplyer",
     opts_btn_lab = "options",
     download_lab = "download",
-    n_lab = "N patients",
     full_screen = TRUE
 ) {
   ns <- shiny::NS(id)
 
   # check geo_data meets criteria for use
-  geo_data <- validate_geo_data(geo_data)
-  # use level_name for display names if found, otherwise list item name
-  geo_levels <- purrr::set_names(
-    names(geo_data),
-    purrr::map2_chr(
-      unname(geo_data),
-      names(geo_data),
-      function(x, y) purrr::pluck(x, "level_name", .default = y)
-    )
-  )
+  # geo_data <- validate_geo_data(geo_data)
+  # # use level_name for display names if found, otherwise list item name
+  # geo_levels <- purrr::set_names(
+  #   names(geo_data),
+  #   purrr::map2_chr(
+  #     unname(geo_data),
+  #     names(geo_data),
+  #     function(x, y) purrr::pluck(x, "level_name", .default = y)
+  #   )
+  # )
+
+  if (!inherits(geo_data, "epishiny_geo_layer")) {
+    if (!all(purrr::map_lgl(geo_data, ~inherits(.x, "epishiny_geo_layer")))) {
+      cli::cli_abort(c(
+        "{.arg geo_data} must be an epishiny geo layer or a list of epishiny geo layers.",
+        "i" = "see ?epishiny::geo_layer for details on how to setup your geo data."
+      ))
+    }
+  }
+
+  if (inherits(geo_data, "epishiny_geo_layer")) {
+    geo_levels <- geo_data$layer_name
+  } else {
+    geo_levels <- purrr::map_chr(geo_data, "layer_name")
+  }
 
   tagList(
     use_epishiny(),
@@ -75,9 +95,17 @@ place_ui <- function(
             choices = geo_levels
           ),
           selectInput(
+            ns("count_var"),
+            label = count_vars_lab,
+            choices = count_vars,
+            multiple = FALSE,
+            selectize = FALSE,
+            width = 200
+          ),
+          selectInput(
             ns("var"),
             label = groups_lab,
-            choices = c(purrr::set_names("n", n_lab), group_vars),
+            choices = c(purrr::set_names("n", no_grouping_lab), group_vars),
             multiple = FALSE,
             selectize = FALSE,
             width = 200
@@ -111,7 +139,7 @@ place_ui <- function(
   )
 }
 
-#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
+#' @param df Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.
 #' @param show_parent_borders Show borders of parent boundary levels?
 #' @param choro_lab Label for attack rate choropleth (only applicable if `geo_data` contains population data)
 #' @param choro_pal Colour palette passed to [`leaflet::colorBin()`] for attack rate choropleth 
@@ -131,10 +159,10 @@ place_ui <- function(
 #' @export
 place_server <- function(
     id,
-    df_ll,
+    df,
     geo_data,
+    count_vars = NULL,
     group_vars = NULL,
-    n_lab = "N patients",
     show_parent_borders = TRUE,
     choro_lab = "Attack rate<br>per 100 000",
     choro_pal = "Reds",
@@ -148,8 +176,21 @@ place_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
+      # re-structure geo_data if only 1 layer provided
+      if (inherits(geo_data, "epishiny_geo_layer")) {
+        geo_data <- list(geo_data)
+      }
+
+      if (length(geo_data) < 2) {
+        shinyjs::hide("geo_level")
+      }
+
       if (is.null(group_vars)) {
         shinyjs::hide("var")
+      }
+
+      if (length(count_vars) < 2) {
+        shinyjs::hide("count_var")
       }
 
       # check for chrome browser for map exports
@@ -161,7 +202,7 @@ place_server <- function(
       }
 
       # sf settings
-      # sf::sf_use_s2(FALSE)
+      sf::sf_use_s2(FALSE)
 
       # loading spinner for map export
       w_map <- waiter::Waiter$new(
@@ -175,19 +216,25 @@ place_server <- function(
       # ==========================================================================
 
       df_mod <- reactive({
-        force_reactive(df_ll)
+        force_reactive(df)
       })
 
       # add point on surface lon lat coords if not already present
       # required for circle/pie position on map
-      geo_data <- purrr::map(geo_data, function(x) {
-        x$sf <- add_coords(x$sf)
-        return(x)
-      })
+      # geo_data <- purrr::map(geo_data, function(x) {
+      #   x$sf <- add_coords(x$sf)
+      #   return(x)
+      # })
 
       geo_select <- reactive({
-        gd <- force_reactive(geo_data)
-        gd[[input$geo_level]]
+        # if geo_data is a single 'epishiny_geo_layer' use that
+        # otherwise select with on geo_level input
+        if (inherits(geo_data, "epishiny_geo_layer")) {
+          geo_data[[1]]
+        } else {
+          gd_index <- which(purrr::map_chr(geo_data, "layer_name") == input$geo_level)
+          geo_data[[gd_index]]
+        }
       })
 
       rv <- reactiveValues()
@@ -195,21 +242,19 @@ place_server <- function(
       # update reactive values whenever inputs change
       observe({
         geo_join <- geo_select()$join_by
-        join_cols <- dplyr::if_else(rlang::is_named(geo_join), names(geo_join), unname(geo_join))
+        join_cols <- if (rlang::is_named(geo_join)) names(geo_join) else geo_join
         geo_col <- unname(geo_join)
         geo_col_sym <- rlang::sym(geo_col)
         geo_name_col <- geo_select()$name_var
         geo_name_col_sym <- rlang::sym(geo_name_col)
-        geo_level_name <- geo_select()$level_name
+        geo_level_name <- geo_select()$layer_name
         geo_pop_var <- geo_select()$pop_var
         map_var <- input$var
         map_var_sym <- rlang::sym(map_var)
-        var_list <- c(purrr::set_names("n", n_lab), group_vars)
-        map_var_lab <- ifelse(
-          is.null(names(var_list[var_list == map_var])),
-          map_var,
-          names(var_list[var_list == map_var])
-        )
+        var_list <- c("n", group_vars)
+        map_var_lab <- get_label(map_var, var_list)
+        count_var <- input$count_var
+        n_lab <- get_label(count_var, count_vars)
         
         # save as reactive values
         rv$geo_join <- geo_join
@@ -223,6 +268,8 @@ place_server <- function(
         rv$map_var <- map_var
         rv$map_var_sym <- map_var_sym
         rv$map_var_lab <- map_var_lab
+        rv$count_var <- count_var
+        rv$n_lab <- n_lab
       })
 
       # filter geo boundaries to only those with incidence + their neighbours
@@ -298,16 +345,20 @@ place_server <- function(
 
       # join ll data to boundaries
       df_geo_counts <- reactive({
-        if (rv$map_var == "n") {
-          var_lab <- n_lab
-          df_counts <- df_mod() %>%
-            dplyr::count(.data[[rv$geo_col]], name = var_lab) %>%
-            dplyr::mutate(total = .data[[var_lab]])
-        } else {
-          df_counts <- df_mod() %>%
-            janitor::tabyl(.data[[rv$geo_col]], .data[[rv$map_var]], show_missing_levels = FALSE) %>%
-            janitor::adorn_totals("col", name = "total")
-        }
+        # is the data pre-aggregated
+        is_agg <- as.logical(length(count_vars))
+        # is a data grouping variable supplied
+        is_grouped <- rv$map_var != "n"
+
+        df_counts <- get_geo_counts(
+          df = df_mod(),
+          is_agg = is_agg,
+          is_grouped = is_grouped,
+          geo_var = rv$geo_col,
+          count_var = rv$count_var,
+          count_lab = rv$n_lab,
+          group_var = rv$map_var
+        )
 
         df_out <- rv$sf %>%
           dplyr::mutate(name = !!rv$geo_name_col_sym) %>%
@@ -325,7 +376,7 @@ place_server <- function(
         }
 
         return(df_out)
-      }) %>% bindEvent(df_mod(), rv$sf, rv$map_var)
+      }) %>% bindEvent(df_mod(), rv$sf, rv$map_var, rv$count_var)
 
       # add polygon boundaries with tooltip data info
       observe({
@@ -354,8 +405,8 @@ place_server <- function(
 
         # if not first admin level, map borders of parent admin levels
         if (show_parent_borders) {
-          gd <- force_reactive(geo_data)
-          geo_level <- which(names(gd) == isolate(input$geo_level))
+          gd <- geo_data
+          geo_level <- which(purrr::map_chr(gd, "layer_name") == isolate(input$geo_level))
           if (geo_level > 1) {
             lower_levels <- 1:(geo_level - 1)
             purrr::walk(lower_levels, ~ {
@@ -378,7 +429,7 @@ place_server <- function(
         # tooltip hover labels for each polygon
         tt <- make_leaf_tooltip(
           boundaries,
-          n_lab = n_lab,
+          n_lab = rv$n_lab,
           pop_col = rv$geo_pop_var,
           ar_col = "attack_rate"
         )
@@ -541,7 +592,7 @@ place_server <- function(
           return(NULL)
         } else {
           n_missing <- glue::glue("{scales::number(df_missing$n)} ({scales::percent(df_missing$percent, accuracy = 1)})")
-          glue::glue("{rv$geo_level_name} data missing/unknown for {n_missing} patients")
+          glue::glue("{rv$geo_level_name} data missing/unknown for {n_missing} {tolower(rv$n_lab)}")
         }
       })
 
@@ -631,7 +682,7 @@ place_server <- function(
             leaflet::addMapPane(name = "place_labels", zIndex = 320) %>%
             leaflet::addMiniMap(toggleDisplay = FALSE, position = "topleft") %>%
             leaflet::addControl(
-              html = tags$b(rv$map_var_lab),
+              html = tags$b(ifelse(rv$map_var_lab == "n", rv$n_lab, rv$map_var_lab)),
               position = "topright"
             ) %>%
             leaflet::addScaleBar(
@@ -686,7 +737,6 @@ place_server <- function(
                 fillColor = ~ pal(attack_rate),
                 fillOpacity = choro_opacity,
                 highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
-                layerId = ~pcode,
                 group = "Attack rate",
                 options = leaflet::pathOptions(pane = "choropleth")
               ) %>%
@@ -704,8 +754,8 @@ place_server <- function(
 
           # if not first admin level, map borders of parent admin levels
           if (show_parent_borders) {
-            gd <- force_reactive(geo_data)
-            geo_level <- which(names(gd) == isolate(input$geo_level))
+            gd <- geo_data
+            geo_level <- which(purrr::map_chr(gd, "layer_name") == isolate(input$geo_level))
             if (geo_level > 1) {
               lower_levels <- 1:(geo_level - 1)
               for (i in lower_levels) {
@@ -773,51 +823,68 @@ place_server <- function(
   )
 }
 
-#' @noRd
-validate_geo_data <- function(geo_data) {
-  gdv <- all(
-    # check geo_data is a list of named lists
-    rlang::is_list(geo_data),
-    rlang::is_named(geo_data),
-    all(purrr::map_lgl(geo_data, rlang::is_list)),
-    # check each item
-    purrr::map_lgl(geo_data, validate_geo_data_item)
-  )
-  if (gdv) {
-    geo_data
-  } else {
+#' Build a geo layer to be used in the 'place' module
+#' 
+#' @param layer_name the name of the geo layer, for example 'State', 'Department', 'Admin2' etc. 
+#'  If providing multiple layers, layer names must be unique.
+#' @param sf geographical data of class 'sf' (simple features).
+#' @param name_var character string of the variable name in `sf` containing the names of each geographical feature.
+#' @param join_by data join specification to join geo layer to a dataset. Should be either a single variable name
+#'  present in both datasets or a named vector where the name is the geo layer join variable and the value is the
+#'  join variable of the dataset. i.e. `c("pcode" = "place_code")` LHS = geo, RHS = data.
+#' @param pop_var character string of the variable name in `sf` containing population data for each feature.
+#'  If provided, attack rates will be shown on the map as a choropleth.
+#' 
+#' @return named list of class "epishiny_geo_layer"
+#' 
+#' @examples 
+#' geo_layer(
+#'   layer_name = "Governorate",
+#'   sf = sf_yem$adm1,
+#'   name_var = "adm1_name",
+#'   pop_var = "adm1_pop",
+#'   join_by = c("pcode" = "adm1_pcode")
+#' )
+#' @export 
+geo_layer <- function(layer_name, sf, name_var, join_by, pop_var = NULL) {
+  # check arguments
+  rlang::check_required(layer_name)
+  rlang::check_required(sf)
+  rlang::check_required(name_var)
+  rlang::check_required(join_by)
+  check_single_string(layer_name)
+  check_single_string(name_var)
+  if (!is.null(pop_var)) check_single_string(pop_var)
+  if (!"sf" %in% class(sf)) {
+    cli::cli_abort("{.var {rlang::caller_arg(sf)}} is not an sf object")
+  }
+  if (!rlang::is_string(join_by) | length(join_by) != 1) {
     cli::cli_abort(c(
-      "x" = "`geo_data` does not meet the required specification.
-      It must be a list of named lists each containing the following named items:",
-      ">" = "`sf`: geographical data of class 'sf' (simple features)",
-      ">" = "`name_var`: character string of the variable name in `sf` containing the names of each geographical feature",
-      ">" = "`join_by`: named character vector of variable names to use when joining to linelist data.
-      For example `c(''pcode' = 'adm1_pcode')` where 'pcode' is a variable in `sf` to be joined with 'adm1_pcode'
-      a variable in the linelist data.",
-      " " = "Other optional items include:",
-      ">" = "`layer_name`: the name of the geographical boundary, for example 'State', 'Department' etc",
-      ">" = "`pop_var`: character string of the variable name in `sf` containing population data for each feature.
-      If provided, attack rates will be shown on the map as a choropleth",
-      "See ?epishiny::place_server for examples"
+      "{.arg join_by} must be a single variable name string or a named string",
+      "*" = "if named, the name should be the name of the variable in {.var {rlang::caller_arg(sf)}} to be used for joining to your dataset.",
+      "*" = "the value should be the name of the variable in your dataset to be used for joining to {.var {rlang::caller_arg(sf)}}.",
+      "*" = "i.e. `c('pcode' = 'place_code')` where `pcode` is in {.var {rlang::caller_arg(sf)}} and `place_code` is in your dataset.",
+      "*" = "if not named, the variable name must be present in both {.var {rlang::caller_arg(sf)}} and your dataset."
     ))
   }
+  sf_join_col <- if (rlang::is_named(join_by)) names(join_by) else join_by
+  if (!sf_join_col %in% colnames(sf)) {
+    cli::cli_abort("join column '{sf_join_col}' not found in {.var {rlang::caller_arg(sf)}}")
+  }
+  # add lon lat coords to sf if not already there
+  sf <- add_coords(sf)
+  # return named list with epishiny_geo_layer class
+  structure(
+    tibble::lst(layer_name, sf, name_var, pop_var, join_by),
+    class = "epishiny_geo_layer"
+  )
 }
 
 #' @noRd 
-validate_geo_data_item <- function(gd) {
-  all(
-    # is an sf object
-    "sf" %in% class(gd$sf),
-    # name var is a character length 1
-    rlang::is_character(gd$name_var),
-    length(gd$name_var) == 1,
-    gd$name_var %in% colnames(gd$sf),
-    # join_by is a named character vector
-    rlang::is_character(gd$join_by),
-    rlang::is_named(gd$join_by),
-    # join cols are present in sf data
-    all(names(gd$join_by) %in% colnames(gd$sf))
-  )
+check_single_string <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
+  if (!rlang::is_string(x) | length(x) != 1) {
+    cli::cli_abort("{.arg {arg}} must be a single string.", call = call)
+  }
 }
 
 #' @noRd 
@@ -826,6 +893,90 @@ add_coords <- function(sf) {
     sf
   } else {
     coords <- sf::st_coordinates(suppressWarnings(sf::st_point_on_surface(sf::st_zm(sf))))
-    sf %>% dplyr::mutate(lon = coords[, 1], lat = coords[, 2], .before = dplyr::last_col())
+    sf %>% dplyr::mutate(lon = coords[, 1], lat = coords[, 2])
   }
 }
+
+#' @noRd
+get_geo_counts <- function(
+    df,
+    is_agg,
+    is_grouped,
+    geo_var,
+    count_var,
+    count_lab,
+    group_var
+  ) {
+    if (!is_grouped) {
+      if (is_agg) {
+        df <- df %>%
+          dplyr::count(.data[[geo_var]], wt = .data[[count_var]], name = count_lab)
+      } else {
+        df <- df %>% dplyr::count(.data[[geo_var]], name = count_lab)
+      }
+      df <- df %>% dplyr::mutate(total = .data[[count_lab]])
+    } else {
+      if (is_agg) {
+        df <- df %>%
+          dplyr::count(.data[[geo_var]], .data[[group_var]], wt = .data[[count_var]])
+      } else {
+        df <- df %>% dplyr::count(.data[[geo_var]], .data[[group_var]])
+      }
+      df <- df %>%
+        tidyr::pivot_wider(names_from = group_var, values_from = "n") %>% 
+        janitor::adorn_totals("col", name = "total")
+    }
+    return(df)
+  }
+
+
+# #' @noRd
+# validate_geo_data <- function(geo_data) {
+#   gdv <- all(
+#     # check geo_data is a list of named lists
+#     rlang::is_list(geo_data),
+#     rlang::is_named(geo_data),
+#     all(purrr::map_lgl(geo_data, rlang::is_list)),
+#     # check each item
+#     purrr::map_lgl(geo_data, validate_geo_data_item)
+#   )
+#   if (gdv) {
+#     geo_data
+#   } else {
+#     cli::cli_abort(c(
+#       "x" = "`geo_data` does not meet the required specification.
+#       It must be a list of named lists each containing the following named items:",
+#       ">" = "`sf`: geographical data of class 'sf' (simple features)",
+#       ">" = "`name_var`: character string of the variable name in `sf` containing the names of each geographical feature",
+#       ">" = "`join_by`: named character vector of variable names to use when joining to linelist data.
+#       For example `c(''pcode' = 'adm1_pcode')` where 'pcode' is a variable in `sf` to be joined with 'adm1_pcode'
+#       a variable in the linelist data.",
+#       " " = "Other optional items include:",
+#       ">" = "`layer_name`: the name of the geographical boundary, for example 'State', 'Department' etc",
+#       ">" = "`pop_var`: character string of the variable name in `sf` containing population data for each feature.
+#       If provided, attack rates will be shown on the map as a choropleth",
+#       "See ?epishiny::place_server for examples"
+#     ))
+#   }
+# }
+
+# #' @noRd
+# validate_geo_data_item <- function(gd) {
+#   all(
+#     # is an sf object
+#     "sf" %in% class(gd$sf),
+#     # name var is a character length 1
+#     rlang::is_character(gd$name_var),
+#     length(gd$name_var) == 1,
+#     gd$name_var %in% colnames(gd$sf),
+#     # join_by is a length 1 character vector
+#     length(gd$join_by) == 1,
+#     rlang::is_character(gd$join_by),
+#     # join cols are present in sf data
+#     if (rlang::is_named(gd$join_by)) {
+#       all(names(gd$join_by) %in% colnames(gd$sf))
+#     } else {
+#       all(gd$join_by %in% colnames(gd$sf))
+#     }
+#   )
+# }

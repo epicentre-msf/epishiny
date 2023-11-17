@@ -94,8 +94,6 @@ For aggregated data, character string of numeric count column to use of ratio de
 
 \item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
 returned by that function here as a shiny reactive to add filter information to chart exports.}
-
-\item{n_lab}{The label for the raw count variable.}
 }
 \value{
 the module server function returns any point click event data of the highchart.
