@@ -191,7 +191,7 @@ server <- function(input, output, session) {
   )
   person_server(
     id = "age_sex",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df_ll),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",
