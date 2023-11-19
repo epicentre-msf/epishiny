@@ -10,7 +10,7 @@ data("sf_yem")
 # will be shown on the map as a choropleth
 geo_data <- list(
   geo_layer(
-    layer_name = "Governorate", # name of the boundary level
+    layer_name = "Governorate", # name of the boundary layer
     sf = sf_yem$adm1, # sf object with boundary polygons
     name_var = "adm1_name", # column with place names
     pop_var = "adm1_pop", # column with population data (optional)

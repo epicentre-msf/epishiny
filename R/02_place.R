@@ -43,18 +43,6 @@ place_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  # check geo_data meets criteria for use
-  # geo_data <- validate_geo_data(geo_data)
-  # # use level_name for display names if found, otherwise list item name
-  # geo_levels <- purrr::set_names(
-  #   names(geo_data),
-  #   purrr::map2_chr(
-  #     unname(geo_data),
-  #     names(geo_data),
-  #     function(x, y) purrr::pluck(x, "level_name", .default = y)
-  #   )
-  # )
-
   if (!inherits(geo_data, "epishiny_geo_layer")) {
     if (!all(purrr::map_lgl(geo_data, ~inherits(.x, "epishiny_geo_layer")))) {
       cli::cli_abort(c(
@@ -164,7 +152,7 @@ place_server <- function(
     count_vars = NULL,
     group_vars = NULL,
     show_parent_borders = TRUE,
-    choro_lab = "Attack rate<br>per 100 000",
+    choro_lab = "Rate per<br>100 000",
     choro_pal = "Reds",
     choro_opacity = .7,
     export_width = 1200,
@@ -198,7 +186,7 @@ place_server <- function(
       if (is.null(chrome_browser)) {
         cli::cli_alert_warning("epishiny place module map exports disabled")
         cli::cli_alert_info("To enable exports, install a chrome or chromium browser on your system")
-        cli::cli_alert("see ?chromote::find_chrome() for details")
+        cli::cli_alert("see `?chromote::find_chrome()` for details")
       }
 
       # sf settings

@@ -2,21 +2,14 @@
 library(tidyverse)
 library(fs)
 
-# adds a lon lat point that falls within each feature
-# better than st_centroid because this is not guaranteed to be within the feature
-set_coords <- function(sf) {
-  coords <- sf::st_coordinates(suppressWarnings(sf::st_point_on_surface(sf::st_zm(sf))))
-  sf %>% dplyr::mutate(lon = coords[, 1], lat = coords[, 2])
-}
-
 # Yemen admin 1 and 2
 dir_geo <- max(dir_ls("~/Library/CloudStorage/OneDrive-SharedLibraries-MSF/OutbreakTools - GeoBase/YEM"))
 
 sf_yem <-
   dir_ls(path(dir_geo, "sf"), regexp = "adm[1-2]") %>%
   set_names(c("adm1", "adm2")) %>% 
-  map(read_rds) %>%
-  map(set_coords)
+  # remove coords to show epishiny will add them for you if missing
+  map(~ read_rds(.x) %>% select(-any_of(c("adm0_sub", "lon", "lat"))))
 
 # path to example Outbreak Tools linelist export: a measles dataset with linelist "Linelist patients"
 path_ll <- here::here("data-raw", "linelist-example.xlsx")
@@ -40,7 +33,7 @@ bin_ages <- function(
       include.lowest = TRUE,
       right = FALSE
     ),
-    .after = .data[[age_var]]
+    .after = dplyr::any_of(age_var)
   )
 }
 

@@ -80,20 +80,20 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   app_data <- filter_server(
     id = "filter",
-    df_ll = df_ll,
+    df = df_ll,
     date_var = "date_notification",
     group_vars = group_vars
   )
   place_server(
     id = "map",
-    df = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
   time_server(
     id = "curve",
-    df = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
     ratio_var = "outcome",
@@ -104,7 +104,7 @@ server <- function(input, output, session) {
   )
   person_server(
     id = "age_sex",
-    df = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

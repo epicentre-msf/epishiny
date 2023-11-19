@@ -19,7 +19,7 @@ filter_ui(
 
 filter_server(
   id,
-  df_ll,
+  df,
   date_var,
   group_vars,
   na_label = getOption("epishiny.na.label", "(Missing)")
@@ -44,7 +44,7 @@ filter_server(
 
 \item{reset_btn_lab}{The label for the reset filters button.}
 
-\item{df_ll}{Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.}
+\item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
 
 \item{date_var}{The name of the date variable in the data frame to be filtered on.}
 
@@ -56,7 +56,7 @@ filter_server(
 A \link[bslib:sidebar]{bslib::sidebar} UI element with date filters, group filters, and action buttons.
 
 The server function returns both the filtered data and a formatted text string with filter information
-named \code{df_ll} and \code{filter_info} respectively in a reactive list. These should be passed as arguments
+named \code{df} and \code{filter_info} respectively in a reactive list. These should be passed as arguments
 of the same name in the time, place and person modules wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}}
 }
 \description{
@@ -145,20 +145,20 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   app_data <- filter_server(
     id = "filter",
-    df_ll = df_ll,
+    df = df_ll,
     date_var = "date_notification",
     group_vars = group_vars
   )
   place_server(
     id = "map",
-    df = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
   time_server(
     id = "curve",
-    df = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
     ratio_var = "outcome",
@@ -169,7 +169,7 @@ server <- function(input, output, session) {
   )
   person_server(
     id = "age_sex",
-    df = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

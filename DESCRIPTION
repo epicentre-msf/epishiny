@@ -1,5 +1,5 @@
 Package: epishiny
-Title: Tools for interactive visualisation of epidemiological linelist data
+Title: Tools for interactive visualisation of epidemiological data
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Paul",
@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "paul.campbell@epicentre.msf.org",
            comment = c(ORCID = "0000-0003-1018-6606"))
-Description: Time, place and person analysis of patient level data using the R shiny web-framework.
+Description: Time, place and person analysis using the R shiny web-framework.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -37,11 +37,10 @@ Imports:
     highcharter,
     gt,
     gtsummary,
-    sf,
+    mapview,
     leaflet,
     leaflet.minicharts,
     chromote,
-    mapview,
     cli
 Remotes:
     r-spatial/mapview
@@ -51,5 +50,6 @@ URL: https://github.com/epicentre-msf/epishiny, https://epicentre-msf.github.io/
 BugReports: https://github.com/epicentre-msf/epishiny/issues
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    sf
 VignetteBuilder: knitr
