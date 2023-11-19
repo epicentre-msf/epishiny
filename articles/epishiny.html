@@ -202,7 +202,7 @@ geo boundary data for adm1 and adm2 levels in Yemen, stored as <a href="https://
 harmonious pcodes available in your data, so if you need help matching
 messy epi data to geo data, check out our <a href="https://epicentre-msf.github.io/hmatch/" class="external-link">hmatch package</a>.</p>
 <p>Now let’s set up the geo data in the format required for epishiny. We
-use the <code>geo_layer</code> function to deine a layer, and since we
+use the <code>geo_layer</code> function to define a layer, and since we
 have multiple layers in this case, we combine them in a list.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># setup geo data for adm1 and adm2 using the</span></span>
@@ -246,7 +246,7 @@ arguments that can be passed.</p>
 <span>  df <span class="op">=</span> <span class="va">df_ll</span>,</span>
 <span>  date_vars <span class="op">=</span> <span class="st">"date_notification"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="../reference/figures/time.png" width="500"></p>
+<p><img src="../reference/figures/time.png" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="place">Place<a class="anchor" aria-label="anchor" href="#place"></a>
@@ -258,7 +258,7 @@ arguments that can be passed.</p>
 <span>  df <span class="op">=</span> <span class="va">df_ll</span>,</span>
 <span>  geo_data <span class="op">=</span> <span class="va">geo_data</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="../reference/figures/place.png" width="500"></p>
+<p><img src="../reference/figures/place.png" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="person">Person<a class="anchor" aria-label="anchor" href="#person"></a>
@@ -272,7 +272,7 @@ arguments that can be passed.</p>
 <span>  male_level <span class="op">=</span> <span class="st">"Male"</span>,</span>
 <span>  female_level <span class="op">=</span> <span class="st">"Female"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="../reference/figures/person.png" width="500"></p>
+<p><img src="../reference/figures/person.png" width="100%"></p>
 </div>
 </div>
 <div class="section level2">
@@ -282,9 +282,9 @@ arguments that can be passed.</p>
 by adding the <code>module_ui</code> component to the shiny ui function,
 and the <code>module_server</code> component to the shiny server
 function. If you’re new to shiny, don’t worry, <code>epishiny</code> is
-designed so that you can build fully-featured without worrying about
-what is happening on the shiny back-end. But if you do want to learn
-more, a good place to start is the <a href="https://mastering-shiny.org/" class="external-link">Mastering Shiny</a> book, authored
+designed so that you can build fully-featured dashboards without
+worrying about what is happening on the shiny back-end. But if you do
+want to learn more, a good place to start is the <a href="https://mastering-shiny.org/" class="external-link">Mastering Shiny</a> book, authored
 by Hadley Wickham.</p>
 <p><code>epishiny</code> modules use UI elements from the <a href="https://rstudio.github.io/bslib/index.html" class="external-link">bslib</a> package, so
 the only constraint is that you use <code>bslib</code> for your
