@@ -22,7 +22,10 @@ each column representing a variable associated with said individual."><!-- mathj
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item">
+      <ul class="navbar-nav me-auto"><li class="nav-item">
+  <a class="nav-link" href="../articles/epishiny.html">Get started</a>
+</li>
+<li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
@@ -77,7 +80,7 @@ information for each patient, as well as other medical indicators.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">df_ll</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,000 × 29</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,000 × 30</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    case_id date_notification date_symptom_start date_hospitalisation_start</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>                    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> P0001   2022-10-07        2022-10-03         <span style="color: #BB0000;">NA</span>                        </span>
@@ -91,12 +94,12 @@ information for each patient, as well as other medical indicators.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> P0009   2022-05-06        2022-04-30         2022-05-09                </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> P0010   2022-10-13        2022-10-11         <span style="color: #BB0000;">NA</span>                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 990 more rows</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 25 more variables: date_sample_occurred &lt;date&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 26 more variables: date_sample_occurred &lt;date&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   date_sample_lab_result_occurred &lt;date&gt;, date_hospitalisation_end &lt;date&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   sex_id &lt;chr&gt;, age_years &lt;dbl&gt;, adm1_origin &lt;chr&gt;, adm2_origin &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   adm3_origin &lt;chr&gt;, adm4_origin &lt;chr&gt;, adm1_pcode &lt;chr&gt;, adm2_pcode &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   fever &lt;chr&gt;, rash &lt;chr&gt;, cough &lt;chr&gt;, oral_lesions &lt;chr&gt;, muac &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   oedema &lt;chr&gt;, hospitalised_yn &lt;chr&gt;, measles_stage &lt;chr&gt;, oxygen &lt;chr&gt;, …</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   sex_id &lt;chr&gt;, age_years &lt;dbl&gt;, age_group &lt;fct&gt;, adm1_origin &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   adm2_origin &lt;chr&gt;, adm3_origin &lt;chr&gt;, adm4_origin &lt;chr&gt;, adm1_pcode &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   adm2_pcode &lt;chr&gt;, fever &lt;chr&gt;, rash &lt;chr&gt;, cough &lt;chr&gt;, oral_lesions &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   muac &lt;chr&gt;, oedema &lt;chr&gt;, hospitalised_yn &lt;chr&gt;, measles_stage &lt;chr&gt;, …</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

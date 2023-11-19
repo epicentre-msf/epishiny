@@ -22,7 +22,10 @@ incorporation into exploratory data analysis workflows in R."><!-- mathjax --><s
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item">
+      <ul class="navbar-nav me-auto"><li class="nav-item">
+  <a class="nav-link" href="../articles/epishiny.html">Get started</a>
+</li>
+<li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
@@ -92,19 +95,23 @@ of the arguments required.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"df_ll"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"sf_yem"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># setup geo data for adm1 and adm2 in the format</span></span></span>
-<span class="r-in"><span><span class="co"># required for epishiny map module</span></span></span>
+<span class="r-in"><span><span class="co"># setup geo data for adm1 and adm2 using the</span></span></span>
+<span class="r-in"><span><span class="co"># geo_layer function to be passed to the place module</span></span></span>
+<span class="r-in"><span><span class="co"># if population variable is provided, attack rates</span></span></span>
+<span class="r-in"><span><span class="co"># will be shown on the map as a choropleth</span></span></span>
 <span class="r-in"><span><span class="va">geo_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"adm1"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"Governorate"</span>,</span></span>
-<span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>,</span></span>
-<span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>,</span></span>
-<span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="geo_layer.html">geo_layer</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    layer_name <span class="op">=</span> <span class="st">"Governorate"</span>, <span class="co"># name of the boundary level</span></span></span>
+<span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>, <span class="co"># sf object with boundary polygons</span></span></span>
+<span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>, <span class="co"># column with place names</span></span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm1_pop"</span>, <span class="co"># column with population data (optional)</span></span></span>
+<span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span> <span class="co"># geo to data join vars: LHS = sf, RHS = data</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  <span class="st">"adm2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"District"</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="geo_layer.html">geo_layer</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    layer_name <span class="op">=</span> <span class="st">"District"</span>,</span></span>
 <span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm2</span>,</span></span>
 <span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm2_name"</span>,</span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm2_pop"</span>,</span></span>
 <span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm2_pcode"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
@@ -131,7 +138,7 @@ of the arguments required.</p></dd>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">launch_module</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    module <span class="op">=</span> <span class="st">"time"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
 <span class="r-in"><span>    date_vars <span class="op">=</span> <span class="va">date_vars</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
 <span class="r-in"><span>    ratio_line_lab <span class="op">=</span> <span class="st">"Show CFR line?"</span>,</span></span>
@@ -146,7 +153,7 @@ of the arguments required.</p></dd>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">launch_module</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    module <span class="op">=</span> <span class="st">"place"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
 <span class="r-in"><span>    geo_data <span class="op">=</span> <span class="va">geo_data</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
@@ -156,7 +163,7 @@ of the arguments required.</p></dd>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">launch_module</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    module <span class="op">=</span> <span class="st">"person"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
 <span class="r-in"><span>    age_var <span class="op">=</span> <span class="st">"age_years"</span>,</span></span>
 <span class="r-in"><span>    sex_var <span class="op">=</span> <span class="st">"sex_id"</span>,</span></span>
 <span class="r-in"><span>    male_level <span class="op">=</span> <span class="st">"Male"</span>,</span></span>

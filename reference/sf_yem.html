@@ -20,7 +20,10 @@ for Yemen, stored as simple features (sf) objects."><!-- mathjax --><script src=
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item">
+      <ul class="navbar-nav me-auto"><li class="nav-item">
+  <a class="nav-link" href="../articles/epishiny.html">Get started</a>
+</li>
+<li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
@@ -75,63 +78,63 @@ specification passed to <a href="place.html">place_ui</a> and <a href="place.htm
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 22 features and 8 fields</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 22 features and 5 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: MULTIPOLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 41.81479 ymin: 12.10665 xmax: 54.5382 ymax: 19</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> First 10 features:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    adm0_iso3 adm0_sub     adm0_name                   adm1_name pcode      lon</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        YEM      ALL Yemen / اليمن                    Ibb / اب  YE11 44.18040</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        YEM      ALL Yemen / اليمن                Abyan / ابين  YE12 46.23681</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        YEM      ALL Yemen / اليمن Sana'a City / امانة العاصمه  YE13 44.17556</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        YEM      ALL Yemen / اليمن          Al Bayda / البيضاء  YE14 45.27953</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        YEM      ALL Yemen / اليمن                 Ta'iz / تعز  YE15 43.78494</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        YEM      ALL Yemen / اليمن             Al Jawf / الجوف  YE16 45.59372</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        YEM      ALL Yemen / اليمن                Hajjah / حجه  YE17 43.20314</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        YEM      ALL Yemen / اليمن       Al Hodeidah / الحديده  YE18 43.21762</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9        YEM      ALL Yemen / اليمن          Hadramawt / حضرموت  YE19 48.63126</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       YEM      ALL Yemen / اليمن               Dhamar / ذمار  YE20 44.30275</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         lat adm1_pop                       geometry</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  14.08362  3117999 MULTIPOLYGON (((44.08076 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  13.63099   619003 MULTIPOLYGON (((46.29563 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  15.40928  3981000 MULTIPOLYGON (((44.3338 15....</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  14.32562   830001 MULTIPOLYGON (((44.72676 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  13.29334  3487612 MULTIPOLYGON (((43.41111 12...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  16.59384   645000 MULTIPOLYGON (((46.34001 17...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  16.09100  2415001 MULTIPOLYGON (((42.80233 15...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  14.78216  3653999 MULTIPOLYGON (((42.6918 13....</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  16.52279  1618329 MULTIPOLYGON (((50.83766 16...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 14.54205  2170000 MULTIPOLYGON (((44.70527 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    adm0_iso3     adm0_name                   adm1_name pcode adm1_pop</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        YEM Yemen / اليمن                    Ibb / اب  YE11  3117999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        YEM Yemen / اليمن                Abyan / ابين  YE12   619003</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        YEM Yemen / اليمن Sana'a City / امانة العاصمه  YE13  3981000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        YEM Yemen / اليمن          Al Bayda / البيضاء  YE14   830001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        YEM Yemen / اليمن                 Ta'iz / تعز  YE15  3487612</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        YEM Yemen / اليمن             Al Jawf / الجوف  YE16   645000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        YEM Yemen / اليمن                Hajjah / حجه  YE17  2415001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        YEM Yemen / اليمن       Al Hodeidah / الحديده  YE18  3653999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9        YEM Yemen / اليمن          Hadramawt / حضرموت  YE19  1618329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10       YEM Yemen / اليمن               Dhamar / ذمار  YE20  2170000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                          geometry</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  MULTIPOLYGON (((44.08076 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  MULTIPOLYGON (((46.29563 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  MULTIPOLYGON (((44.3338 15....</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  MULTIPOLYGON (((44.72676 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  MULTIPOLYGON (((43.41111 12...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  MULTIPOLYGON (((46.34001 17...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  MULTIPOLYGON (((42.80233 15...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  MULTIPOLYGON (((42.6918 13....</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  MULTIPOLYGON (((50.83766 16...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 MULTIPOLYGON (((44.70527 14...</span>
 <span class="r-in"><span><span class="va">sf_yem</span><span class="op">$</span><span class="va">adm2</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 335 features and 9 fields</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 335 features and 6 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: MULTIPOLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: 41.81479 ymin: 12.10665 xmax: 54.5382 ymax: 19</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> First 10 features:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    adm0_iso3 adm0_sub     adm0_name adm1_name                  adm2_name  pcode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        YEM      ALL Yemen / اليمن  Ibb / اب            Al Qafr / القفر YE1101</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        YEM      ALL Yemen / اليمن  Ibb / اب               Yarim / يريم YE1102</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        YEM      ALL Yemen / اليمن  Ibb / اب         Ar Radmah / الرضمه YE1103</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        YEM      ALL Yemen / اليمن  Ibb / اب       An Nadirah / النادره YE1104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        YEM      ALL Yemen / اليمن  Ibb / اب         Ash Sha'ir / الشعر YE1105</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        YEM      ALL Yemen / اليمن  Ibb / اب          As Saddah / السده YE1106</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        YEM      ALL Yemen / اليمن  Ibb / اب      Al Makhadir / المخادر YE1107</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        YEM      ALL Yemen / اليمن  Ibb / اب             Hobeish / حبيش YE1108</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9        YEM      ALL Yemen / اليمن  Ibb / اب Hazm Al Odayn / حزم العدين YE1109</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       YEM      ALL Yemen / اليمن  Ibb / اب Far' Al Odayn / فرع العدين YE1110</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         lon      lat adm2_pop                       geometry</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  44.04029 14.32486   152248 MULTIPOLYGON (((43.82405 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  44.37298 14.28908   257878 MULTIPOLYGON (((44.2682 14....</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  44.55286 14.21038   111778 MULTIPOLYGON (((44.4855 14....</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  44.48370 14.06157   108243 MULTIPOLYGON (((44.4946 14....</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  44.36793 14.03340    58233 MULTIPOLYGON (((44.307 14.0...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  44.41946 14.16679   119880 MULTIPOLYGON (((44.44934 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  44.20557 14.14071   166083 MULTIPOLYGON (((44.22156 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  44.10425 14.11770   152918 MULTIPOLYGON (((44.01363 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  43.83321 14.11171   115630 MULTIPOLYGON (((44.05006 14...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 43.78992 13.95782   130477 MULTIPOLYGON (((43.80641 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    adm0_iso3     adm0_name adm1_name                  adm2_name  pcode adm2_pop</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        YEM Yemen / اليمن  Ibb / اب            Al Qafr / القفر YE1101   152248</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        YEM Yemen / اليمن  Ibb / اب               Yarim / يريم YE1102   257878</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        YEM Yemen / اليمن  Ibb / اب         Ar Radmah / الرضمه YE1103   111778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        YEM Yemen / اليمن  Ibb / اب       An Nadirah / النادره YE1104   108243</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        YEM Yemen / اليمن  Ibb / اب         Ash Sha'ir / الشعر YE1105    58233</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        YEM Yemen / اليمن  Ibb / اب          As Saddah / السده YE1106   119880</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7        YEM Yemen / اليمن  Ibb / اب      Al Makhadir / المخادر YE1107   166083</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        YEM Yemen / اليمن  Ibb / اب             Hobeish / حبيش YE1108   152918</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9        YEM Yemen / اليمن  Ibb / اب Hazm Al Odayn / حزم العدين YE1109   115630</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10       YEM Yemen / اليمن  Ibb / اب Far' Al Odayn / فرع العدين YE1110   130477</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                          geometry</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  MULTIPOLYGON (((43.82405 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  MULTIPOLYGON (((44.2682 14....</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  MULTIPOLYGON (((44.4855 14....</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  MULTIPOLYGON (((44.4946 14....</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  MULTIPOLYGON (((44.307 14.0...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  MULTIPOLYGON (((44.44934 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  MULTIPOLYGON (((44.22156 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  MULTIPOLYGON (((44.01363 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  MULTIPOLYGON (((44.05006 14...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 MULTIPOLYGON (((43.80641 14...</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

@@ -18,7 +18,10 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item">
+      <ul class="navbar-nav me-auto"><li class="nav-item">
+  <a class="nav-link" href="../articles/epishiny.html">Get started</a>
+</li>
+<li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
@@ -57,6 +60,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">time_ui</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
 <span>  <span class="va">date_vars</span>,</span>
+<span>  count_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Time"</span>,</span>
 <span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/bsicons/man/bs_icon.html" class="external-link">bs_icon</a></span><span class="op">(</span><span class="st">"bar-chart-line-fill"</span><span class="op">)</span>,</span>
@@ -64,21 +68,22 @@
 <span>  date_lab <span class="op">=</span> <span class="st">"Date axis"</span>,</span>
 <span>  date_int_lab <span class="op">=</span> <span class="st">"Date interval"</span>,</span>
 <span>  day_week_month_labs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Day"</span>, <span class="st">"Week"</span>, <span class="st">"Month"</span><span class="op">)</span>,</span>
+<span>  count_vars_lab <span class="op">=</span> <span class="st">"Indicator"</span>,</span>
 <span>  groups_lab <span class="op">=</span> <span class="st">"Group data by"</span>,</span>
+<span>  no_grouping_lab <span class="op">=</span> <span class="st">"No grouping"</span>,</span>
 <span>  bar_stacking_lab <span class="op">=</span> <span class="st">"Bar stacking"</span>,</span>
 <span>  cumul_data_lab <span class="op">=</span> <span class="st">"Show cumulative data?"</span>,</span>
-<span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
-<span>  ratio_line_lab <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ratio_line_lab <span class="op">=</span> <span class="st">"Show ratio line?"</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">time_server</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
-<span>  <span class="va">df_ll</span>,</span>
+<span>  <span class="va">df</span>,</span>
 <span>  <span class="va">date_vars</span>,</span>
+<span>  count_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  y_lab <span class="op">=</span> <span class="st">"Patients"</span>,</span>
-<span>  n_lab <span class="op">=</span> <span class="st">"N patients"</span>,</span>
+<span>  show_ratio <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ratio_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ratio_lab <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ratio_numer <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -94,7 +99,12 @@
 
 
 <dt>date_vars</dt>
-<dd><p>named character vector of date variables for the date axis input. Names are used as variable labels.</p></dd>
+<dd><p>Character vector of date variable(s) for the date axis. If named, names are used as variable labels.</p></dd>
+
+
+<dt>count_vars</dt>
+<dd><p>If data is aggregated, variable name(s) of count variable(s) in data. If more than one variable provided,
+a select input will appear in the options dropdown. If named, names are used as variable labels.</p></dd>
 
 
 <dt>group_vars</dt>
@@ -104,7 +114,7 @@ If named, names are used as variable labels.</p></dd>
 
 
 <dt>title</dt>
-<dd><p>header title for the card.</p></dd>
+<dd><p>Header title for the card.</p></dd>
 
 
 <dt>icon</dt>
@@ -127,8 +137,16 @@ If named, names are used as variable labels.</p></dd>
 <dd><p>character vector with text labels for day, week and month, respectively.</p></dd>
 
 
+<dt>count_vars_lab</dt>
+<dd><p>text label for the aggregate count variables input.</p></dd>
+
+
 <dt>groups_lab</dt>
 <dd><p>text label for the grouping variable input.</p></dd>
+
+
+<dt>no_grouping_lab</dt>
+<dd><p>text label for the no grouping option in the grouping input.</p></dd>
 
 
 <dt>bar_stacking_lab</dt>
@@ -139,28 +157,25 @@ If named, names are used as variable labels.</p></dd>
 <dd><p>text label for cumulative data option.</p></dd>
 
 
-<dt>n_lab</dt>
-<dd><p>The label for the raw count variable.</p></dd>
-
-
 <dt>ratio_line_lab</dt>
-<dd><p>text label for the ratio line input. If not supplied the input is not included.</p></dd>
+<dd><p>text label for the ratio line input. This input will only be visable if
+<code>show_ratio</code> is TRUE in time_server</p></dd>
 
 
 <dt>full_screen</dt>
 <dd><p>Add button to card to with the option to enter full screen mode?</p></dd>
 
 
-<dt>df_ll</dt>
-<dd><p>Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.</p></dd>
+<dt>df</dt>
+<dd><p>Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.</p></dd>
 
 
-<dt>y_lab</dt>
-<dd><p>The label for y-axis of chart.</p></dd>
+<dt>show_ratio</dt>
+<dd><p>Display a ratio line on the epicurve?</p></dd>
 
 
 <dt>ratio_var</dt>
-<dd><p>Character string of variable name to use for ratio calculation.</p></dd>
+<dd><p>For patient level data, character string of variable name to use for ratio calculation.</p></dd>
 
 
 <dt>ratio_lab</dt>
@@ -168,11 +183,13 @@ If named, names are used as variable labels.</p></dd>
 
 
 <dt>ratio_numer</dt>
-<dd><p>Value(s) in <code>ratio_var</code> to be used for the ratio numerator i.e. 'Death'.</p></dd>
+<dd><p>For patient level data, Value(s) in <code>ratio_var</code> to be used for the ratio numerator i.e. 'Death'.
+For aggregated data, character string of numeric count column to use of ratio numerator i.e. 'deaths'.</p></dd>
 
 
 <dt>ratio_denom</dt>
-<dd><p>Values in <code>ratio_var</code> to be used for the ratio denominator i.e. <code>c('Death', 'Recovery')</code>.</p></dd>
+<dd><p>For patient level data, values in <code>ratio_var</code> to be used for the ratio denominator i.e. <code>c('Death', 'Recovery')</code>.
+For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.</p></dd>
 
 
 <dt>filter_info</dt>

@@ -18,7 +18,10 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item">
+      <ul class="navbar-nav me-auto"><li class="nav-item">
+  <a class="nav-link" href="../articles/epishiny.html">Get started</a>
+</li>
+<li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
@@ -68,7 +71,7 @@
 <span></span>
 <span><span class="fu">filter_server</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
-<span>  <span class="va">df_ll</span>,</span>
+<span>  <span class="va">df</span>,</span>
 <span>  <span class="va">date_var</span>,</span>
 <span>  <span class="va">group_vars</span>,</span>
 <span>  na_label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"epishiny.na.label"</span>, <span class="st">"(Missing)"</span><span class="op">)</span></span>
@@ -113,8 +116,8 @@
 <dd><p>The label for the reset filters button.</p></dd>
 
 
-<dt>df_ll</dt>
-<dd><p>Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.</p></dd>
+<dt>df</dt>
+<dd><p>Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.</p></dd>
 
 
 <dt>date_var</dt>
@@ -137,7 +140,7 @@
 
 
 <p>The server function returns both the filtered data and a formatted text string with filter information
-named <code>df_ll</code> and <code>filter_info</code> respectively in a reactive list. These should be passed as arguments
+named <code>df</code> and <code>filter_info</code> respectively in a reactive list. These should be passed as arguments
 of the same name in the time, place and person modules wrapped in a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">shiny::reactive()</a></code></p>
 
 
@@ -158,18 +161,20 @@ of the same name in the time, place and person modules wrapped in a <code><a hre
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"df_ll"</span><span class="op">)</span> <span class="co"># linelist</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"sf_yem"</span><span class="op">)</span> <span class="co"># sf geo boundaries for Yemen admin 1 &amp; 2</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># setup geo data for adm1 and adm2 in the format</span></span></span>
-<span class="r-in"><span><span class="co"># required for epishiny map module</span></span></span>
+<span class="r-in"><span><span class="co"># setup geo data for adm1 and adm2 using the</span></span></span>
+<span class="r-in"><span><span class="co"># geo_layer function to be passed to the place module</span></span></span>
+<span class="r-in"><span><span class="co"># if population variable is provided, attack rates</span></span></span>
+<span class="r-in"><span><span class="co"># will be shown on the map as a choropleth</span></span></span>
 <span class="r-in"><span><span class="va">geo_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"adm1"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"Governorate"</span>,</span></span>
-<span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>,</span></span>
-<span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>,</span></span>
-<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm1_pop"</span>,</span></span>
-<span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="geo_layer.html">geo_layer</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    layer_name <span class="op">=</span> <span class="st">"Governorate"</span>, <span class="co"># name of the boundary level</span></span></span>
+<span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm1</span>, <span class="co"># sf object with boundary polygons</span></span></span>
+<span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm1_name"</span>, <span class="co"># column with place names</span></span></span>
+<span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm1_pop"</span>, <span class="co"># column with population data (optional)</span></span></span>
+<span class="r-in"><span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pcode"</span> <span class="op">=</span> <span class="st">"adm1_pcode"</span><span class="op">)</span> <span class="co"># geo to data join vars: LHS = sf, RHS = data</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  <span class="st">"adm2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    level_name <span class="op">=</span> <span class="st">"District"</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="geo_layer.html">geo_layer</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    layer_name <span class="op">=</span> <span class="st">"District"</span>,</span></span>
 <span class="r-in"><span>    sf <span class="op">=</span> <span class="va">sf_yem</span><span class="op">$</span><span class="va">adm2</span>,</span></span>
 <span class="r-in"><span>    name_var <span class="op">=</span> <span class="st">"adm2_name"</span>,</span></span>
 <span class="r-in"><span>    pop_var <span class="op">=</span> <span class="st">"adm2_pop"</span>,</span></span>
@@ -230,20 +235,20 @@ of the same name in the time, place and person modules wrapped in a <code><a hre
 <span class="r-in"><span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">app_data</span> <span class="op">&lt;-</span> <span class="fu">filter_server</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    id <span class="op">=</span> <span class="st">"filter"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="va">df_ll</span>,</span></span>
 <span class="r-in"><span>    date_var <span class="op">=</span> <span class="st">"date_notification"</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="place.html">place_server</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    id <span class="op">=</span> <span class="st">"map"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df_ll</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    geo_data <span class="op">=</span> <span class="va">geo_data</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
 <span class="r-in"><span>    filter_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">filter_info</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="time.html">time_server</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    id <span class="op">=</span> <span class="st">"curve"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df_ll</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    date_vars <span class="op">=</span> <span class="va">date_vars</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
 <span class="r-in"><span>    ratio_var <span class="op">=</span> <span class="st">"outcome"</span>,</span></span>
@@ -254,7 +259,7 @@ of the same name in the time, place and person modules wrapped in a <code><a hre
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="person.html">person_server</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    id <span class="op">=</span> <span class="st">"age_sex"</span>,</span></span>
-<span class="r-in"><span>    df_ll <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df_ll</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    df <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    age_var <span class="op">=</span> <span class="st">"age_years"</span>,</span></span>
 <span class="r-in"><span>    sex_var <span class="op">=</span> <span class="st">"sex_id"</span>,</span></span>
 <span class="r-in"><span>    male_level <span class="op">=</span> <span class="st">"Male"</span>,</span></span>
