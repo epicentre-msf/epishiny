@@ -4,18 +4,20 @@ pkgload::load_all()
 data("df_ll")
 data("sf_yem")
 
-# setup geo data for adm1 and adm2 in the format
-# required for epishiny map module
+# setup geo data for adm1 and adm2 using the
+# geo_layer function to be passed to the place module
+# if population variable is provided, attack rates
+# will be shown on the map as a choropleth
 geo_data <- list(
-  "adm1" = list(
-    level_name = "Governorate",
-    sf = sf_yem$adm1,
-    name_var = "adm1_name",
-    pop_var = "adm1_pop",
-    join_by = c("pcode" = "adm1_pcode")
+  geo_layer(
+    layer_name = "Governorate", # name of the boundary level
+    sf = sf_yem$adm1, # sf object with boundary polygons
+    name_var = "adm1_name", # column with place names
+    pop_var = "adm1_pop", # column with population data (optional)
+    join_by = c("pcode" = "adm1_pcode") # geo to data join vars: LHS = sf, RHS = data
   ),
-  "adm2" = list(
-    level_name = "District",
+  geo_layer(
+    layer_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
     pop_var = "adm2_pop",
@@ -36,7 +38,7 @@ group_vars <- c(
 # launch place map module
 launch_module(
   module = "place",
-  df_ll = df_ll,
+  df = df_ll,
   geo_data = geo_data,
   group_vars = group_vars
 )

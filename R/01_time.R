@@ -6,6 +6,8 @@
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param date_vars Character vector of date variable(s) for the date axis. If named, names are used as variable labels.
+#' @param count_vars If data is aggregated, variable name(s) of count variable(s) in data. If more than one variable provided,
+#'  a select input will appear in the options dropdown. If named, names are used as variable labels.
 #' @param group_vars Character vector of categorical variable names. If provided, a select input will appear
 #'  in the options dropdown allowing for data groups to be visualised as stacked bars on the epicurve.
 #'  If named, names are used as variable labels.
@@ -15,11 +17,13 @@
 #' @param date_lab text label for the date variable input.
 #' @param date_int_lab text label for the date interval input.
 #' @param day_week_month_labs character vector with text labels for day, week and month, respectively.
+#' @param count_vars_lab text label for the aggregate count variables input.
 #' @param groups_lab text label for the grouping variable input.
+#' @param no_grouping_lab text label for the no grouping option in the grouping input.
 #' @param bar_stacking_lab text label for bar stacking option.
 #' @param cumul_data_lab text label for cumulative data option.
-#' @param n_lab The label for the raw count variable.
-#' @param ratio_line_lab text label for the ratio line input. If not supplied the input is not included.
+#' @param ratio_line_lab text label for the ratio line input. This input will only be visable if 
+#'  `show_ratio` is TRUE in [time_server]
 #' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
 #' @return the module server function returns any point click event data of the highchart.
@@ -30,6 +34,7 @@
 time_ui <- function(
     id,
     date_vars,
+    count_vars = NULL,
     group_vars = NULL,
     title = "Time",
     icon = bsicons::bs_icon("bar-chart-line-fill"),
@@ -37,11 +42,12 @@ time_ui <- function(
     date_lab = "Date axis",
     date_int_lab = "Date interval",
     day_week_month_labs = c("Day", "Week", "Month"),
+    count_vars_lab = "Indicator",
     groups_lab = "Group data by",
+    no_grouping_lab = "No grouping",
     bar_stacking_lab = "Bar stacking",
     cumul_data_lab = "Show cumulative data?",
-    n_lab = "N patients",
-    ratio_line_lab = NULL,
+    ratio_line_lab = "Show ratio line?",
     full_screen = TRUE
 ) {
   ns <- NS(id)
@@ -84,9 +90,17 @@ time_ui <- function(
             selected = "week"
           ),
           selectInput(
+            ns("count_var"),
+            label = count_vars_lab,
+            choices = count_vars,
+            multiple = FALSE,
+            selectize = FALSE,
+            width = 200
+          ),
+          selectInput(
             ns("group"),
             label = groups_lab,
-            choices = c(purrr::set_names("n", n_lab), group_vars),
+            choices = c(purrr::set_names("n", no_grouping_lab), group_vars),
             multiple = FALSE,
             selectize = FALSE,
             width = 200
@@ -105,15 +119,12 @@ time_ui <- function(
             value = FALSE,
             width = "100%"
           ),
-          # only show ratio line option if label provided
-          if (!is.null(ratio_line_lab)) {
-            shiny::checkboxInput(
-              ns("show_ratio_line"),
-              ratio_line_lab,
-              value = FALSE,
-              width = "100%"
-            )
-          }
+          shiny::checkboxInput(
+            ns("show_ratio_line"),
+            ratio_line_lab,
+            value = FALSE,
+            width = "100%"
+          )
         )
       ),
       bslib::card_body(
@@ -127,13 +138,14 @@ time_ui <- function(
 
 
 
-#' @param df_ll Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.
-#' @param y_lab The label for y-axis of chart.
-#' @param n_lab The label for the raw count variable.
-#' @param ratio_var Character string of variable name to use for ratio calculation.
+#' @param df Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.
+#' @param show_ratio Display a ratio line on the epicurve?
+#' @param ratio_var For patient level data, character string of variable name to use for ratio calculation.
 #' @param ratio_lab The label to describe the computed ratio i.e. 'CFR' for case fatality ratio.
-#' @param ratio_numer Value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
-#' @param ratio_denom Values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
+#' @param ratio_numer For patient level data, Value(s) in `ratio_var` to be used for the ratio numerator i.e. 'Death'.
+#'  For aggregated data, character string of numeric count column to use of ratio numerator i.e. 'deaths'.
+#' @param ratio_denom For patient level data, values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
+#'  For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
 #'
@@ -143,11 +155,11 @@ time_ui <- function(
 #' @export
 time_server <- function(
     id,
-    df_ll,
+    df,
     date_vars,
+    count_vars = NULL,
     group_vars = NULL,
-    y_lab = "Patients",
-    n_lab = "N patients",
+    show_ratio = FALSE,
     ratio_var = NULL,
     ratio_lab = NULL,
     ratio_numer = NULL,
@@ -163,8 +175,20 @@ time_server <- function(
         shinyjs::hide("group")
       }
 
+      if (length(date_vars) < 2) {
+        shinyjs::hide("date")
+      }
+
+      if (length(count_vars) < 2) {
+        shinyjs::hide("count_var")
+      }
+
+      if (!show_ratio) {
+        shinyjs::hide("show_ratio_line")
+      }
+
       df_mod <- reactive({
-        force_reactive(df_ll)
+        force_reactive(df)
       })
 
       # variables and labels etc
@@ -174,70 +198,56 @@ time_server <- function(
         date <- input$date
         rv$date <- date
         rv$date_sym <- rlang::sym(date)
+        rv$count_var <- input$count_var
         group <- input$group
         rv$group <- group
         rv$group_sym <- rlang::sym(group)
         rv$missing_dates <- sum(is.na(df_mod()[[input$date]]))
+        count_var <- input$count_var
+        n_lab <- get_label(count_var, count_vars)
+        rv$n_lab <- n_lab
       })
 
       df_curve <- reactive({
         date <- rlang::sym(input$date)
         group <- rlang::sym(input$group)
 
-        df <- df_mod() %>%
+        # aggregate dates based on input
+        df_interval <- df_mod() %>%
           dplyr::mutate(!!date := lubridate::floor_date(
             lubridate::as_date(!!date),
             unit = input$date_interval,
             week_start = getOption("epishiny.week.start", 1)
           ))
 
-        if (input$group == "n") {
-          df <- df %>%
-            dplyr::count(!!date) %>%
-            tidyr::drop_na() %>% 
-            dplyr::arrange(!!date) %>% 
-            dplyr::mutate(n_c = cumsum(.data$n))
-        } else {
-          df <- df %>%
-            dplyr::count(!!date, !!group) %>%
-            tidyr::drop_na() %>% 
-            dplyr::group_by(!!group) %>% 
-            dplyr::arrange(!!date) %>%
-            dplyr::mutate(n_c = cumsum(.data$n)) %>% 
-            dplyr::ungroup()
+        # is the data pre-aggregated
+        is_agg <- as.logical(length(count_vars))
+        # is a data grouping variable supplied
+        is_grouped <- input$group != "n"
+
+        df_time <- get_time_df(
+          df = df_interval,
+          is_agg = is_agg,
+          is_grouped = is_grouped,
+          date_var = input$date,
+          count_var = input$count_var,
+          group_var = input$group
+        )
+
+        if (show_ratio) {
+          df_ratio <- get_ratio_df(
+            df = df_interval,
+            date_var = input$date,
+            is_agg = is_agg,
+            ratio_var = ratio_var,
+            ratio_lab = ratio_lab,
+            ratio_numer = ratio_numer,
+            ratio_denom = ratio_denom
+          )
+          df_time <- df_time %>% dplyr::left_join(df_ratio, by = input$date)
         }
 
-        if (!is.null(ratio_var)) {
-          if (any(is.null(ratio_numer), is.null(ratio_denom), is.null(ratio_lab))) {
-            cli::cli_abort(c(
-              "x" = "when `ratio_var` is supplied, you must provide the following accompanying arguments:",
-              "*" = "ratio_numer`: character vector of ratio calculation numerator value(s)",
-              "*" = "ratio_denom`: character vector of ratio calculation denominator value(s)",
-              "*" = "ratio_lab`: the axis label to be used for the ratio line"
-            ))
-          }
-
-          df_ratio <- df_mod() %>%
-            dplyr::mutate(!!date := lubridate::floor_date(
-              lubridate::as_date(!!date),
-              unit = input$date_interval,
-              week_start = getOption("epishiny.week.start", 1)
-            )) %>%
-            dplyr::group_by(!!date) %>%
-            dplyr::summarise(
-              n1 = sum(.data[[ratio_var]] %in% ratio_numer),
-              N = sum(.data[[ratio_var]] %in% unique(c(ratio_numer, ratio_denom))),
-              ratio = (.data$n1 / .data$N) * 100,
-              .groups = "drop"
-            ) %>%
-            dplyr::arrange(!!date) %>% 
-            dplyr::mutate(ratio_c = cumsum(.data$n1) / cumsum(.data$N) * 100) %>% 
-            dplyr::select(!!date, .data$ratio, .data$ratio_c)
-
-          df <- df %>% dplyr::left_join(df_ratio, by = input$date)
-        }
-
-        return(df)
+        return(df_time)
       })
 
       output$chart <- highcharter::renderHighchart({
@@ -248,17 +258,14 @@ time_server <- function(
         date_sym <- isolate(rv$date_sym)
         group_sym <- isolate(rv$group_sym)
         missing_dates <- isolate(rv$missing_dates)
+        y_lab <- isolate(rv$n_lab)
         n_var <- dplyr::if_else(
           isolate(input$cumulative), "n_c", "n"
         )
 
         shiny::validate(shiny::need(nrow(df) > 0, "No data to display"))
 
-        date_lab <- ifelse(
-          is.null(names(date_vars[date_vars == date])),
-          date,
-          names(date_vars[date_vars == date])
-        )
+        date_lab <- get_label(date, date_vars)
 
         if (group == "n") {
           hc <- highcharter::hchart(
@@ -266,18 +273,17 @@ time_server <- function(
             "column",
             highcharter::hcaes(!!date_sym, !!rlang::sym(n_var)),
             id = "n_bars",
-            name = n_lab
-          )
+            name = rv$n_lab
+          ) %>% 
+          highcharter::hc_tooltip(shared = TRUE)
         } else {
-          group_lab <- ifelse(
-            is.null(names(group_vars[group_vars == group])),
-            group,
-            names(group_vars[group_vars == group])
-          )
+          group_lab <- get_label(group, group_vars)
 
           text_legend <- glue::glue(
             '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'
           )
+
+          stacked_tooltip <- '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>'
 
           hc <-
             highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, !!n_var, group = !!group_sym)) %>%
@@ -289,10 +295,9 @@ time_server <- function(
               x = -10,
               y = 40,
               itemStyle = list(textOverflow = "ellipsis", width = 150)
-            )
+            ) %>% 
+            highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip)
         }
-
-        stacked_tooltip <- '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>'
 
         hc <- hc %>%
           highcharter::hc_add_event_point(event = "click") %>%
@@ -318,7 +323,7 @@ time_server <- function(
               gridLineWidth = 0
             )
           ) %>%
-          highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip) %>%
+          # highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip) %>%
           my_hc_export(caption = isolate(filter_info()))
 
         if (isolate(input$date_interval == "week")) {
@@ -440,7 +445,7 @@ time_server <- function(
             highcharter::hcpxy_update(
               yAxis = list(
                 list(
-                  title = list(text = y_lab),
+                  title = list(text = rv$n_lab),
                   allowDecimals = FALSE
                 ),
                 list(
@@ -468,7 +473,7 @@ time_server <- function(
             highcharter::hcpxy_update(
               yAxis = list(
                 list(
-                  title = list(text = y_lab),
+                  title = list(text = rv$n_lab),
                   allowDecimals = FALSE
                 ),
                 list(
@@ -491,3 +496,107 @@ time_server <- function(
   )
 }
 
+#' @noRd
+get_time_df <- function(
+    df,
+    is_agg,
+    is_grouped,
+    date_var,
+    count_var,
+    group_var
+) {
+  if (is_agg && !length(count_var)) {
+    cli::cli_abort(c(
+      "x" = "You must supply a `count_var` variable name if data is aggregated"
+    ))
+  }
+  if (!is_grouped) {
+    if (is_agg) {
+      df <- df %>%
+        dplyr::count(.data[[date_var]], wt = .data[[count_var]])
+    } else {
+      df <- df %>% dplyr::count(.data[[date_var]])
+    }
+    df <- df %>%
+      tidyr::drop_na() %>%
+      dplyr::arrange(.data[[date_var]]) %>%
+      dplyr::mutate(n_c = cumsum(.data$n))
+  } else {
+    if (is_agg) {
+      df <- df %>%
+        dplyr::count(.data[[date_var]], .data[[group_var]], wt = .data[[count_var]])
+    } else {
+      df <- df %>% dplyr::count(.data[[date_var]], .data[[group_var]])
+    }
+    df <- df %>%
+      tidyr::drop_na() %>%
+      dplyr::group_by(.data[[group_var]]) %>%
+      dplyr::arrange(.data[[date_var]]) %>%
+      dplyr::mutate(n_c = cumsum(.data$n)) %>%
+      dplyr::ungroup()
+  }
+  return(df)
+}
+
+#' @noRd 
+get_ratio_df <- function(
+  df,
+  date_var,
+  is_agg,
+  ratio_var,
+  ratio_lab,
+  ratio_numer,
+  ratio_denom
+) {
+  if (!is_agg) {
+    # method for patient level data
+    if (any(is.null(ratio_var), is.null(ratio_numer), is.null(ratio_denom), is.null(ratio_lab))) {
+      cli::cli_abort(c(
+        "x" = "to calculate a ratio from patient level data, the following must be provided:",
+        "*" = "`ratio_var`: character string of variable name to use for ratio calculation i.e. 'outcome'",
+        "*" = "`ratio_lab`: the axis label to be used for the ratio line i.e. 'CFR'",
+        "*" = "`ratio_numer`: character vector of ratio calculation numerator levels(s) found in `ratio_var` i.e. 'death'",
+        "*" = "`ratio_denom`: character vector of ratio calculation denominator levels(s) found in `ratio_var` i.e. c('death', 'recovery')",
+        "i" = "See ?epishiny::time for details."
+      ))
+    }
+
+    df_ratio <- df %>%
+      dplyr::group_by(.data[[date_var]]) %>%
+      dplyr::summarise(
+        n1 = sum(.data[[ratio_var]] %in% ratio_numer),
+        N = sum(.data[[ratio_var]] %in% unique(c(ratio_numer, ratio_denom))),
+        ratio = (.data$n1 / .data$N) * 100,
+        .groups = "drop"
+      ) %>%
+      dplyr::arrange(.data[[date_var]]) %>%
+      dplyr::mutate(ratio_c = cumsum(.data$n1) / cumsum(.data$N) * 100) %>%
+      dplyr::select(.data[[date_var]], .data$ratio, .data$ratio_c)
+
+  } else {
+    # method for aggregated data
+    if (any(is.null(ratio_numer), is.null(ratio_denom), is.null(ratio_lab))) {
+      cli::cli_abort(c(
+        "x" = "to calculate a ratio from aggregated data, the following must be provided in `time_server` module:",
+        "*" = "`ratio_numer`: character string variable name of numeric column in data to use for the ratio numerator i.e. 'deaths'",
+        "*" = "`ratio_denom`: character string variable name of numeric column in data to use for the ratio denominator i.e. 'cases'",
+        "*" = "`ratio_lab`: the axis label to be used for the ratio line i.e. 'CFR'",
+        "i" = "See ?epishiny::time for details."
+      ))
+    }
+
+    df_ratio <- df %>%
+      dplyr::group_by(.data[[date_var]]) %>%
+      dplyr::summarise(
+        n1 = sum(.data[[ratio_numer]], na.rm = TRUE),
+        N = sum(.data[[ratio_denom]], na.rm = TRUE),
+        ratio = (.data$n1 / .data$N) * 100,
+        .groups = "drop"
+      ) %>%
+      dplyr::arrange(.data[[date_var]]) %>%
+      dplyr::mutate(ratio_c = cumsum(.data$n1) / cumsum(.data$N) * 100) %>%
+      dplyr::select(.data[[date_var]], .data$ratio, .data$ratio_c)
+
+  }
+  return(df_ratio)
+}

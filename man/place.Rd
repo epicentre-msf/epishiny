@@ -8,26 +8,28 @@
 place_ui(
   id,
   geo_data,
+  count_vars = NULL,
   group_vars = NULL,
   title = "Place",
   icon = bsicons::bs_icon("geo-fill"),
   geo_lab = "Geo boundaries",
+  count_vars_lab = "Indicator",
   groups_lab = "Group data by",
+  no_grouping_lab = "No grouping",
   circle_size_lab = "Circle size multiplyer",
   opts_btn_lab = "options",
   download_lab = "download",
-  n_lab = "N patients",
   full_screen = TRUE
 )
 
 place_server(
   id,
-  df_ll,
+  df,
   geo_data,
+  count_vars = NULL,
   group_vars = NULL,
-  n_lab = "N patients",
   show_parent_borders = TRUE,
-  choro_lab = "Attack rate<br>per 100 000",
+  choro_lab = "Rate per<br>100 000",
   choro_pal = "Reds",
   choro_opacity = 0.7,
   export_width = 1200,
@@ -40,6 +42,9 @@ place_server(
 
 \item{geo_data}{A list of named lists containing spatial sf dataframes and other information for different geographical levels.}
 
+\item{count_vars}{If data is aggregated, variable name(s) of count variable(s) in data. If more than one is variable provided,
+a select input will appear in the options dropdown. If named, names are used as variable labels.}
+
 \item{group_vars}{Character vector of categorical variable names. If provided, a select input will appear
 in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit.
 If named, names are used as variable labels.}
@@ -50,7 +55,11 @@ If named, names are used as variable labels.}
 
 \item{geo_lab}{The label for the geographical level selection.}
 
+\item{count_vars_lab}{text label for the aggregate count variables input.}
+
 \item{groups_lab}{The label for the group data by selection.}
+
+\item{no_grouping_lab}{text label for the no grouping option in the grouping input.}
 
 \item{circle_size_lab}{text label for the circle size slider input.}
 
@@ -58,11 +67,9 @@ If named, names are used as variable labels.}
 
 \item{download_lab}{text label for the download button.}
 
-\item{n_lab}{The label for the raw count variable.}
-
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 
-\item{df_ll}{Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.}
+\item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
 
 \item{show_parent_borders}{Show borders of parent boundary levels?}
 
@@ -97,18 +104,20 @@ library(epishiny)
 data("df_ll") # linelist
 data("sf_yem") # sf geo boundaries for Yemen admin 1 & 2
 
-# setup geo data for adm1 and adm2 in the format
-# required for epishiny map module
+# setup geo data for adm1 and adm2 using the
+# geo_layer function to be passed to the place module
+# if population variable is provided, attack rates
+# will be shown on the map as a choropleth
 geo_data <- list(
-  "adm1" = list(
-    level_name = "Governorate",
-    sf = sf_yem$adm1,
-    name_var = "adm1_name",
-    pop_var = "adm1_pop",
-    join_by = c("pcode" = "adm1_pcode")
+  geo_layer(
+    layer_name = "Governorate", # name of the boundary level
+    sf = sf_yem$adm1, # sf object with boundary polygons
+    name_var = "adm1_name", # column with place names
+    pop_var = "adm1_pop", # column with population data (optional)
+    join_by = c("pcode" = "adm1_pcode") # geo to data join vars: LHS = sf, RHS = data
   ),
-  "adm2" = list(
-    level_name = "District",
+  geo_layer(
+    layer_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
     pop_var = "adm2_pop",
@@ -169,20 +178,20 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   app_data <- filter_server(
     id = "filter",
-    df_ll = df_ll,
+    df = df_ll,
     date_var = "date_notification",
     group_vars = group_vars
   )
   place_server(
     id = "map",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
   time_server(
     id = "curve",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
     ratio_var = "outcome",
@@ -193,7 +202,7 @@ server <- function(input, output, session) {
   )
   person_server(
     id = "age_sex",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

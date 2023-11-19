@@ -12,7 +12,7 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 **Please note this package is in alpha stage of development and not yet
 suitable for use in production as the API is likely to change.**
 
-## Philosophy
+## Motivation
 
 Interactive web-based data visualisations and dashboards are an
 increasingly common method of monitoring infectious disease outbreaks.
@@ -24,8 +24,8 @@ instead.
 
 `epishiny` aims to bridge this gap by providing simple functions that
 produce engaging, feature-rich interactive visualisations and dashboards
-from epidemiological linelist data using R’s
-[`shiny`](https://shiny.posit.co/) web-framework.
+from epidemiological data using R’s [`shiny`](https://shiny.posit.co/)
+web-framework.
 
 ## Installation
 
@@ -49,104 +49,14 @@ found in [inst/examples/demo](inst/examples/demo).
 
 <img src="man/figures/dashboard.png" width="100%" />
 
-## Launching individual modules
+## Getting started
 
-As well as for use in dashboards, each epishiny module can be launched
-individually from within an R script allowing for incorporation into
-exploratory data analaysis pipelines. Their interactive nature allows
-the user to quickly visualise the data in different ways, as well as
-export images for use in reports and communications with others.
+See the [getting started
+tutorial](https://epicentre-msf.github.io/epishiny/articles/epishiny.html)
+on the package website to get started using `epishiny` with your data.
 
-### Setup
+## Contributions
 
-``` r
-library(epishiny)
-
-# example package data
-data("df_ll")
-data("sf_yem")
-
-# setup geo data for adm1 and adm2 in the format
-# required for epishiny map module
-# if population variable is provided, attack rates
-# will be shown on the map as a choropleth
-geo_data <- list(
-  "adm1" = list(
-    level_name = "Governorate", # name of the boundary level
-    sf = sf_yem$adm1, # sf object with boundary polygons
-    name_var = "adm1_name", # variable with place names
-    pop_var = "adm1_pop", # variable with population data (optional)
-    join_by = c("pcode" = "adm1_pcode") # geo to data join vars: LHS = sf, RHS = data
-  ),
-  # same for admin 2 level
-  "adm2" = list(
-    level_name = "District",
-    sf = sf_yem$adm2,
-    name_var = "adm2_name",
-    pop_var = "adm2_pop",
-    join_by = c("pcode" = "adm2_pcode")
-  )
-)
-
-# define date variables in data as named list to be used in app
-date_vars <- c(
-  "Date of notification" = "date_notification",
-  "Date of onset" = "date_symptom_start",
-  "Date of hospitalisation" = "date_hospitalisation_start",
-  "Date of outcome" = "date_hospitalisation_end"
-)
-
-# define categorical grouping variables
-# in data as named list to be used in app
-group_vars <- c(
-  "Governorate" = "adm1_origin",
-  "Sex" = "sex_id",
-  "Hospitalised" = "hospitalised_yn",
-  "Vaccinated measles" = "vacci_measles_yn",
-  "Outcome" = "outcome"
-)
-```
-
-### Time module
-
-``` r
-# launch time epicurve module
-launch_module(
-  module = "time",
-  df_ll = df_ll,
-  date_vars = date_vars,
-  group_vars = group_vars
-)
-```
-
-<img src="man/figures/time.png" width="100%" />
-
-### Place module
-
-``` r
-# launch place map module
-launch_module(
-  module = "place",
-  df_ll = df_ll,
-  geo_data = geo_data,
-  group_vars = group_vars
-)
-```
-
-<img src="man/figures/place.png" width="100%" />
-
-### Person module
-
-``` r
-# launch person age/sex pyramid module
-launch_module(
-  module = "person",
-  df_ll = df_ll,
-  age_var = "age_years",
-  sex_var = "sex_id",
-  male_level = "Male",
-  female_level = "Female"
-)
-```
-
-<img src="man/figures/person.png" width="100%" />
+Contributions are welcome. See the [contributing
+article](https://epicentre-msf.github.io/epishiny/articles/epishiny.html)
+on the package website for details on how to contribute to `epishiny`.

@@ -2,21 +2,14 @@
 library(tidyverse)
 library(fs)
 
-# adds a lon lat point that falls within each feature
-# better than st_centroid because this is not guaranteed to be within the feature
-set_coords <- function(sf) {
-  coords <- sf::st_coordinates(suppressWarnings(sf::st_point_on_surface(sf::st_zm(sf))))
-  sf %>% dplyr::mutate(lon = coords[, 1], lat = coords[, 2])
-}
-
 # Yemen admin 1 and 2
 dir_geo <- max(dir_ls("~/Library/CloudStorage/OneDrive-SharedLibraries-MSF/OutbreakTools - GeoBase/YEM"))
 
 sf_yem <-
   dir_ls(path(dir_geo, "sf"), regexp = "adm[1-2]") %>%
   set_names(c("adm1", "adm2")) %>% 
-  map(read_rds) %>%
-  map(set_coords)
+  # remove coords to show epishiny will add them for you if missing
+  map(~ read_rds(.x) %>% select(-any_of(c("adm0_sub", "lon", "lat"))))
 
 # path to example Outbreak Tools linelist export: a measles dataset with linelist "Linelist patients"
 path_ll <- here::here("data-raw", "linelist-example.xlsx")
@@ -24,6 +17,25 @@ df_ll_raw <- qxl::qread(
   here::here("data-raw", "linelist-example.xlsx"),
   sheet = "Linelist patients"
 )
+
+bin_ages <- function(
+    df,
+    age_var,
+    age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
+    age_labs = c("<5", "5-17", "18-24", "25-34", "35-49", "50+")
+) {
+  dplyr::mutate(
+    df,
+    age_group = cut(
+      .data[[age_var]],
+      breaks = age_breaks,
+      labels = age_labs,
+      include.lowest = TRUE,
+      right = FALSE
+    ),
+    .after = dplyr::any_of(age_var)
+  )
+}
 
 df_ll <- df_ll_raw %>%
   left_join(
@@ -47,11 +59,13 @@ df_ll <- df_ll_raw %>%
       .default = NA_real_
     )
   ) %>%
+  bin_ages(age_var = "age_years") %>% 
   select(
     case_id,
     starts_with("date"),
     sex_id,
     age_years,
+    age_group,
     starts_with("adm"),
     fever,
     rash,

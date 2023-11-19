@@ -46,28 +46,6 @@ ui <-tagList(
             person_ui(id = "age_sex")
           )
         )
-        # layout_columns(
-        #   col_widths = breakpoints(
-        #     md = c(12, 12, 12),
-        #     lg = c(12, 7, 5)
-        #   ),
-
-        #   place_ui(
-        #     id = "map",
-        #     geo_data = geo_data,
-        #     group_vars = group_vars
-        #   ),
-
-        #   time_ui(
-        #     id = "curve",
-        #     title = "Time",
-        #     date_vars = date_vars,
-        #     group_vars = group_vars,
-        #     ratio_line_lab = "Show CFR line?"
-        #   ),
-
-        #   person_ui(id = "age_sex")
-        # )
       )
     ),
 
@@ -78,13 +56,6 @@ ui <-tagList(
         target = "_blank"
       )
     ),
-
-    # nav_panel(
-    #   tags$span(shiny::icon("info"), "About"),
-    #   tags$div(
-    #     class = "container"
-    #   )
-    # ),
 
     # nav images and links
     nav_spacer(),
@@ -102,6 +73,6 @@ ui <-tagList(
       )
     ),
   ),
-
+  # start up loading spinner
   waiter::waiter_preloader(html = waiter::spin_3())
 )

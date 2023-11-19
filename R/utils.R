@@ -74,8 +74,8 @@ epi_pals <- function() {
 }
 
 #' @noRd
-make_select_filter <- function(var, lab, ns, df_ll, ...) {
-  vec <- df_ll[[var]]
+make_select_filter <- function(var, lab, ns, df, ...) {
+  vec <- df[[var]]
   if (is.factor(vec)) {
     choices <- levels(vec)
   } else if (is.character(vec)) {
@@ -257,6 +257,7 @@ leaf_basemap <- function(
   return(lf)
 }
 
+#' @noRd
 make_leaf_tooltip <- function(
     df,
     name_col = "name",
@@ -269,7 +270,7 @@ make_leaf_tooltip <- function(
 ) {
   if (all(!is.null(pop_col), !is.null(ar_col))) {
     pop <- ifelse(is.na(df[[pop_col]]), "Unknown", scales::number(df[[pop_col]], accuracy = 1))
-    ar <- ifelse(is.na(df[[ar_col]]), "0", scales::number(df[[ar_col]], accuracy = .1))
+    ar <- ifelse(is.na(df[[ar_col]]), "Unknown", scales::number(df[[ar_col]], accuracy = .1))
     glue::glue(
       "<b>{df[[name_col]]}</b><br>
        {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>
@@ -281,5 +282,15 @@ make_leaf_tooltip <- function(
       "<b>{df[[name_col]]}</b><br>
        {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>"
     ) %>% purrr::map(htmltools::HTML)
+  }
+}
+
+#' @noRd 
+get_label <- function(selected, choices, .default = getOption("epishiny.count.label", "N")) {
+  if (length(choices)) {
+    lab <- choices[choices == selected]
+    ifelse(rlang::is_named(lab), names(lab), lab)
+  } else {
+    .default
   }
 }

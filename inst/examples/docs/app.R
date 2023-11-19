@@ -6,18 +6,20 @@ library(epishiny)
 data("df_ll") # linelist
 data("sf_yem") # sf geo boundaries for Yemen admin 1 & 2
 
-# setup geo data for adm1 and adm2 in the format
-# required for epishiny map module
+# setup geo data for adm1 and adm2 using the
+# geo_layer function to be passed to the place module
+# if population variable is provided, attack rates
+# will be shown on the map as a choropleth
 geo_data <- list(
-  "adm1" = list(
-    level_name = "Governorate",
-    sf = sf_yem$adm1,
-    name_var = "adm1_name",
-    pop_var = "adm1_pop",
-    join_by = c("pcode" = "adm1_pcode")
+  geo_layer(
+    layer_name = "Governorate", # name of the boundary level
+    sf = sf_yem$adm1, # sf object with boundary polygons
+    name_var = "adm1_name", # column with place names
+    pop_var = "adm1_pop", # column with population data (optional)
+    join_by = c("pcode" = "adm1_pcode") # geo to data join vars: LHS = sf, RHS = data
   ),
-  "adm2" = list(
-    level_name = "District",
+  geo_layer(
+    layer_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
     pop_var = "adm2_pop",
@@ -78,20 +80,20 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   app_data <- filter_server(
     id = "filter",
-    df_ll = df_ll,
+    df = df_ll,
     date_var = "date_notification",
     group_vars = group_vars
   )
   place_server(
     id = "map",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
   time_server(
     id = "curve",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
     ratio_var = "outcome",
@@ -102,7 +104,7 @@ server <- function(input, output, session) {
   )
   person_server(
     id = "age_sex",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

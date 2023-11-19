@@ -2,6 +2,7 @@
 
 export(filter_server)
 export(filter_ui)
+export(geo_layer)
 export(launch_demo_dashboard)
 export(launch_module)
 export(person_server)

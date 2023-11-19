@@ -8,6 +8,7 @@
 time_ui(
   id,
   date_vars,
+  count_vars = NULL,
   group_vars = NULL,
   title = "Time",
   icon = bsicons::bs_icon("bar-chart-line-fill"),
@@ -15,21 +16,22 @@ time_ui(
   date_lab = "Date axis",
   date_int_lab = "Date interval",
   day_week_month_labs = c("Day", "Week", "Month"),
+  count_vars_lab = "Indicator",
   groups_lab = "Group data by",
+  no_grouping_lab = "No grouping",
   bar_stacking_lab = "Bar stacking",
   cumul_data_lab = "Show cumulative data?",
-  n_lab = "N patients",
-  ratio_line_lab = NULL,
+  ratio_line_lab = "Show ratio line?",
   full_screen = TRUE
 )
 
 time_server(
   id,
-  df_ll,
+  df,
   date_vars,
+  count_vars = NULL,
   group_vars = NULL,
-  y_lab = "Patients",
-  n_lab = "N patients",
+  show_ratio = FALSE,
   ratio_var = NULL,
   ratio_lab = NULL,
   ratio_numer = NULL,
@@ -40,13 +42,16 @@ time_server(
 \arguments{
 \item{id}{Module id. Must be the same in both the UI and server function to link the two.}
 
-\item{date_vars}{named character vector of date variables for the date axis input. Names are used as variable labels.}
+\item{date_vars}{Character vector of date variable(s) for the date axis. If named, names are used as variable labels.}
+
+\item{count_vars}{If data is aggregated, variable name(s) of count variable(s) in data. If more than one variable provided,
+a select input will appear in the options dropdown. If named, names are used as variable labels.}
 
 \item{group_vars}{Character vector of categorical variable names. If provided, a select input will appear
 in the options dropdown allowing for data groups to be visualised as stacked bars on the epicurve.
 If named, names are used as variable labels.}
 
-\item{title}{header title for the card.}
+\item{title}{Header title for the card.}
 
 \item{icon}{The icon to display next to the title.}
 
@@ -58,29 +63,34 @@ If named, names are used as variable labels.}
 
 \item{day_week_month_labs}{character vector with text labels for day, week and month, respectively.}
 
+\item{count_vars_lab}{text label for the aggregate count variables input.}
+
 \item{groups_lab}{text label for the grouping variable input.}
+
+\item{no_grouping_lab}{text label for the no grouping option in the grouping input.}
 
 \item{bar_stacking_lab}{text label for bar stacking option.}
 
 \item{cumul_data_lab}{text label for cumulative data option.}
 
-\item{n_lab}{The label for the raw count variable.}
-
-\item{ratio_line_lab}{text label for the ratio line input. If not supplied the input is not included.}
+\item{ratio_line_lab}{text label for the ratio line input. This input will only be visable if
+\code{show_ratio} is TRUE in \link{time_server}}
 
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 
-\item{df_ll}{Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.}
+\item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
 
-\item{y_lab}{The label for y-axis of chart.}
+\item{show_ratio}{Display a ratio line on the epicurve?}
 
-\item{ratio_var}{Character string of variable name to use for ratio calculation.}
+\item{ratio_var}{For patient level data, character string of variable name to use for ratio calculation.}
 
 \item{ratio_lab}{The label to describe the computed ratio i.e. 'CFR' for case fatality ratio.}
 
-\item{ratio_numer}{Value(s) in \code{ratio_var} to be used for the ratio numerator i.e. 'Death'.}
+\item{ratio_numer}{For patient level data, Value(s) in \code{ratio_var} to be used for the ratio numerator i.e. 'Death'.
+For aggregated data, character string of numeric count column to use of ratio numerator i.e. 'deaths'.}
 
-\item{ratio_denom}{Values in \code{ratio_var} to be used for the ratio denominator i.e. \code{c('Death', 'Recovery')}.}
+\item{ratio_denom}{For patient level data, values in \code{ratio_var} to be used for the ratio denominator i.e. \code{c('Death', 'Recovery')}.
+For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.}
 
 \item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
 returned by that function here as a shiny reactive to add filter information to chart exports.}

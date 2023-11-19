@@ -7,19 +7,23 @@
 \usage{
 person_ui(
   id,
+  count_vars = NULL,
   title = "Person",
   icon = bsicons::bs_icon("people-fill"),
   opts_btn_lab = "options",
+  count_vars_lab = "Indicator",
   full_screen = TRUE
 )
 
 person_server(
   id,
-  df_ll,
-  age_var,
+  df,
   sex_var,
   male_level,
   female_level,
+  age_group_var = NULL,
+  age_var = NULL,
+  count_vars = NULL,
   age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
   age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
   age_var_lab = "Age (years)",
@@ -32,23 +36,32 @@ person_server(
 \arguments{
 \item{id}{Module id. Must be the same in both the UI and server function to link the two.}
 
+\item{count_vars}{If data is aggregated, variable name(s) of count variable(s) in data. If more than one variable provided,
+a select input will appear in the options dropdown. If named, names are used as variable labels.}
+
 \item{title}{The title for the card.}
 
 \item{icon}{The icon to display next to the title.}
 
 \item{opts_btn_lab}{The label for the options button.}
 
+\item{count_vars_lab}{text label for the aggregate count variables input.}
+
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 
-\item{df_ll}{Data frame or tibble of patient level linelist data. Can be either a shiny reactive or static dataset.}
-
-\item{age_var}{The name of the age variable in the data.}
+\item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
 
 \item{sex_var}{The name of the sex variable in the data.}
 
 \item{male_level}{The level representing males in the sex variable.}
 
 \item{female_level}{The level representing females in the sex variable.}
+
+\item{age_group_var}{The name of a character/factor variable in the data with age groups.
+If specified, \code{age_var} is ignored.}
+
+\item{age_var}{The name of a numeric age variable in the data.
+If ages have already been binned into groups, use \code{age_group_var} instead.}
 
 \item{age_breaks}{A numeric vector specifying age breaks for age groups.}
 
@@ -80,18 +93,20 @@ library(epishiny)
 data("df_ll") # linelist
 data("sf_yem") # sf geo boundaries for Yemen admin 1 & 2
 
-# setup geo data for adm1 and adm2 in the format
-# required for epishiny map module
+# setup geo data for adm1 and adm2 using the
+# geo_layer function to be passed to the place module
+# if population variable is provided, attack rates
+# will be shown on the map as a choropleth
 geo_data <- list(
-  "adm1" = list(
-    level_name = "Governorate",
-    sf = sf_yem$adm1,
-    name_var = "adm1_name",
-    pop_var = "adm1_pop",
-    join_by = c("pcode" = "adm1_pcode")
+  geo_layer(
+    layer_name = "Governorate", # name of the boundary level
+    sf = sf_yem$adm1, # sf object with boundary polygons
+    name_var = "adm1_name", # column with place names
+    pop_var = "adm1_pop", # column with population data (optional)
+    join_by = c("pcode" = "adm1_pcode") # geo to data join vars: LHS = sf, RHS = data
   ),
-  "adm2" = list(
-    level_name = "District",
+  geo_layer(
+    layer_name = "District",
     sf = sf_yem$adm2,
     name_var = "adm2_name",
     pop_var = "adm2_pop",
@@ -152,20 +167,20 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   app_data <- filter_server(
     id = "filter",
-    df_ll = df_ll,
+    df = df_ll,
     date_var = "date_notification",
     group_vars = group_vars
   )
   place_server(
     id = "map",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
     filter_info = reactive(app_data()$filter_info)
   )
   time_server(
     id = "curve",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
     ratio_var = "outcome",
@@ -176,7 +191,7 @@ server <- function(input, output, session) {
   )
   person_server(
     id = "age_sex",
-    df_ll = reactive(app_data()$df_ll),
+    df = reactive(app_data()$df),
     age_var = "age_years",
     sex_var = "sex_id",
     male_level = "Male",

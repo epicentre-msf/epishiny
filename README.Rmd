@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 
 __Please note this package is in alpha stage of development and not yet suitable for use in production as the API is likely to change.__
 
-## Philosophy
+## Motivation
 
 Interactive web-based data visualisations and dashboards are an increasingly common method 
 of monitoring infectious disease outbreaks. Whilst R is now a commonly used tool for analysis 
@@ -33,7 +33,7 @@ to be able to produce interactive dashboards directly from within their R workfl
 resulting in external propriatory software being used instead.
 
 `epishiny` aims to bridge this gap by providing simple functions that produce engaging, 
-feature-rich interactive visualisations and dashboards from epidemiological linelist data 
+feature-rich interactive visualisations and dashboards from epidemiological data 
 using R's [`shiny`](https://shiny.posit.co/) web-framework.
 
 ## Installation
@@ -49,8 +49,6 @@ remotes::install_github("epicentre-msf/epishiny")
 ```
 
 ```{r include=FALSE}
-library(shinytest2)
-pkgload::load_all()
 # set to TRUE to take new app screenshots
 update_imgs <- FALSE
 ```
@@ -62,6 +60,9 @@ The code for this dashboard can be found in [inst/examples/demo](inst/examples/d
 
 ```{r include=FALSE}
 if (update_imgs) {
+  require("shinytest2")
+  pkgload::load_all()
+
   app_path <- here::here("inst/examples/demo")
 
   app <- AppDriver$new(app_path, width = 1600, height = 900)
@@ -78,105 +79,39 @@ if (update_imgs) {
 knitr::include_graphics("man/figures/dashboard.png")
 ```
 
-## Launching individual modules
+## Getting started
 
-As well as for use in dashboards, each epishiny module can be launched individually from within an R script allowing for incorporation
-into exploratory data analaysis pipelines. Their interactive nature allows the user to quickly visualise the data in different ways,
-as well as export images for use in reports and communications with others.  
+See the [getting started tutorial](https://epicentre-msf.github.io/epishiny/articles/epishiny.html) 
+on the package website to get started using `epishiny` with your data.
 
-### Setup
+## Contributions
 
-```{r file='inst/examples/docs/setup.R'}
-```
-
-### Time module
-
-```{r eval=FALSE}
-# launch time epicurve module
-launch_module(
-  module = "time",
-  df_ll = df_ll,
-  date_vars = date_vars,
-  group_vars = group_vars
-)
-```
+Contributions are welcome. See the [contributing article](https://epicentre-msf.github.io/epishiny/articles/epishiny.html) 
+on the package website for details on how to contribute to `epishiny`.
 
 ```{r include=FALSE}
 if (update_imgs) {
+  require("shinytest2")
+  # time module screenshot
   app_path <- here::here("inst/examples/docs/time")
-
   app <- AppDriver$new(app_path, width = 1000, height = 600)
-
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
   fs::file_copy(img_path, "man/figures/time.png", overwrite = TRUE)
-
   app$stop()
-}
-```
-
-```{r echo=FALSE}
-knitr::include_graphics("man/figures/time.png")
-```
-
-### Place module
-
-```{r eval=FALSE}
-# launch place map module
-launch_module(
-  module = "place",
-  df_ll = df_ll,
-  geo_data = geo_data,
-  group_vars = group_vars
-)
-```
-
-```{r include=FALSE}
-if (update_imgs) {
+  # place module screenshot
   app_path <- here::here("inst/examples/docs/place")
-
   app <- AppDriver$new(app_path, width = 1000, height = 600)
-
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
   fs::file_copy(img_path, "man/figures/place.png", overwrite = TRUE)
-
   app$stop()
-}
-```
-
-```{r echo=FALSE}
-knitr::include_graphics("man/figures/place.png")
-```
-
-### Person module
-
-```{r eval=FALSE}
-# launch person age/sex pyramid module
-launch_module(
-  module = "person",
-  df_ll = df_ll,
-  age_var = "age_years",
-  sex_var = "sex_id",
-  male_level = "Male",
-  female_level = "Female"
-)
-```
-
-```{r include=FALSE}
-if (update_imgs) {
+  # person module screenshot
   app_path <- here::here("inst/examples/docs/person")
-
   app <- AppDriver$new(app_path, width = 1000, height = 600)
-
   img_path <- tempfile(fileext = ".png")
   app$get_screenshot(file = img_path, delay = 1)
   fs::file_copy(img_path, "man/figures/person.png", overwrite = TRUE)
-
   app$stop()
 }
-```
-
-```{r echo=FALSE}
-knitr::include_graphics("man/figures/person.png")
 ```
