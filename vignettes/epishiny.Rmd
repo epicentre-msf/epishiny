@@ -10,7 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%"
 )
 ```
 
@@ -44,7 +45,7 @@ Luckily we can easily match this to the linelist data via the `pcode` columns. I
 harmonious pcodes available in your data, so if you need help matching messy epi data to geo data, check out our 
 [hmatch package](https://epicentre-msf.github.io/hmatch/).
 
-Now let's set up the geo data in the format required for epishiny. We use the `geo_layer` function to deine a layer, and
+Now let's set up the geo data in the format required for epishiny. We use the `geo_layer` function to define a layer, and
 since we have multiple layers in this case, we combine them in a list.
 
 ```{r eval=FALSE}
@@ -127,7 +128,7 @@ knitr::include_graphics("../man/figures/person.png")
 
 `epishiny` modules can be included in any shiny dashboard by adding the `module_ui` component to the shiny ui function,
 and the `module_server` component to the shiny server function. If you're new to shiny, don't worry, `epishiny` is designed 
-so that you can build fully-featured without worrying about what is happening on the shiny back-end. But if you do want to 
+so that you can build fully-featured dashboards without worrying about what is happening on the shiny back-end. But if you do want to 
 learn more, a good place to start is the [Mastering Shiny](https://mastering-shiny.org/) book, authored by Hadley Wickham.
 
 `epishiny` modules use UI elements from the [bslib](https://rstudio.github.io/bslib/index.html) package, so the only constraint 
