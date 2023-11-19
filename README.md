@@ -45,7 +45,9 @@ remotes::install_github("epicentre-msf/epishiny")
 
 Launch a demo dashboard with examples of every epishiny module with the
 `launch_demo_dashboard()` function. The code for this dashboard can be
-found in [inst/examples/demo](inst/examples/demo).
+found in
+[inst/examples/demo](https://github.com/epicentre-msf/epishiny/tree/main/inst/examples/demo)
+of the package repository.
 
 <img src="man/figures/dashboard.png" width="100%" />
 
@@ -58,5 +60,5 @@ on the package website to get started using `epishiny` with your data.
 ## Contributions
 
 Contributions are welcome. See the [contributing
-article](https://epicentre-msf.github.io/epishiny/articles/epishiny.html)
+article](https://epicentre-msf.github.io/epishiny/articles/contributing.html)
 on the package website for details on how to contribute to `epishiny`.
