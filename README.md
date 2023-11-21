@@ -35,10 +35,10 @@ either the [pak](https://pak.r-lib.org/) or
 
 ``` r
 # install.packages("pak")
-pak::pkg_install("epicentre-msf/epishiny")
+pak::pkg_install("epicentre-msf/epishiny", dependencies = TRUE)
 
 # install.packages("remotes")
-remotes::install_github("epicentre-msf/epishiny")
+remotes::install_github("epicentre-msf/epishiny", dependencies = TRUE)
 ```
 
 ## Demo Dashboard

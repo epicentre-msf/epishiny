@@ -15,7 +15,7 @@
 #' @export
 launch_module <- function(module = c("time", "place", "person"), ...) {
 
-  module <- match.arg(module, c("time", "place", "person"), several.ok = FALSE)
+  module <- match.arg(module, several.ok = FALSE)
   mod_ui <- paste0(module, "_ui")
   mod_server <- paste0(module, "_server")
   # prepare arguments for ui and server

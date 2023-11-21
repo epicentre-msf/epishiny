@@ -51,6 +51,13 @@ time_ui <- function(
     full_screen = TRUE
 ) {
   ns <- NS(id)
+
+  # check deps are installed
+  pkg_deps <- c("highcharter", "lubridate")
+  if (!rlang::is_installed(pkg_deps)) {
+    rlang::check_installed(pkg_deps, reason = "to use the epishiny time module.")
+  }
+
   tagList(
     use_epishiny(),
     bslib::card(

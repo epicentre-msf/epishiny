@@ -14,12 +14,13 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
+    cli,
     shiny (>= 1.5.0),
     bslib (>= 0.5.1),
     bsicons,
     shinyWidgets,
-    htmltools,
-    htmlwidgets,
+    shinyjs,
+    waiter,
     rlang,
     magrittr,
     tibble,
@@ -27,21 +28,10 @@ Imports:
     tidyr,
     purrr,
     stringr,
-    lubridate,
     forcats,
     scales,
-    waiter,
-    shinyjs,
-    janitor,
     glue,
-    highcharter,
-    gt,
-    gtsummary,
-    mapview,
-    leaflet,
-    leaflet.minicharts,
-    chromote,
-    cli
+    highcharter
 Remotes:
     r-spatial/mapview
 Depends: 
@@ -51,5 +41,12 @@ BugReports: https://github.com/epicentre-msf/epishiny/issues
 Suggests: 
     knitr,
     rmarkdown,
-    sf
+    lubridate,
+    gt,
+    gtsummary,
+    sf,
+    mapview,
+    chromote,
+    leaflet,
+    leaflet.minicharts
 VignetteBuilder: knitr

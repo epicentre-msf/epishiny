@@ -43,6 +43,12 @@ place_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
+  # check deps are installed
+  pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "mapview", "chromote")
+  if (!rlang::is_installed(pkg_deps)) {
+    rlang::check_installed(pkg_deps, reason = "to use the epishiny place module.")
+  }
+
   if (!inherits(geo_data, "epishiny_geo_layer")) {
     if (!all(purrr::map_lgl(geo_data, ~inherits(.x, "epishiny_geo_layer")))) {
       cli::cli_abort(c(
@@ -137,8 +143,6 @@ place_ui <- function(
 #' @param export_height The height of the exported map image.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
-#' 
-#' @importFrom mapview mapshot2
 #'
 #' @rdname place
 #'
@@ -519,7 +523,6 @@ place_server <- function(
               colorPalette = epi_pals()$d310,
               legend = TRUE,
               showLabels = TRUE,
-              labelStyle = htmltools::css(font_family = "'Roboto Mono',sans-serif"),
               type = "pie",
               width = pie_width
             )
@@ -559,7 +562,6 @@ place_server <- function(
               colorPalette = epi_pals()$d310,
               legend = TRUE,
               showLabels = TRUE,
-              labelStyle = htmltools::css(font_family = "'Roboto Mono',sans-serif"),
               type = "pie",
               width = pie_width
             )
@@ -704,7 +706,6 @@ place_server <- function(
               colorPalette = epi_pals()$d310,
               legend = TRUE,
               showLabels = TRUE,
-              labelStyle = htmltools::css(font_family = "'Roboto Mono',sans-serif"),
               type = "pie",
               width = pie_width
             )
@@ -912,7 +913,7 @@ get_geo_counts <- function(
       }
       df <- df %>%
         tidyr::pivot_wider(names_from = group_var, values_from = "n") %>% 
-        janitor::adorn_totals("col", name = "total")
+        dplyr::mutate(total = rowSums(dplyr::pick(dplyr::where(is.numeric))))
     }
     return(df)
   }

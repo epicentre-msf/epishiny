@@ -145,7 +145,7 @@ frmt_num <- function(x, accuracy = .1) {
 
 #' @noRd
 hc_week_labels <- function(week_letter = getOption("epishiny.week.letter", "W")) {
-  htmlwidgets::JS(
+  highcharter::JS(
     glue::glue("function () {
          var date = new Date(this.value);
          var year = date.getWeekYear();
@@ -276,12 +276,12 @@ make_leaf_tooltip <- function(
        {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>
        {pop_lab}: <b>{pop}</b><br>
        {ar_lab}: <b>{ar}</b> / 100 000<br>"
-    ) %>% purrr::map(htmltools::HTML)
+    ) %>% purrr::map(shiny::HTML)
   } else {
     glue::glue(
       "<b>{df[[name_col]]}</b><br>
        {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>"
-    ) %>% purrr::map(htmltools::HTML)
+    ) %>% purrr::map(shiny::HTML)
   }
 }
 

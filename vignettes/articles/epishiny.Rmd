@@ -89,7 +89,7 @@ launch_module(
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("../man/figures/time.png")
+knitr::include_graphics("../../man/figures/time.png")
 ```
 
 ### Place
@@ -104,7 +104,7 @@ launch_module(
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("../man/figures/place.png")
+knitr::include_graphics("../../man/figures/place.png")
 ```
 
 ### Person
@@ -121,7 +121,7 @@ launch_module(
 ```
 
 ```{r echo=FALSE}
-knitr::include_graphics("../man/figures/person.png")
+knitr::include_graphics("../../man/figures/person.png")
 ```
 
 ## Dashboards
@@ -137,5 +137,5 @@ article for full details on designing a UI with `bslib`.
 
 Below is a full dashboard example incorporating all `epishiny` modules in a `bslib` user interface.
 
-```{r eval=FALSE, file='../inst/examples/docs/app.R'}
+```{r eval=FALSE, file='../../inst/examples/docs/app.R'}
 ```

@@ -28,6 +28,12 @@ person_ui <- function(
 ) { 
   ns <- shiny::NS(id)
 
+  # check deps are installed
+  pkg_deps <- c("highcharter", "gt", "gtsummary")
+  if (!rlang::is_installed(pkg_deps)) {
+    rlang::check_installed(pkg_deps, reason = "to use the epishiny person module.")
+  }
+
   bslib::navset_card_tab(
     wrapper = function(...) {bslib::card_body(..., padding = 0, class = "person-container")}, 
     full_screen = full_screen,
