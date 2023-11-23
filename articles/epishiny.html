@@ -44,6 +44,10 @@
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <h6 class="dropdown-header" data-toc-skip>Use Cases</h6>
+    <a class="dropdown-item" href="../articles/linelist_data.html">Linelists</a>
+    <a class="dropdown-item" href="../articles/aggregated_data.html">Aggregated Data</a>
+    <div class="dropdown-divider"></div>
     <a class="dropdown-item" href="../articles/contributing.html">Contributing</a>
   </div>
 </li>
@@ -74,12 +78,34 @@
       <img src="" class="logo" alt=""><h1>epishiny</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/epicentre-msf/epishiny/blob/HEAD/vignettes/epishiny.Rmd" class="external-link"><code>vignettes/epishiny.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/epicentre-msf/epishiny/blob/HEAD/vignettes/articles/epishiny.Rmd" class="external-link"><code>vignettes/articles/epishiny.Rmd</code></a></small>
       <div class="d-none name"><code>epishiny.Rmd</code></div>
     </div>
 
     
     
+<div class="section level2">
+<h2 id="global-options">Global options<a class="anchor" aria-label="anchor" href="#global-options"></a>
+</h2>
+<p><code>epishiny</code> sets the following global options on start up
+that are used across various modules. You can change any of these to
+suit your needs via the <code><a href="https://rdrr.io/r/base/options.html" class="external-link">options()</a></code> function as below. Make
+sure you do this <em>after</em> <code>epishiny</code> has been loaded
+for the changes to take effect.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># first load libraries</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/epicentre-msf/epishiny" class="external-link">epishiny</a></span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># then set your options. the options below are the defaults</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span></span>
+<span>  epishiny.na.label <span class="op">=</span> <span class="st">"(Missing)"</span>, <span class="co"># label to be used for NA values in outputs</span></span>
+<span>  epishiny.count.label <span class="op">=</span> <span class="st">"Patients"</span>, <span class="co"># if data is un-aggregated, the label to represent row counts</span></span>
+<span>  epishiny.week.letter <span class="op">=</span> <span class="st">"W"</span>, <span class="co"># letter to represent 'Week'. Change to S for 'Semaine' etc</span></span>
+<span>  epishiny.week.start <span class="op">=</span> <span class="fl">1</span> <span class="co"># day the epiweek starts on. 1 = Monday, 7 = Sunday</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
 <div class="section level2">
 <h2 id="setting-up-data-for-epishiny">Setting up data for epishiny<a class="anchor" aria-label="anchor" href="#setting-up-data-for-epishiny"></a>
 </h2>
@@ -93,11 +119,8 @@ associated with said individual.</p>
 containing data for a fake measles outbreak in Yemen. The data contains
 temporal, demographic, and geographic information for each patient, as
 well as other medical indicators.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/epicentre-msf/epishiny" class="external-link">epishiny</a></span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">df_ll</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">df_ll</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Rows: 1,000</span></span>
 <span><span class="co">#&gt; Columns: 30</span></span>
 <span><span class="co">#&gt; $ case_id                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "P0001", "P0002", "P0003", "P0004", "P…</span></span>
@@ -136,7 +159,7 @@ Yemen. If we wan’t to visualise this data on a map we need to provide
 accompanying geo data that we can match to the linelist data.
 <code>sf_yem</code>, a dataset within the package, is a list containing
 geo boundary data for adm1 and adm2 levels in Yemen, stored as <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> objects.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sf_yem</span></span>
 <span><span class="co">#&gt; $adm1</span></span>
 <span><span class="co">#&gt; Simple feature collection with 22 features and 5 fields</span></span>
@@ -202,9 +225,9 @@ geo boundary data for adm1 and adm2 levels in Yemen, stored as <a href="https://
 harmonious pcodes available in your data, so if you need help matching
 messy epi data to geo data, check out our <a href="https://epicentre-msf.github.io/hmatch/" class="external-link">hmatch package</a>.</p>
 <p>Now let’s set up the geo data in the format required for epishiny. We
-use the <code>geo_layer</code> function to define a layer, and since we
-have multiple layers in this case, we combine them in a list.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+use the <code><a href="../reference/geo_layer.html">geo_layer()</a></code> function to define a layer, and since
+we have multiple layers in this case, we combine them in a list.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># setup geo data for adm1 and adm2 using the</span></span>
 <span><span class="co"># geo_layer function to be passed to the place module</span></span>
 <span><span class="co"># if population variable is provided, attack rates</span></span>
@@ -240,7 +263,7 @@ arguments that can be passed.</p>
 <div class="section level3">
 <h3 id="time">Time<a class="anchor" aria-label="anchor" href="#time"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/launch_module.html">launch_module</a></span><span class="op">(</span></span>
 <span>  module<span class="op">=</span> <span class="st">"time"</span>,</span>
 <span>  df <span class="op">=</span> <span class="va">df_ll</span>,</span>
@@ -251,7 +274,7 @@ arguments that can be passed.</p>
 <div class="section level3">
 <h3 id="place">Place<a class="anchor" aria-label="anchor" href="#place"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># launch place map module</span></span>
 <span><span class="fu"><a href="../reference/launch_module.html">launch_module</a></span><span class="op">(</span></span>
 <span>  module <span class="op">=</span> <span class="st">"place"</span>,</span>
@@ -263,7 +286,7 @@ arguments that can be passed.</p>
 <div class="section level3">
 <h3 id="person">Person<a class="anchor" aria-label="anchor" href="#person"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/launch_module.html">launch_module</a></span><span class="op">(</span></span>
 <span>  module<span class="op">=</span> <span class="st">"person"</span>,</span>
 <span>  df <span class="op">=</span> <span class="va">df_ll</span>,</span>
@@ -294,7 +317,7 @@ shiny dashboards</a> article for full details on designing a UI with
 <p>Below is a full dashboard example incorporating all
 <code>epishiny</code> modules in a <code>bslib</code> user
 interface.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/bslib/" class="external-link">bslib</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/epicentre-msf/epishiny" class="external-link">epishiny</a></span><span class="op">)</span></span>
