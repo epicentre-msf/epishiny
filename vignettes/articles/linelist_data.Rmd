@@ -1,0 +1,182 @@
+---
+title: "Using epishiny with linelist data"
+author: "Sebastian Funk"
+bibliography: references.bib
+nocite: '@*'
+link-citations: true
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using epishiny with linelist data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+library("knitr")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The _epishiny_ package can work with pre-aggregated data or with line lists, i.e. data sets in the form of 
+tables that contain cases as one line per individual. 
+
+The package provides a range of visualisations of different aggregations of the data that can either 
+be launched as individual modules or as part of a shiny dashboard that can be run locally or deployed on a server.
+
+In this demonstation we will walk throught the steps of preparing external data then visualise it by 
+launching individual modules from within an R script. 
+
+# Load in data
+
+The package comes with a built in example line list `df_ll`, but a user can also bring their own data.
+Here we will use a line list of Ebola in Sierra Leone published in @Fang2016.
+
+```{r load_data}
+suppressPackageStartupMessages(library("readr"))
+suppressPackageStartupMessages(library("dplyr"))
+suppressPackageStartupMessages(library("purrr"))
+suppressPackageStartupMessages(library("sf"))
+suppressPackageStartupMessages(library("epishiny"))
+
+url <- paste(
+  "https://raw.githubusercontent.com/parksw3/epidist-paper/main/data-raw/",
+  "pnas.1518587113.sd02.csv",
+  sep = "/"
+)
+df <- read_csv(url)
+glimpse(df)
+```
+
+# Set up geo data
+
+We next need geological data if we want to show maps.
+Unfortunately there is no systematic availability of subnational data.
+A search on the HDX platform reveals that subnational data are available at https://data.humdata.org/dataset/cod-ab-sle
+
+The line list contains Districts (admin 2 level) and Chiefdoms (admin 3 level).
+We can download the corresponding data sets from HDX.
+
+
+```{r load_geo_data}
+## common element of both shapefile URLs
+hdx_dir <-
+  "https://data.humdata.org/dataset/a4816317-a913-4619-b1e9-d89e21c056b4"
+## shapefile names and resource ID (from URL)
+shapefiles <- list(
+  adm2 = list(
+    filename = "sle_admbnda_adm2_1m_gov_ocha.zip",
+    resource = "b3963917-8550-478d-9363-736492bf209a"
+  ),
+  adm3 = list(
+    filename = "sle_admbnda_adm3_1m_gov_ocha_20161017.zip",
+    resource = "e2aa661d-af2f-42d8-bdea-c7e16a00bdb2"
+  )
+)
+## create temporary dir for downloading
+tmpdir <- tempdir()
+
+## download and load shapefiles
+shapes <- map(shapefiles, \(x) {
+  ## construct URL
+  url <- paste(
+    hdx_dir, "resource", x$resource, "download", x$filename, sep = "/"
+  )
+  ## construct file name
+  ## (`read_sf` expects ending `.shp.zip` for zipped shapefiles)
+  destfile <- sub("\\.zip$", ".shp.zip", file.path(tmpdir, x$filename))
+  download.file(url, destfile = destfile)
+  return(read_sf(destfile))
+})
+
+# little bit of cleaning on district names to match with data
+shapes$adm2$admin2Name <- gsub("Area ", "", shapes$adm2$admin2Name)
+
+map(shapes, head)
+```
+
+# Launch Modules
+
+Before we launch the modules we can define some grouping variables. If passed to the `time` or `place` modules,
+a select input will appear in the 'options' dropdown allowing you to group the data by the variables you select.
+
+If you want a more readable variable label to appear in the module rather than the variable name itself, pass a 
+named vector where the name is the label and the value is the variable name. 
+
+In our example we use sex and district as a variable, but since they are already formatted as labels there is 
+no need to pass names:
+
+```{r group_vars}
+group_vars <- c("Sex", "District")
+```
+
+## Place module
+
+Now that we have the shapefiles we can collate the information contained in the format that _epishiny_ expects
+using the `geo_layer()` function. Since we are using more than one geo layer, we combine them in a list:
+
+```{r geo_data, eval=FALSE}
+geo_data <- list(
+  geo_layer(
+    layer_name = "District",
+    sf = shapes$adm2,
+    name_var = "admin2Name",
+    join_by = c("admin2Name" = "District")
+  ),
+  geo_layer(
+    layer_name = "Chiefdom",
+    sf = shapes$adm3,
+    name_var = "admin3Name",
+    join_by = c("admin3Name" = "Chiefdom")
+  )
+)
+```
+
+We use this to launch the place module:
+
+```{r place_module, eval = FALSE}
+launch_module(
+  module = "place",
+  df = df,
+  geo_data = geo_data,
+  group_vars = group_vars[1] # only pass sex variable since district is already visualised on map
+)
+```
+
+## Time module
+
+To launch the time module, we need to pass the date variable(s) in the line list we want to use for the x-axis.
+
+Notice that the date variables are of character class in the data but they are automatically parsed to date class
+in the time module via the lubridate::as_date function.
+
+```{r time_module, eval = FALSE}
+launch_module(
+  module = "time",
+  df = df,
+  date_vars = c("Date of symptom onset", "Date of sample tested"),
+  group_vars = group_vars
+)
+```
+
+## Person module
+
+Finally, we can plot an age/sex pyramid using the person module, passing age and sex variable names
+and the levels in the sex variable to encode male and female:
+
+```{r person_module, eval = FALSE}
+launch_module(
+  module = "person",
+  df = df,
+  age_var = "Age",
+  sex_var = "Sex",
+  male_level = "M",
+  female_level = "F"
+)
+```
+
+
+# References
+
+

@@ -53,10 +53,10 @@ time_ui <- function(
   ns <- NS(id)
 
   # check deps are installed
-  pkg_deps <- c("highcharter", "lubridate")
-  if (!rlang::is_installed(pkg_deps)) {
-    rlang::check_installed(pkg_deps, reason = "to use the epishiny time module.")
-  }
+  # pkg_deps <- c("highcharter", "lubridate")
+  # if (!rlang::is_installed(pkg_deps)) {
+  #   rlang::check_installed(pkg_deps, reason = "to use the epishiny time module.")
+  # }
 
   tagList(
     use_epishiny(),
@@ -193,6 +193,14 @@ time_server <- function(
       if (!show_ratio) {
         shinyjs::hide("show_ratio_line")
       }
+
+      observe({
+        cond <- input$group != "n"
+        if (!cond) {
+          shinyWidgets::updateRadioGroupButtons(session, "bar_stacking", selected = "normal")
+        }
+        shinyjs::toggle("bar_stacking", condition = cond, anim = TRUE)
+      })
 
       df_mod <- reactive({
         force_reactive(df)

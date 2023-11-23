@@ -15,6 +15,27 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Global options
+
+`epishiny` sets the following global options on start up that are used across various modules. You can
+change any of these to suit your needs via the `options()` function as below. Make sure you do this _after_
+`epishiny` has been loaded for the changes to take effect.
+
+```{r}
+# first load libraries
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(sf))
+suppressPackageStartupMessages(library(epishiny))
+
+# then set your options. the options below are the defaults
+options(
+  epishiny.na.label = "(Missing)", # label to be used for NA values in outputs
+  epishiny.count.label = "Patients", # if data is un-aggregated, the label to represent row counts
+  epishiny.week.letter = "W", # letter to represent 'Week'. Change to S for 'Semaine' etc
+  epishiny.week.start = 1 # day the epiweek starts on. 1 = Monday, 7 = Sunday
+)
+```
+
 ## Setting up data for epishiny
 
 `epishiny` can work with either aggregated or un-aggregated data. Here we will use an 
@@ -26,9 +47,6 @@ and each column representing a variable associated with said individual.
 The data contains temporal, demographic, and geographic information for each patient, as well as other medical indicators.
 
 ```{r}
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(epishiny))
-
 glimpse(df_ll)
 ```
 
@@ -45,7 +63,7 @@ Luckily we can easily match this to the linelist data via the `pcode` columns. I
 harmonious pcodes available in your data, so if you need help matching messy epi data to geo data, check out our 
 [hmatch package](https://epicentre-msf.github.io/hmatch/).
 
-Now let's set up the geo data in the format required for epishiny. We use the `geo_layer` function to define a layer, and
+Now let's set up the geo data in the format required for epishiny. We use the `geo_layer()` function to define a layer, and
 since we have multiple layers in this case, we combine them in a list.
 
 ```{r eval=FALSE}
@@ -88,9 +106,7 @@ launch_module(
 )
 ```
 
-```{r echo=FALSE}
-knitr::include_graphics("../../man/figures/time.png")
-```
+<img src="../reference/figures/time.png" width="100%"/>
 
 ### Place
 
@@ -103,9 +119,7 @@ launch_module(
 )
 ```
 
-```{r echo=FALSE}
-knitr::include_graphics("../../man/figures/place.png")
-```
+<img src="../reference/figures/place.png" width="100%"/>
 
 ### Person
 
@@ -120,9 +134,7 @@ launch_module(
 )
 ```
 
-```{r echo=FALSE}
-knitr::include_graphics("../../man/figures/person.png")
-```
+<img src="../reference/figures/person.png" width="100%"/>
 
 ## Dashboards
 

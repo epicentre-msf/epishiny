@@ -9,7 +9,7 @@
   # set epishiny default options =============
   options(
     epishiny.na.label = "(Missing)",
-    epishiny.count.label = "N",
+    epishiny.count.label = "Patients",
     epishiny.week.letter = "W",
     epishiny.week.start = 1
   )

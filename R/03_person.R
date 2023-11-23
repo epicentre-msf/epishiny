@@ -29,10 +29,10 @@ person_ui <- function(
   ns <- shiny::NS(id)
 
   # check deps are installed
-  pkg_deps <- c("highcharter", "gt", "gtsummary")
-  if (!rlang::is_installed(pkg_deps)) {
-    rlang::check_installed(pkg_deps, reason = "to use the epishiny person module.")
-  }
+  # pkg_deps <- c("highcharter", "gt", "gtsummary")
+  # if (!rlang::is_installed(pkg_deps)) {
+  #   rlang::check_installed(pkg_deps, reason = "to use the epishiny person module.")
+  # }
 
   bslib::navset_card_tab(
     wrapper = function(...) {bslib::card_body(..., padding = 0, class = "person-container")}, 
@@ -335,11 +335,11 @@ get_as_df <- function(
     missing_sex <- df %>% 
       dplyr::filter(!.data$sex %in% c(male_level, female_level) | is.na(.data$sex)) %>% 
       dplyr::pull(.data[[count_var]]) %>% 
-      sum()
+      sum(na.rm = TRUE)
     missing_age <- df %>% 
       dplyr::filter(is.na(.data$age_group) | .data$age_group == getOption("epishiny.na.label", "(Missing)")) %>% 
       dplyr::pull(.data[[count_var]]) %>%
-      sum()
+      sum(na.rm = TRUE)
   } else {
     missing_sex <- nrow(dplyr::filter(df, !.data$sex %in% c(male_level, female_level) | is.na(.data$sex)))
     missing_age <- sum(is.na(df$age_group) | df$age_group == getOption("epishiny.na.label", "(Missing)"))
