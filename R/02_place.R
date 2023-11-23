@@ -44,10 +44,10 @@ place_ui <- function(
   ns <- shiny::NS(id)
 
   # check deps are installed
-  pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "mapview", "chromote")
-  if (!rlang::is_installed(pkg_deps)) {
-    rlang::check_installed(pkg_deps, reason = "to use the epishiny place module.")
-  }
+  # pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "mapview", "chromote")
+  # if (!rlang::is_installed(pkg_deps)) {
+  #   rlang::check_installed(pkg_deps, reason = "to use the epishiny place module.")
+  # }
 
   if (!inherits(geo_data, "epishiny_geo_layer")) {
     if (!all(purrr::map_lgl(geo_data, ~inherits(.x, "epishiny_geo_layer")))) {
@@ -156,7 +156,7 @@ place_server <- function(
     count_vars = NULL,
     group_vars = NULL,
     show_parent_borders = TRUE,
-    choro_lab = "Rate per<br>100 000",
+    choro_lab = "Rate /100 000",
     choro_pal = "Reds",
     choro_opacity = .7,
     export_width = 1200,
@@ -572,17 +572,22 @@ place_server <- function(
       # Missing data information ==================================================
       missing_text <- reactive({
         df_missing <- df_mod() %>%
-          dplyr::summarise(
-            N = dplyr::n(),
-            n = sum(is.na(.data[[rv$geo_col]]))
-          ) %>%
-          dplyr::mutate(percent = .data$n / .data$N)
+          dplyr::anti_join(geo_select()$sf, by = purrr::set_names(rv$join_cols, rv$geo_col))
 
-        if (df_missing$n == 0) {
+        if (length(count_vars)) {
+          n_missing <- df_missing %>% dplyr::pull(.data[[rv$count_var]]) %>% sum(na.rm = TRUE)
+          n_total <- df_mod() %>% dplyr::pull(.data[[rv$count_var]]) %>% sum(na.rm = TRUE)
+          pcnt_missing <- n_missing / n_total
+        } else {
+          n_missing <- nrow(df_missing)
+          pcnt_missing <- n_missing / nrow(df_mod())
+        }
+
+        if (n_missing == 0) {
           return(NULL)
         } else {
-          n_missing <- glue::glue("{scales::number(df_missing$n)} ({scales::percent(df_missing$percent, accuracy = 1)})")
-          glue::glue("{rv$geo_level_name} data missing/unknown for {n_missing} {tolower(rv$n_lab)}")
+          lab_missing <- glue::glue("{scales::number(n_missing)} ({scales::percent(pcnt_missing, accuracy = 1)})")
+          glue::glue("Missing/Unknown {rv$geo_level_name} data for {lab_missing} {tolower(rv$n_lab})")
         }
       })
 

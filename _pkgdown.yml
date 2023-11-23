@@ -2,3 +2,16 @@ url: https://epicentre-msf.github.io/epishiny/
 template:
   bootstrap: 5
 
+navbar:
+ components:
+   articles:
+    text: Articles
+    menu:
+    - text: Use Cases
+    - text: Linelists
+      href: articles/linelist_data.html
+    - text: Aggregated Data 
+      href: articles/aggregated_data.html
+    - text: -------
+    - text: Contributing
+      href: articles/contributing.html
