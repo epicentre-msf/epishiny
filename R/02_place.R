@@ -173,6 +173,7 @@ place_server <- function(
         geo_data <- list(geo_data)
       }
 
+      # hide inputs if redundant
       if (length(geo_data) < 2) {
         shinyjs::hide("geo_level")
       }
@@ -211,17 +212,10 @@ place_server <- function(
         force_reactive(df)
       })
 
-      # add point on surface lon lat coords if not already present
-      # required for circle/pie position on map
-      # geo_data <- purrr::map(geo_data, function(x) {
-      #   x$sf <- add_coords(x$sf)
-      #   return(x)
-      # })
-
       geo_select <- reactive({
         # if geo_data is a single 'epishiny_geo_layer' use that
         # otherwise select with on geo_level input
-        if (inherits(geo_data, "epishiny_geo_layer")) {
+        if (length(geo_data) == 1) {
           geo_data[[1]]
         } else {
           gd_index <- which(purrr::map_chr(geo_data, "layer_name") == input$geo_level)
@@ -339,17 +333,13 @@ place_server <- function(
       df_geo_counts <- reactive({
         # is the data pre-aggregated
         is_agg <- as.logical(length(count_vars))
-        # is a data grouping variable supplied
-        is_grouped <- rv$map_var != "n"
 
         df_counts <- get_geo_counts(
           df = df_mod(),
           is_agg = is_agg,
-          is_grouped = is_grouped,
           geo_var = rv$geo_col,
           count_var = rv$count_var,
-          count_lab = rv$n_lab,
-          group_var = rv$map_var
+          count_lab = rv$n_lab
         )
 
         df_out <- rv$sf %>%
@@ -368,7 +358,30 @@ place_server <- function(
         }
 
         return(df_out)
-      }) %>% bindEvent(df_mod(), rv$sf, rv$map_var, rv$count_var)
+      }) %>% bindEvent(df_mod(), rv$sf, rv$count_var)
+
+      df_map_circles <- reactive({
+        # drop geometry and unneeded cols
+        df_geo_counts <- df_geo_counts() %>% 
+          sf::st_drop_geometry() %>% 
+          dplyr::select(-dplyr::any_of(c("attack_rate", rv$geo_pop_var)))
+        # is the data pre-aggregated
+        is_agg <- as.logical(length(count_vars))
+        # is a data grouping variable supplied
+        is_grouped <- rv$map_var != "n"
+        # get df
+        df_circles <- get_map_circle_df(
+          df = df_mod(),
+          is_agg = is_agg,
+          is_grouped = is_grouped,
+          geo_var = rv$geo_col,
+          count_var = rv$count_var,
+          group_var = rv$map_var,
+          df_geo_counts = df_geo_counts,
+          geo_join = rv$geo_join,
+          n_lab = rv$n_lab
+        )
+      }) %>% bindEvent(df_geo_counts(), rv$map_var)
 
       # add polygon boundaries with tooltip data info
       observe({
@@ -383,7 +396,7 @@ place_server <- function(
         if (is.null(geo_select()$pop_var)) {
           ogs <- c("Boundaries", "Circles")
         } else {
-          ogs <- c("Boundaries", "Attack rate", "Circles")
+          ogs <- c("Boundaries", "Choropleth", "Circles")
         }
 
         leaflet::leafletProxy("map", session) %>%
@@ -442,12 +455,12 @@ place_server <- function(
           leaflet::flyToBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]])
       }) %>% bindEvent(df_geo_counts())
 
-      # add/update attack rate polygons when df_geo_counts() changes
+      # add/update Choropleth polygons when df_geo_counts() changes
       observe({
         req(df_geo_counts())
 
         leaflet::leafletProxy("map", session) %>%
-          leaflet::clearGroup("Attack rate") %>%
+          leaflet::clearGroup("Choropleth") %>%
           leaflet::removeControl(layerId = "attack_legend")
 
         # only plot polygons with incidence
@@ -472,7 +485,7 @@ place_server <- function(
               fillColor = ~ pal(attack_rate),
               fillOpacity = choro_opacity,
               highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
-              group = "Attack rate",
+              group = "Choropleth",
               options = leaflet::pathOptions(pane = "choropleth")
             ) %>%
             leaflet::addLegend(
@@ -482,7 +495,7 @@ place_server <- function(
               values = ~attack_rate,
               opacity = choro_opacity,
               position = "bottomright",
-              group = "Attack rate",
+              group = "Choropleth",
               layerId = "attack_legend"
             )
         }
@@ -492,8 +505,8 @@ place_server <- function(
       minicharts_init <- reactiveVal(TRUE)
       minicharts_on <- reactiveVal(TRUE)
       observe({
-        req(df_geo_counts())
-        df_map <- sf::st_drop_geometry(df_geo_counts())
+        req(df_map_circles())
+        df_map <- df_map_circles()
         leaflet::leafletProxy("map", session) %>% leaflet.minicharts::clearMinicharts()
 
         req(nrow(df_map) > 0)
@@ -529,7 +542,7 @@ place_server <- function(
 
           minicharts_init(FALSE)
         }
-      }) %>% bindEvent(df_geo_counts(), input$circle_size_mult)
+      }) %>% bindEvent(df_map_circles(), input$circle_size_mult)
 
       # show/hide circles when selected/unselected from map groups
       observeEvent(input$map_groups, {
@@ -538,7 +551,7 @@ place_server <- function(
             leaflet.minicharts::clearMinicharts()
           minicharts_on(FALSE)
         } else if (!minicharts_on()) {
-          df_map <- sf::st_drop_geometry(df_geo_counts())
+          df_map <- df_map_circles()
           req(nrow(df_map) > 0)
           chart_data <- df_map %>%
             dplyr::select(-dplyr::any_of(c(
@@ -587,7 +600,7 @@ place_server <- function(
           return(NULL)
         } else {
           lab_missing <- glue::glue("{scales::number(n_missing)} ({scales::percent(pcnt_missing, accuracy = 1)})")
-          glue::glue("Missing/Unknown {rv$geo_level_name} data for {lab_missing} {tolower(rv$n_lab})")
+          glue::glue("Missing/Unknown {rv$geo_level_name} data for {lab_missing} {tolower(rv$n_lab)}")
         }
       })
 
@@ -631,21 +644,6 @@ place_server <- function(
 
           # rebuild current map shown on dashboard
           boundaries <- rv$sf
-          df_map <- df_geo_counts()
-          chart_data <- sf::st_drop_geometry(df_map) %>% 
-            dplyr::select(-dplyr::any_of(c(
-              rv$join_cols,
-              rv$geo_pop_var,
-              "attack_rate",
-              "name",
-              "lon",
-              "lat",
-              "total"
-            )))
-
-          # * 7 instead of * 10 like in the app map because
-          # circles are coming out larger in the image export
-          pie_width <- (input$circle_size_mult * 7) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
           missing_data_text <- missing_text()
           if (!is.null(missing_data_text)) {
@@ -700,22 +698,42 @@ place_server <- function(
               label = boundaries[[rv$geo_name_col]],
               group = "Boundaries",
               options = leaflet::pathOptions(pane = "boundaries")
-            ) %>%
-            leaflet.minicharts::addMinicharts(
-              lng = df_map$lon,
-              lat = df_map$lat,
-              layerId = df_map$name,
-              chartdata = chart_data,
-              opacity = .8,
-              fillColor = epi_pals()$d310[1],
-              colorPalette = epi_pals()$d310,
-              legend = TRUE,
-              showLabels = TRUE,
-              type = "pie",
-              width = pie_width
             )
+
+          if (isTruthy("Circles" %in% input$map_groups)) {
+            df_circles <- df_map_circles()
+            chart_data <- df_circles %>%
+              dplyr::select(-dplyr::any_of(c(
+                rv$join_cols,
+                rv$geo_pop_var,
+                "attack_rate",
+                "name",
+                "lon",
+                "lat",
+                "total"
+              )))
+            # * 7 instead of * 10 like in the app map because
+            # circles are coming out larger in the image export
+            pie_width <- (input$circle_size_mult * 7) * (sqrt(df_circles$total) / sqrt(max(df_circles$total)))
+            leaf_out <- leaf_out %>%
+              leaflet.minicharts::addMinicharts(
+                lng = df_circles$lon,
+                lat = df_circles$lat,
+                layerId = df_circles$name,
+                chartdata = chart_data,
+                opacity = .8,
+                fillColor = epi_pals()$d310[1],
+                colorPalette = epi_pals()$d310,
+                legend = TRUE,
+                showLabels = TRUE,
+                type = "pie",
+                width = pie_width
+              )
+          }
           
-          if (!is.null(rv$geo_pop_var)) {
+          if (isTruthy("Choropleth" %in% input$map_groups)) { # !is.null(rv$geo_pop_var)
+            df_map <- df_geo_counts()
+
             pal <- leaflet::colorBin(
               palette = choro_pal,
               domain = df_map$attack_rate,
@@ -731,7 +749,7 @@ place_server <- function(
                 fillColor = ~ pal(attack_rate),
                 fillOpacity = choro_opacity,
                 highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
-                group = "Attack rate",
+                group = "Choropleth",
                 options = leaflet::pathOptions(pane = "choropleth")
               ) %>%
               leaflet::addLegend(
@@ -741,7 +759,7 @@ place_server <- function(
                 values = ~attack_rate,
                 opacity = choro_opacity,
                 position = "bottomright",
-                group = "Attack rate",
+                group = "Choropleth",
                 layerId = "attack_legend"
               )
           }
@@ -754,7 +772,7 @@ place_server <- function(
               lower_levels <- 1:(geo_level - 1)
               for (i in lower_levels) {
                 stroke_width <- (geo_level - i) + 1
-                borders <- sf::st_filter(gd[[i]]$sf, boundaries)
+                borders <- suppressMessages(sf::st_filter(gd[[i]]$sf, boundaries))
                 leaf_out <- leaf_out %>%
                   leaflet::addPolylines(
                     data = borders,
@@ -895,82 +913,49 @@ add_coords <- function(sf) {
 get_geo_counts <- function(
     df,
     is_agg,
-    is_grouped,
     geo_var,
     count_var,
-    count_lab,
-    group_var
+    count_lab
   ) {
-    if (!is_grouped) {
-      if (is_agg) {
-        df <- df %>%
-          dplyr::count(.data[[geo_var]], wt = .data[[count_var]], name = count_lab)
-      } else {
-        df <- df %>% dplyr::count(.data[[geo_var]], name = count_lab)
-      }
-      df <- df %>% dplyr::mutate(total = .data[[count_lab]])
-    } else {
-      if (is_agg) {
-        df <- df %>%
-          dplyr::count(.data[[geo_var]], .data[[group_var]], wt = .data[[count_var]])
-      } else {
-        df <- df %>% dplyr::count(.data[[geo_var]], .data[[group_var]])
-      }
+    if (is_agg) {
       df <- df %>%
-        tidyr::pivot_wider(names_from = group_var, values_from = "n") %>% 
-        dplyr::mutate(total = rowSums(dplyr::pick(dplyr::where(is.numeric))))
+        dplyr::count(.data[[geo_var]], wt = .data[[count_var]], name = count_lab)
+    } else {
+      df <- df %>% dplyr::count(.data[[geo_var]], name = count_lab)
     }
-    return(df)
+    df %>% dplyr::mutate(total = .data[[count_lab]])
   }
 
+get_map_circle_df <- function(
+  df,
+  is_agg,
+  is_grouped,
+  geo_var,
+  count_var,
+  group_var,
+  df_geo_counts,
+  geo_join,
+  n_lab
+) {
+  if (!is_grouped) {
+    df <- df_geo_counts
+  } else {
+    if (is_agg) {
+      df <- df %>%
+        dplyr::count(.data[[geo_var]], .data[[group_var]], wt = .data[[count_var]])
+    } else {
+      df <- df %>% dplyr::count(.data[[geo_var]], .data[[group_var]])
+    }
+    # dplyr::mutate(total = rowSums(dplyr::pick(dplyr::where(is.numeric))))
+    df <- df_geo_counts %>% 
+      dplyr::select(-dplyr::any_of(n_lab)) %>% 
+      dplyr::left_join(
+        df %>% tidyr::pivot_wider(names_from = group_var, values_from = "n"), 
+        by = geo_join
+      ) %>% 
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
+  }
+  df %>% dplyr::filter(.data$total > 0) 
+}
 
-# #' @noRd
-# validate_geo_data <- function(geo_data) {
-#   gdv <- all(
-#     # check geo_data is a list of named lists
-#     rlang::is_list(geo_data),
-#     rlang::is_named(geo_data),
-#     all(purrr::map_lgl(geo_data, rlang::is_list)),
-#     # check each item
-#     purrr::map_lgl(geo_data, validate_geo_data_item)
-#   )
-#   if (gdv) {
-#     geo_data
-#   } else {
-#     cli::cli_abort(c(
-#       "x" = "`geo_data` does not meet the required specification.
-#       It must be a list of named lists each containing the following named items:",
-#       ">" = "`sf`: geographical data of class 'sf' (simple features)",
-#       ">" = "`name_var`: character string of the variable name in `sf` containing the names of each geographical feature",
-#       ">" = "`join_by`: named character vector of variable names to use when joining to linelist data.
-#       For example `c(''pcode' = 'adm1_pcode')` where 'pcode' is a variable in `sf` to be joined with 'adm1_pcode'
-#       a variable in the linelist data.",
-#       " " = "Other optional items include:",
-#       ">" = "`layer_name`: the name of the geographical boundary, for example 'State', 'Department' etc",
-#       ">" = "`pop_var`: character string of the variable name in `sf` containing population data for each feature.
-#       If provided, attack rates will be shown on the map as a choropleth",
-#       "See ?epishiny::place_server for examples"
-#     ))
-#   }
-# }
-
-# #' @noRd
-# validate_geo_data_item <- function(gd) {
-#   all(
-#     # is an sf object
-#     "sf" %in% class(gd$sf),
-#     # name var is a character length 1
-#     rlang::is_character(gd$name_var),
-#     length(gd$name_var) == 1,
-#     gd$name_var %in% colnames(gd$sf),
-#     # join_by is a length 1 character vector
-#     length(gd$join_by) == 1,
-#     rlang::is_character(gd$join_by),
-#     # join cols are present in sf data
-#     if (rlang::is_named(gd$join_by)) {
-#       all(names(gd$join_by) %in% colnames(gd$sf))
-#     } else {
-#       all(gd$join_by %in% colnames(gd$sf))
-#     }
-#   )
-# }

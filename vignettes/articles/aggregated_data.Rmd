@@ -78,7 +78,8 @@ launch_module(
   show_ratio = TRUE,
   ratio_lab = "CFR",
   ratio_numer = "New_deaths",
-  ratio_denom = "New_cases"
+  ratio_denom = "New_cases",
+  date_intervals = c("week", "month", "year")
 )
 ```
 
