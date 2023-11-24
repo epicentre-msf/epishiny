@@ -52,7 +52,7 @@ ui <-tagList(
     nav_item(
       tags$a(
         tags$span(shiny::icon("info"), "About"),
-        href = "https://github.com/epicentre-msf/epishiny",
+        href = "https://epicentre-msf.github.io/epishiny/",
         target = "_blank"
       )
     ),
