@@ -51,11 +51,18 @@ of the package repository.
 
 <img src="man/figures/dashboard.png" width="100%" />
 
-## Getting started
+## Tutorials
 
-See the [getting started
-tutorial](https://epicentre-msf.github.io/epishiny/articles/epishiny.html)
-on the package website to get started using `epishiny` with your data.
+See the articles below on the package website to get started using
+`epishiny` with your data.
+
+- [Getting
+  started](https://epicentre-msf.github.io/epishiny/articles/epishiny.html)
+- Use cases
+  - [Linelist
+    data](https://epicentre-msf.github.io/epishiny/articles/linelist_data.html)
+  - [Aggregated
+    data](https://epicentre-msf.github.io/epishiny/articles/aggregated_data.html)
 
 ## Contributions
 

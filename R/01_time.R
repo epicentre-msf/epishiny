@@ -16,7 +16,8 @@
 #' @param opts_btn_lab text label for the dropdown menu button.
 #' @param date_lab text label for the date variable input.
 #' @param date_int_lab text label for the date interval input.
-#' @param day_week_month_labs character vector with text labels for day, week and month, respectively.
+#' @param date_intervals Character vector with choices for date aggregation intervals passed to the `unit`
+#'  argument of [lubridate::floor_date]. If named, names are used as labels. Default is c('day', 'week', 'year').
 #' @param count_vars_lab text label for the aggregate count variables input.
 #' @param groups_lab text label for the grouping variable input.
 #' @param no_grouping_lab text label for the no grouping option in the grouping input.
@@ -41,7 +42,7 @@ time_ui <- function(
     opts_btn_lab = "options",
     date_lab = "Date axis",
     date_int_lab = "Date interval",
-    day_week_month_labs = c("Day", "Week", "Month"),
+    date_intervals = c("Day" = "day", "Week" = "week", "Month" = "month"),
     count_vars_lab = "Indicator",
     groups_lab = "Group data by",
     no_grouping_lab = "No grouping",
@@ -90,11 +91,8 @@ time_ui <- function(
             label = date_int_lab,
             size = "sm",
             status = "outline-dark",
-            choices = purrr::set_names(
-              c("day", "week", "month"),
-              day_week_month_labs
-            ),
-            selected = "week"
+            choices = date_intervals,
+            selected = ifelse("week" %in% date_intervals, "week", date_intervals[1])
           ),
           selectInput(
             ns("count_var"),

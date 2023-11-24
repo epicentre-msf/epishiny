@@ -15,7 +15,7 @@ time_ui(
   opts_btn_lab = "options",
   date_lab = "Date axis",
   date_int_lab = "Date interval",
-  day_week_month_labs = c("Day", "Week", "Month"),
+  date_intervals = c(Day = "day", Week = "week", Month = "month"),
   count_vars_lab = "Indicator",
   groups_lab = "Group data by",
   no_grouping_lab = "No grouping",
@@ -61,7 +61,8 @@ If named, names are used as variable labels.}
 
 \item{date_int_lab}{text label for the date interval input.}
 
-\item{day_week_month_labs}{character vector with text labels for day, week and month, respectively.}
+\item{date_intervals}{Character vector with choices for date aggregation intervals passed to the \code{unit}
+argument of \link[lubridate:round_date]{lubridate::floor_date}. If named, names are used as labels. Default is c('day', 'week', 'year').}
 
 \item{count_vars_lab}{text label for the aggregate count variables input.}
 

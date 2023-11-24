@@ -29,7 +29,7 @@ place_server(
   count_vars = NULL,
   group_vars = NULL,
   show_parent_borders = TRUE,
-  choro_lab = "Rate per<br>100 000",
+  choro_lab = "Rate /100 000",
   choro_pal = "Reds",
   choro_opacity = 0.7,
   export_width = 1200,
