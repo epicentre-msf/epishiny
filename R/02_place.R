@@ -926,6 +926,7 @@ get_geo_counts <- function(
     df %>% dplyr::mutate(total = .data[[count_lab]])
   }
 
+#' @noRd 
 get_map_circle_df <- function(
   df,
   is_agg,

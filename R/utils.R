@@ -186,8 +186,8 @@ my_hc_export <- function(
   subtitle <- set_hc_val(subtitle, hc$x$hc_opts$subtitle$text)
   colors <- set_hc_val(colors, hc$x$hc_opts$colors)
   credits <- set_hc_val(credits, hc$x$hc_opts$credits$text)
-  show_credits <- ifelse(length(credits), FALSE, TRUE)
-  show_caption <- ifelse(length(caption), FALSE, TRUE)
+  show_credits <- ifelse(length(credits), TRUE, FALSE)
+  show_caption <- ifelse(length(caption), TRUE, FALSE)
 
   legend_title <- stringr::str_remove(hc$x$hc_opts$legend$title$text, "\\(click to filter\\)")
 
