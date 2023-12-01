@@ -161,6 +161,7 @@ place_server <- function(
     choro_opacity = .7,
     export_width = 1200,
     export_height = 650,
+    time_filter = shiny::reactiveVal(),
     filter_info = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
@@ -209,7 +210,12 @@ place_server <- function(
       # ==========================================================================
 
       df_mod <- reactive({
-        force_reactive(df)
+        df_out <- force_reactive(df)
+        tf <- time_filter()
+        if (length(tf)) {
+          df_out <- df_out %>% dplyr::filter(dplyr::between(.data[[tf$date_var]], tf$from, tf$to))
+        }
+        df_out
       })
 
       geo_select <- reactive({

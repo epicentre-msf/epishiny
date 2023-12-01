@@ -169,6 +169,7 @@ time_server <- function(
     ratio_lab = NULL,
     ratio_numer = NULL,
     ratio_denom = NULL,
+    place_filter = shiny::reactiveVal(),
     filter_info = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
@@ -201,7 +202,12 @@ time_server <- function(
       })
 
       df_mod <- reactive({
-        force_reactive(df)
+        df_out <- force_reactive(df)
+        pf <- place_filter()
+        if (pf$region_select != "all") {
+          df_out <- df_out %>% dplyr::filter(.data[[pf$geo_col]] == pf$region_select)
+        }
+        df_out
       })
 
       # variables and labels etc
@@ -312,12 +318,19 @@ time_server <- function(
             highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip)
         }
 
+        click_js <- highcharter::JS(
+          glue::glue('function(event) {
+            Shiny.setInputValue("{{ns("chart_click")}}", {x: event.point.x, y: event.point.y}, {priority: "event"});
+          }', .open = "{{", .close = "}}")
+        )
+
         hc <- hc %>%
-          highcharter::hc_add_event_point(event = "click") %>%
+          # highcharter::hc_add_event_point(event = "click") %>%
           highcharter::hc_title(text = NULL) %>%
           highcharter::hc_chart(zoomType = "x", alignTicks = TRUE) %>%
           highcharter::hc_plotOptions(
-            column = list(stacking = isolate(input$bar_stacking))
+            column = list(stacking = isolate(input$bar_stacking)),
+            series = list(cursor = "pointer", stickyTracking = FALSE, events = list(click = click_js))
           ) %>% 
           highcharter::hc_xAxis(
             title = list(text = date_lab),
@@ -500,10 +513,76 @@ time_server <- function(
         }
       }) %>% shiny::bindEvent(input$show_ratio_line, ignoreInit = TRUE)
 
-      # return chart click input values
-      shiny::reactive({
-        input$chart_click
+
+      bar_click <- reactiveVal(NULL)
+
+      observe({
+        new_click <- input$chart_click$x
+        if (identical(bar_click(), new_click)) {
+          bar_click(NULL)
+        } else {
+          bar_click(new_click)
+        }
+      }) %>% bindEvent(input$chart_click)
+
+      # reset bar click if date interval is changed
+      observe({
+        bar_click(NULL)
+      }) %>% bindEvent(input$date_interval)
+
+      # format chart click input values for filtering
+      time_filter <- shiny::reactive({
+        bc <- bar_click()
+        if (length(bc)) {
+          date_var <- input$date
+          interval <- input$date_interval
+          from <- lubridate::as_datetime(bc / 1000, origin = "1970-01-01")
+          # this only makes sense if the interval is a full day or more
+          to <- from + lubridate::period(1, input$date_interval) - lubridate::period(1, "day")
+          list(
+            date_var = date_var,
+            from = from,
+            to = to,
+            interval = interval
+          )
+        } else {
+          return(NULL)
+        }
       })
+
+      # show clicked period on chart
+      observe({
+        tf <- time_filter()
+        if (length(tf)) {
+          # browser()
+          if (tf$interval == "day") {
+            pad <- lubridate::period(12, "hours")
+          } else {
+            pad <- lubridate::as.period(lubridate::interval(tf$from, tf$to))$day / 2
+            pad <- lubridate::period(ceiling(pad), "day")
+          }
+          date_from <- tf$from - pad
+          date_to <- tf$from + pad
+          highcharter::highchartProxy(ns("chart")) %>%
+            highcharter::hcpxy_update(
+              xAxis = list(plotBands = list(
+                list(
+                  color = "#D3D3D350",
+                  zIndex = 1,
+                  from = highcharter::datetime_to_timestamp(date_from),
+                  to = highcharter::datetime_to_timestamp(date_to)
+                  # label = list(text = "filter")
+                )
+              ))
+            )
+        } else {
+            highcharter::highchartProxy(ns("chart")) %>%
+              highcharter::hcpxy_update(xAxis = list(plotBands = list()))
+        }
+      }) %>% bindEvent(time_filter(), ignoreNULL = FALSE)
+
+      # return to main app
+      return(reactive(time_filter()))
 
     }
   )
