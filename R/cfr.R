@@ -1,4 +1,12 @@
-cfr_ui <- function(id) {
+#' CFR ui
+#' @rdname cfr
+#' @param id The id.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+cfr_ui <- function(id, full_screen = TRUE) {
   # parameter tabs
   parameter_tabs <- tabsetPanel(
     id = NS(id, "params"),
@@ -45,39 +53,55 @@ cfr_ui <- function(id) {
   )
 
   tagList(
-    sidebarLayout(
-      sidebarPanel(
-        useShinyjs(),
-        selectInput(
-          NS(id, "type"), "Estimate type",
-          choices = list(
-            Rolling = "rolling", `Time-varying` = "time_varying"
-          )
-        ),
-        cfr_options_tabs,
-        checkboxInput(
-          NS(id, "correct_delays"), "Correct for delays?"
-        ),
-        conditionalPanel(
-          ns = NS(id),
-          condition = "input.correct_delays",
-          selectInput(
-            NS(id, "dist"), "Distribution",
-            choices = c("Normal", "Gamma", "Log-normal")
+    use_epishiny(),
+    bslib::card(
+      full_screen = full_screen,
+      bslib::card_header(
+        class = "d-flex justify-content-start align-items-center",
+        tags$span(bsicons::bs_icon("bar-chart-line-fill"), "CFR", class = "pe-2"),
+
+        # options button and dropdown menu
+        bslib::popover(
+          title = tags$span(shiny::icon("sliders"), "Options"),
+          trigger = actionButton(
+            NS(id, "dropdown"),
+            icon = shiny::icon("sliders"),
+            label = "Options",
+            class = "btn-sm pe-2 me-2"
           ),
-          parameter_tabs
+          selectInput(
+            NS(id, "type"), "Estimate type",
+            choices = list(
+              Rolling = "rolling", `Time-varying` = "time_varying"
+            )
+          ),
+          cfr_options_tabs,
+          checkboxInput(
+            NS(id, "correct_delays"), "Correct for delays?"
+          ),
+          conditionalPanel(
+            ns = NS(id),
+            condition = "input.correct_delays",
+            selectInput(
+              NS(id, "dist"), "Distribution",
+              choices = c("Normal", "Gamma", "Log-normal")
+            ),
+            parameter_tabs
+          )
         )
       ),
-      mainPanel(
+      bslib::card_body(
+        class = "d-flex justify-content-start align-items-center",
+        padding = 0,
         tableOutput(NS(id, "cfr_overall")),
-        plotlyOutput(NS(id, "cfr_plot")),
+        highcharter::highchartOutput(NS(id, "cfr_plot")),
         conditionalPanel(
           ns = NS(id),
           "input.correct_delays",
           div(
             style = "display:flex;",
-            plotlyOutput(NS(id, "plot_pmf"), width = "25vw", height = "25vw"),
-            plotlyOutput(NS(id, "plot_cdf"), width = "25vw", height = "25vw")
+            plotly::plotlyOutput(NS(id, "plot_pmf"), width = "25vw", height = "25vw"),
+            plotly::plotlyOutput(NS(id, "plot_cdf"), width = "25vw", height = "25vw")
           )
         )
       )
@@ -85,7 +109,17 @@ cfr_ui <- function(id) {
   )
 }
 
-cfr_server <- function(id) {
+#' CFR server
+#'
+#' @rdname cfr
+#' @param id The id.
+#' @param df The data.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+cfr_server <- function(id, df) {
   moduleServer(
     id, function(input, output, session) {
       observeEvent(input$type, {
@@ -175,16 +209,22 @@ cfr_server <- function(id) {
           `FALSE` = NULL
         )
       )
+
+      # prepare data by forcing it to reactive
+      df_mod <- reactive({
+        force_reactive(df)
+      })
+
       # estimate CFR
       cfr_estimate <- reactive(
         switch(input$type,
           rolling = cfr::cfr_rolling(
-            data = cfr::ebola1976,
+            data = df,
             delay_density = ddens(),
             poisson_threshold = input$poisson_threshold
           ),
           time_varying = cfr::cfr_time_varying(
-            data = cfr::ebola1976,
+            data = df,
             delay_density = ddens(),
             burn_in = input$burn_in,
             smoothing_window = input$smoothing_window
@@ -193,39 +233,27 @@ cfr_server <- function(id) {
       )
 
       # create plot
-      cfr_plot <- reactive(
-        ggplot(cfr_estimate()) +
-          geom_ribbon(
-            aes(
-              date,
-              ymin = severity_low, ymax = severity_high
-            ),
-            fill = alpha("pink", 0.2)
-          ) +
-          geom_line(
-            aes(date, severity_mean),
-            colour = "darkred"
-          ) +
-          scale_x_date(
-            date_labels = "%b-%Y"
-          ) +
-          scale_y_continuous(
-            labels = scales::label_percent()
-          ) +
-          labs(
-            x = NULL,
-            y = "CFR (%)"
-          ) +
-          theme_classic()
+      cfr_plot_hc <- reactive(
+        highcharter::hchart(
+          cfr_estimate(),
+          type = "line",
+          highcharter::hcaes(date, severity_mean),
+          id = "cfr_plot",
+          name = "CFR estimate", color = "red"
+        ) %>%
+          highcharter::hc_add_series(
+            data = cfr_estimate()
+          ) %>%
+          highcharter::hc_tooltip(shared = TRUE)
       )
 
       # pass plot and df to output ui
-      output$cfr_plot <- renderPlotly(ggplotly(cfr_plot()))
+      output$cfr_plot <- highcharter::renderHighchart(cfr_plot_hc())
 
       # get static overall estimate
       cfr_overall <- reactive(
         cfr::cfr_static(
-          data = cfr::ebola1976,
+          data = df,
           delay_density = ddens(),
           poisson_threshold = 100 # NOTE: fixed
         )
