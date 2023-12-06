@@ -1,8 +1,26 @@
-#' CFR ui
-#' @rdname cfr
-#' @param id The id.
+#' CFR module
 #'
-#' @return
+#' @description Visualise the rolling or time-varying disease severity in the
+#' form of the case fatality risk, while optionally correcting for delays in
+#' reporting outcomes (deaths).
+#'
+#' @name cfr
+#' @rdname cfr
+#' @inheritParams time_ui
+#'
+#' @param df A `<data.frame>` of daily cases and deaths to be passed to
+#' `launch_module()`.
+#' Must include the columns `date`, `cases`, and `deaths`, which specify the
+#' daily cases and deaths reported during the outbreak.
+#' The CFR module currently only supports aggregated incidence data and does
+#' not support grouping variables.
+#' Dates must be a continuous series and no values may be missing or `NA`.
+#' See `cfr::cfr_rolling()` or `cfr::cfr_time_varying()` for more details on
+#' the CFR functions.
+#'
+#' @return Creates a Shiny module to be launched by `launch_module()`.
+#' @import shiny
+#' @importFrom rlang .data
 #' @export
 cfr_ui <- function(id, full_screen = TRUE) {
   # parameter tabs
@@ -106,14 +124,9 @@ cfr_ui <- function(id, full_screen = TRUE) {
 
 #' CFR server
 #'
+#' @name cfr
 #' @rdname cfr
-#' @param id The id.
-#' @param df The data.
-#'
-#' @return
 #' @export
-#'
-#' @examples
 cfr_server <- function(id, df) {
   moduleServer(
     id, function(input, output, session) {
