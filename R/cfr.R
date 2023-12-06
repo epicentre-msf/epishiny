@@ -4,25 +4,23 @@
 #'
 #' @return
 #' @export
-#'
-#' @examples
 cfr_ui <- function(id, full_screen = TRUE) {
   # parameter tabs
   parameter_tabs <- tabsetPanel(
     id = NS(id, "params"),
     type = "hidden",
     tabPanel(
-      "Normal",
+      "normal",
       numericInput(NS(id, "mean"), "mean", value = 1),
       numericInput(NS(id, "sd"), "standard deviation", min = 0, value = 1)
     ),
     tabPanel(
-      "Gamma",
+      "gamma",
       numericInput(NS(id, "shape"), "shape", value = 5),
       numericInput(NS(id, "scale"), "scale", value = 1)
     ),
     tabPanel(
-      "Log-normal",
+      "lognormal",
       numericInput(NS(id, "meanlog"), "meanlog", value = 1, min = 0),
       numericInput(NS(id, "sdlog"), "sdlog", value = 1, min = 0)
     )
@@ -58,14 +56,17 @@ cfr_ui <- function(id, full_screen = TRUE) {
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
-        tags$span(bsicons::bs_icon("bar-chart-line-fill"), "CFR", class = "pe-2"),
+        tags$span(
+          bsicons::bs_icon("bar-chart-line-fill"), "CFR",
+          class = "pe-2"
+        ),
 
         # options button and dropdown menu
         bslib::popover(
-          title = tags$span(shiny::icon("sliders"), "Options"),
+          title = tags$span(icon("sliders"), "Options"),
           trigger = actionButton(
             NS(id, "dropdown"),
-            icon = shiny::icon("sliders"),
+            icon = icon("sliders"),
             label = "Options",
             class = "btn-sm pe-2 me-2"
           ),
@@ -84,7 +85,11 @@ cfr_ui <- function(id, full_screen = TRUE) {
             condition = "input.correct_delays",
             selectInput(
               NS(id, "dist"), "Distribution",
-              choices = c("Normal", "Gamma", "Log-normal")
+              choices = list(
+                Normal = "normal",
+                Gamma = "gamma",
+                `Log-normal` = "lognormal"
+              )
             ),
             parameter_tabs
           )
@@ -93,17 +98,7 @@ cfr_ui <- function(id, full_screen = TRUE) {
       bslib::card_body(
         class = "d-flex justify-content-start align-items-center",
         padding = 0,
-        tableOutput(NS(id, "cfr_overall")),
-        highcharter::highchartOutput(NS(id, "cfr_plot")),
-        conditionalPanel(
-          ns = NS(id),
-          "input.correct_delays",
-          div(
-            style = "display:flex;",
-            plotly::plotlyOutput(NS(id, "plot_pmf"), width = "25vw", height = "25vw"),
-            plotly::plotlyOutput(NS(id, "plot_cdf"), width = "25vw", height = "25vw")
-          )
-        )
+        highcharter::highchartOutput(NS(id, "cfr_plot"))
       )
     )
   )
@@ -131,74 +126,28 @@ cfr_server <- function(id, df) {
         updateTabsetPanel(inputId = "params", selected = input$dist)
       })
 
+      # prepare PMF functions
       pmf_fn <- reactive(
         switch(input$dist,
-          Normal = dnorm,
-          Gamma = dgamma,
-          `Log-normal` = dlnorm
+          normal = dnorm,
+          gamma = dgamma,
+          lognormal = dlnorm
         )
       )
-      cdf_fn <- reactive(
-        switch(input$dist,
-          Normal = pnorm,
-          Gamma = pgamma,
-          `Log-normal` = plnorm
-        )
-      )
+      # distribution arguments
       args <- reactive(
         switch(input$dist,
-          Normal = list(
+          normal = list(
             mean = input$mean, sd = input$sd
           ),
-          Gamma = list(
+          gamma = list(
             shape = input$shape, rate = 1 / input$scale
           ),
-          `Log-normal` = list(
+          lognormal = list(
             meanlog = input$meanlog, sdlog = input$sdlog
           )
         )
       )
-
-      # create PMF plot
-      plot_pmf <- reactive(
-        ggplot() +
-          stat_function(
-            fun = pmf_fn(),
-            args = args(),
-            fill = "steelblue",
-            geom = "area", colour = NA
-          ) +
-          labs(
-            x = "Days after symptom onset",
-            y = "Prob. density (death)"
-          ) +
-          theme_classic() +
-          xlim(0, 21) + # assume 3 weeks
-          coord_cartesian(expand = FALSE)
-      )
-
-      # create CDF plot
-      plot_cdf <- reactive(
-        ggplot() +
-          stat_function(
-            fun = cdf_fn(),
-            args = args(),
-            fill = "steelblue",
-            geom = "area", colour = NA
-          ) +
-          labs(
-            x = "Days after symptom onset",
-            y = "Cumulative density (death)"
-          ) +
-          theme_classic() +
-          xlim(0, 21) + # assume 3 weeks
-          ylim(0, 1) +
-          coord_cartesian(expand = FALSE)
-      )
-
-      # pass to output ui
-      output$plot_pmf <- renderPlotly(ggplotly(plot_pmf()))
-      output$plot_cdf <- renderPlotly(ggplotly(plot_cdf()))
 
       # prepare ddens
       ddens <- reactive(
@@ -209,11 +158,6 @@ cfr_server <- function(id, df) {
           `FALSE` = NULL
         )
       )
-
-      # prepare data by forcing it to reactive
-      df_mod <- reactive({
-        force_reactive(df)
-      })
 
       # estimate CFR
       cfr_estimate <- reactive(
@@ -234,32 +178,51 @@ cfr_server <- function(id, df) {
 
       # create plot
       cfr_plot_hc <- reactive(
-        highcharter::hchart(
-          cfr_estimate(),
-          type = "line",
-          highcharter::hcaes(date, severity_mean),
-          id = "cfr_plot",
-          name = "CFR estimate", color = "red"
+        highcharter::highchart(
+          hc_opts = list(
+            title = list(
+              text = "CFR estimate"
+            ),
+            yAxis = list(
+              max = 1,
+              title = list(
+                enabled = FALSE
+              )
+            ),
+            xAxis = list(
+              type = "datetime",
+              labels = list(
+                format = "{value:%b %Y}"
+              )
+            ),
+            tooltip = list(
+              valueDecimals = 3
+            )
+          )
         ) %>%
           highcharter::hc_add_series(
-            data = cfr_estimate()
+            type = "arearange",
+            data = cfr_estimate(),
+            highcharter::hcaes(
+              .data$date,
+              low = .data$severity_low,
+              high = .data$severity_high
+            ),
+            name = "95% confidence interval",
+            color = "pink",
           ) %>%
-          highcharter::hc_tooltip(shared = TRUE)
+          hc_add_series(
+            type = "line",
+            data = cfr_estimate(),
+            highcharter::hcaes(.data$date, .data$severity_mean),
+            name = "Rolling CFR estimate",
+            color = "darkred"
+          ) %>%
+          highcharter::hc_tooltip(shared = TRUE, sort = TRUE)
       )
 
-      # pass plot and df to output ui
+      # pass plot to output ui
       output$cfr_plot <- highcharter::renderHighchart(cfr_plot_hc())
-
-      # get static overall estimate
-      cfr_overall <- reactive(
-        cfr::cfr_static(
-          data = df,
-          delay_density = ddens(),
-          poisson_threshold = 100 # NOTE: fixed
-        )
-      )
-
-      output$cfr_overall <- renderTable(cfr_overall())
     }
   )
 }
