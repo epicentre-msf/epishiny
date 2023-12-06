@@ -263,13 +263,3 @@ cfr_server <- function(id, df) {
     }
   )
 }
-
-cfr_app <- function() {
-  ui <- fluidPage(
-    cfr_ui("cfr")
-  )
-  server <- function(input, output, session) {
-    cfr_server("cfr")
-  }
-  shinyApp(ui, server)
-}
