@@ -20,7 +20,7 @@
 #'
 #' @return Creates a Shiny module to be launched by `launch_module()`.
 #' @import shiny
-#' @importFrom rlang .data
+#' @importFrom dplyr .data
 #' @export
 cfr_ui <- function(id, full_screen = TRUE) {
   # parameter tabs
@@ -142,9 +142,9 @@ cfr_server <- function(id, df) {
       # prepare PMF functions
       pmf_fn <- reactive(
         switch(input$dist,
-          normal = dnorm,
-          gamma = dgamma,
-          lognormal = dlnorm
+          normal = stats::dnorm,
+          gamma = stats::dgamma,
+          lognormal = stats::dlnorm
         )
       )
       # distribution arguments
@@ -224,7 +224,7 @@ cfr_server <- function(id, df) {
             name = "95% confidence interval",
             color = "pink",
           ) %>%
-          hc_add_series(
+          highcharter::hc_add_series(
             type = "line",
             data = cfr_estimate(),
             highcharter::hcaes(.data$date, .data$severity_mean),
