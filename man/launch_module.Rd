@@ -4,7 +4,7 @@
 \alias{launch_module}
 \title{Launch a single 'epishiny' module as a standalone shiny app}
 \usage{
-launch_module(module = c("time", "place", "person"), ...)
+launch_module(module = c("time", "place", "person", "cfr"), ...)
 }
 \arguments{
 \item{module}{Name of the module to launch. Current options are
