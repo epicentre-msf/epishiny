@@ -33,9 +33,3 @@ Visualise the rolling or time-varying disease severity in the
 form of the case fatality risk, while optionally correcting for delays in
 reporting outcomes (deaths).
 }
-\examples{
-launch_module(
-  "cfr",
-  df = cfr::ebola1976
-)
-}

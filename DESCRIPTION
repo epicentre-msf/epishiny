@@ -42,6 +42,7 @@ Imports:
     chromote,
     webshot2
     cfr
+    stats
 Remotes:
     r-spatial/mapview
 Depends: 
