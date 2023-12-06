@@ -91,6 +91,10 @@ filter_ui <- function(
 #' @param df Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.
 #' @param date_var The name of the date variable in the data frame to be filtered on.
 #' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
+#' @param time_filter supply the output of [time_server()] wrapped in a [shiny::reactive()] here to add
+#'  its filter information to the filter sidebar
+#' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to add
+#'  its filter information to the filter sidebar
 #' @param na_label The label to use for missing values in group variables.
 #'
 #' @return The server function returns both the filtered data and a formatted text string with filter information
@@ -105,6 +109,8 @@ filter_server <- function(
     df,
     date_var,
     group_vars,
+    time_filter = shiny::reactiveVal(),
+    place_filter = shiny::reactiveVal(),
     na_label = getOption("epishiny.na.label", "(Missing)")
 ) {
   moduleServer(
@@ -126,7 +132,8 @@ filter_server <- function(
 
       rv <- reactiveValues(
         df = NULL,
-        filter_info = NULL
+        filter_info = NULL,
+        filter_reset = NULL
       )
 
       df_mod <- reactive({
@@ -145,6 +152,12 @@ filter_server <- function(
       observeEvent(input$reset, {
         shinyjs::reset("sb")
         shinyjs::delay(500, shinyjs::click("go"))
+      })
+
+      # also send back to main app to reset module click filters
+      # if they have been applied
+      observe({
+        rv$filter_reset <- input$reset
       })
 
       # observe({
@@ -253,14 +266,18 @@ filter_server <- function(
         fi_out <- glue::glue("<b>Filters applied</b></br>{date_filters}")
 
         if (!is.null(group_filters)) {
-          fi_out <- glue::glue("{fi_out} </br> {glue::glue_collapse(group_filters, sep = '</br>')}")
+          fi_out <- glue::glue("{fi_out}</br>{glue::glue_collapse(group_filters, sep = '</br>')}")
         }
 
         rv$filter_info <- fi_out
       })%>% shiny::bindEvent(input$go, ignoreNULL = FALSE, ignoreInit = FALSE)
 
       output$filter_info <- renderUI({
-        shiny::helpText(shiny::HTML(rv$filter_info))
+        fi <- rv$filter_info
+        tf <- time_filter()
+        pf <- place_filter()
+        fi <- format_filter_info(fi, tf, pf)
+        shiny::helpText(shiny::HTML(fi))
       })
 
       # return data to main app ===========================

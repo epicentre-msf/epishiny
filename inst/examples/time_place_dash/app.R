@@ -1,7 +1,6 @@
 library(shiny)
 library(bslib)
-library(epishiny)
-
+pkgload::load_all()
 
 update_data <- FALSE
 
@@ -12,12 +11,11 @@ if (update_data) {
   library(sf)
 
   df_who_covid <- read_csv("https://covid19.who.int/WHO-COVID-19-global-data.csv")
+  df_who_covid_2020 <- df_who_covid %>% filter(Date_reported < as.Date("2021-01-01"))
 
   world_map <- ne_countries(scale = "small", type = "countries", returnclass = "sf") %>%
     st_transform(crs = 4326) %>%
-    select(iso_a2, name, pop_est)
-  
-
+    select(iso_a2_eh, name, pop_est)
 }
 
 # setup the geo layer for epishiny
@@ -26,7 +24,7 @@ geo_data <- geo_layer(
   sf = world_map,
   name_var = "name",
   pop_var = "pop_est",
-  join_by = c("iso_a2" = "Country_code")
+  join_by = c("iso_a2_eh" = "Country_code")
 )
 
 count_vars <- c("Cases" = "New_cases", "Deaths" = "New_deaths")
@@ -43,7 +41,7 @@ ui <- page_sidebar(
     )
   ),
   layout_columns(
-    col_widths = 12,
+    # col_widths = 12,
     time_ui(
       id = "time",
       date_vars = date_vars,
@@ -60,8 +58,6 @@ ui <- page_sidebar(
 )
 
 server <- function(input, output, session) {
-
-  df_
 
   bar_click <- time_server(
     id = "time",

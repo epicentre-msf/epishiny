@@ -29,10 +29,10 @@ person_ui <- function(
   ns <- shiny::NS(id)
 
   # check deps are installed
-  # pkg_deps <- c("highcharter", "gt", "gtsummary")
-  # if (!rlang::is_installed(pkg_deps)) {
-  #   rlang::check_installed(pkg_deps, reason = "to use the epishiny person module.")
-  # }
+  pkg_deps <- c("highcharter", "gt", "gtsummary")
+  if (!rlang::is_installed(pkg_deps)) {
+    rlang::check_installed(pkg_deps, reason = "to use the epishiny person module.")
+  }
 
   bslib::navset_card_tab(
     wrapper = function(...) {bslib::card_body(..., padding = 0, class = "person-container")}, 
@@ -93,6 +93,10 @@ person_ui <- function(
 #' @param colours Vector of 2 colours to represent male and female, respectively.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
 #'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#' @param time_filter supply the output of [time_server()] wrapped in a [shiny::reactive()] here to filter 
+#' the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)
+#' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to filter 
+#'  the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)
 #'
 #' @rdname person
 #'
@@ -112,7 +116,9 @@ person_server <- function(
     age_group_lab = "Age group",
     n_lab = "N patients",
     colours = c("#f15f36", "#19a0aa"),
-    filter_info = shiny::reactiveVal()
+    filter_info = shiny::reactiveVal(),
+    time_filter = shiny::reactiveVal(),
+    place_filter = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
     id,
@@ -131,7 +137,7 @@ person_server <- function(
         color = waiter::transparent(alpha = 0)
       )
 
-      df_mod <- reactive({
+      df_prep <- reactive({
         df <- force_reactive(df) 
         df$sex <- df[[sex_var]]
         # ensure sex var is factor
@@ -167,6 +173,28 @@ person_server <- function(
         df
       })
 
+      # filter by time and place click events if and when they occur
+      df_mod <- reactive({
+        df_out <- df_prep()
+        pf <- place_filter()
+        if (length(pf)) {
+          df_out <- df_out %>% dplyr::filter(.data[[pf$geo_col]] == pf$region_select)
+        }
+        tf <- time_filter()
+        if (length(tf)) {
+          df_out <- df_out %>% dplyr::filter(dplyr::between(.data[[tf$date_var]], tf$from, tf$to))
+        }
+        df_out
+      })
+
+      # adjust filter info if click event filtering has taken place
+      filter_info_out <- reactive({
+        fi <- filter_info()
+        tf <- time_filter()
+        pf <- place_filter()
+        format_filter_info(fi, tf, pf)
+      })
+
       output$as_pyramid <- highcharter::renderHighchart({
         shiny::validate(shiny::need(nrow(df_mod()) > 0, "No data to display"))
 
@@ -191,7 +219,7 @@ person_server <- function(
           colours = colours,
           ylab = age_group_lab,
           value_name = get_label(input$count_var, count_vars),
-          filter_info = filter_info()
+          filter_info = filter_info_out()
         )
       })
 

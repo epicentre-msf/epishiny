@@ -31,15 +31,7 @@ Imports:
     forcats,
     scales,
     glue,
-    highcharter,
-    lubridate,
-    gt,
-    gtsummary,
-    sf,
-    mapview,
-    chromote,
-    leaflet,
-    leaflet.minicharts
+    lubridate
 Remotes:
     r-spatial/mapview
 Depends: 
@@ -47,6 +39,14 @@ Depends:
 URL: https://github.com/epicentre-msf/epishiny, https://epicentre-msf.github.io/epishiny/
 BugReports: https://github.com/epicentre-msf/epishiny/issues
 Suggests: 
+    highcharter,
+    gt,
+    gtsummary,
+    sf,
+    mapview,
+    chromote,
+    leaflet,
+    leaflet.minicharts,
     knitr,
     rmarkdown,
     rnaturalearth,

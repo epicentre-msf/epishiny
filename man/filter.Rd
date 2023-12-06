@@ -22,6 +22,8 @@ filter_server(
   df,
   date_var,
   group_vars,
+  time_filter = shiny::reactiveVal(),
+  place_filter = shiny::reactiveVal(),
   na_label = getOption("epishiny.na.label", "(Missing)")
 )
 }
@@ -49,6 +51,12 @@ filter_server(
 \item{date_var}{The name of the date variable in the data frame to be filtered on.}
 
 \item{group_vars}{named character vector of categorical variables for the data grouping input. Names are used as variable labels.}
+
+\item{time_filter}{supply the output of \code{\link[=time_server]{time_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to add
+its filter information to the filter sidebar}
+
+\item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to add
+its filter information to the filter sidebar}
 
 \item{na_label}{The label to use for missing values in group variables.}
 }

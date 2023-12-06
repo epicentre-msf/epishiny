@@ -1,4 +1,5 @@
 ui <-tagList(
+  tags$head(tags$style("body {background-color: #f5f5f5;}")),
   page_navbar(
     title = app_title,
     window_title = app_title,
@@ -8,6 +9,7 @@ ui <-tagList(
 
     theme = bs_theme(
       version = 5,
+      preset = "bootstrap",
       base_font = font_google(
         app_font,
         wght = c(300, 400, 500, 600, 700, 800),
@@ -31,6 +33,7 @@ ui <-tagList(
           width = 1 / 2,
           place_ui(
             id = "map",
+            tooltip = "Click on a polygon to filter other graphics to this region",
             geo_data = geo_data,
             group_vars = group_vars
           ),
@@ -38,7 +41,7 @@ ui <-tagList(
             width = 1,
             time_ui(
               id = "curve",
-              title = "Time",
+              tooltip = "Click on a bar to filter other graphics to this period",
               date_vars = date_vars,
               group_vars = group_vars,
               ratio_line_lab = "Show CFR line?"
@@ -68,7 +71,7 @@ ui <-tagList(
         ),
         class = "py-0 d-none d-lg-block",
         title = "Epicentre",
-        href = "https://epicentre.msf.org/",
+        href = "https://epicentre.msf.org/en",
         target = "_blank"
       )
     ),

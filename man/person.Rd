@@ -30,7 +30,9 @@ person_server(
   age_group_lab = "Age group",
   n_lab = "N patients",
   colours = c("#f15f36", "#19a0aa"),
-  filter_info = shiny::reactiveVal()
+  filter_info = shiny::reactiveVal(),
+  time_filter = shiny::reactiveVal(),
+  place_filter = shiny::reactiveVal()
 )
 }
 \arguments{
@@ -77,6 +79,12 @@ If ages have already been binned into groups, use \code{age_group_var} instead.}
 
 \item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
 returned by that function here as a shiny reactive to add filter information to chart exports.}
+
+\item{time_filter}{supply the output of \code{\link[=time_server]{time_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
+the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)}
+
+\item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
+the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)}
 }
 \value{
 A \link[bslib:navset]{bslib::navset_card_tab} UI element with chart and table tabs.

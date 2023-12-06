@@ -4,8 +4,14 @@ server <- function(input, output, session) {
     id = "filter",
     df = df_ll,
     date_var = "date_notification",
+    time_filter = reactive(bar_click()),
+    place_filter = reactive(map_click()),
     group_vars = group_vars
   )
+
+  filter_reset <- reactive({
+    app_data()$filter_reset
+  })
 
   map_click <- place_server(
     id = "map",
@@ -13,7 +19,8 @@ server <- function(input, output, session) {
     geo_data = geo_data,
     group_vars = group_vars,
     time_filter = reactive(bar_click()),
-    filter_info = reactive(app_data()$filter_info)
+    filter_info = reactive(app_data()$filter_info),
+    filter_reset = filter_reset
   )
 
   # uncomment to see data returned from map click events
@@ -32,7 +39,8 @@ server <- function(input, output, session) {
     ratio_numer = "Deceased",
     ratio_denom = c("Deceased", "Healed", "Abandonment"),
     place_filter = reactive(map_click()),
-    filter_info = reactive(app_data()$filter_info)
+    filter_info = reactive(app_data()$filter_info),
+    filter_reset = filter_reset
   )
 
   # uncomment to see data returned from chart click events
@@ -47,6 +55,8 @@ server <- function(input, output, session) {
     sex_var = "sex_id",
     male_level = "Male",
     female_level = "Female",
+    time_filter = reactive(bar_click()),
+    place_filter = reactive(map_click()),
     filter_info = reactive(app_data()$filter_info)
   )
 
