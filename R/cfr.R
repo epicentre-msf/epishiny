@@ -189,6 +189,15 @@ cfr_server <- function(id, df) {
         )
       )
 
+      # plot line label
+      estimate_type <- reactive(
+        switch(input$type,
+          rolling = "Rolling",
+          time_varying = "Time-varying"
+        )
+      )
+      estimate_label <- reactive(glue::glue("{estimate_type()} CFR estimate"))
+
       # create plot
       cfr_plot_hc <- reactive(
         highcharter::highchart(
@@ -228,7 +237,7 @@ cfr_server <- function(id, df) {
             type = "line",
             data = cfr_estimate(),
             highcharter::hcaes(.data$date, .data$severity_mean),
-            name = "Rolling CFR estimate",
+            name = estimate_label(),
             color = "darkred"
           ) %>%
           highcharter::hc_tooltip(shared = TRUE, sort = TRUE)
