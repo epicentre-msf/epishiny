@@ -116,7 +116,8 @@ cfr_ui <- function(id, full_screen = TRUE) {
               )
             ),
             parameter_tabs
-          )
+          ),
+          actionButton("go", "Get estimate")
         )
       ),
       bslib::card_body(
@@ -163,6 +164,7 @@ cfr_server <- function(
           lognormal = stats::dlnorm
         )
       )
+
       # distribution arguments
       args <- reactive(
         switch(input$dist,
@@ -189,20 +191,23 @@ cfr_server <- function(
       )
 
       # estimate CFR
-      cfr_estimate <- reactive(
-        switch(input$type,
-          rolling = cfr::cfr_rolling(
-            data = df,
-            delay_density = ddens(),
-            poisson_threshold = input$poisson_threshold
-          ),
-          time_varying = cfr::cfr_time_varying(
-            data = df,
-            delay_density = ddens(),
-            burn_in = input$burn_in,
-            smoothing_window = input$smoothing_window
+      cfr_estimate <- bindEvent(
+        x = reactive(
+          switch(input$type,
+            rolling = cfr::cfr_rolling(
+              data = df,
+              delay_density = ddens(),
+              poisson_threshold = input$poisson_threshold
+            ),
+            time_varying = cfr::cfr_time_varying(
+              data = df,
+              delay_density = ddens(),
+              burn_in = input$burn_in,
+              smoothing_window = input$smoothing_window
+            )
           )
-        )
+        ),
+        input$go
       )
 
       # plot line label
@@ -215,49 +220,53 @@ cfr_server <- function(
       estimate_label <- reactive(glue::glue("{estimate_type()} CFR estimate"))
 
       # create plot
-      cfr_plot_hc <- reactive(
-        highcharter::highchart(
-          hc_opts = list(
-            title = list(
-              text = "CFR estimate"
-            ),
-            yAxis = list(
-              max = 1,
-              title = list(
-                enabled = FALSE
+      cfr_plot_hc <-
+        bindEvent(
+          x = reactive(
+            highcharter::highchart(
+              hc_opts = list(
+                title = list(
+                  text = "CFR estimate"
+                ),
+                yAxis = list(
+                  max = 1,
+                  title = list(
+                    enabled = FALSE
+                  )
+                ),
+                xAxis = list(
+                  type = "datetime",
+                  labels = list(
+                    format = "{value:%b %Y}"
+                  )
+                ),
+                tooltip = list(
+                  valueDecimals = 3
+                )
               )
-            ),
-            xAxis = list(
-              type = "datetime",
-              labels = list(
-                format = "{value:%b %Y}"
-              )
-            ),
-            tooltip = list(
-              valueDecimals = 3
-            )
-          )
-        ) %>%
-          highcharter::hc_add_series(
-            type = "arearange",
-            data = cfr_estimate(),
-            highcharter::hcaes(
-              .data$date,
-              low = .data$severity_low,
-              high = .data$severity_high
-            ),
-            name = "95% confidence interval",
-            color = "pink",
-          ) %>%
-          highcharter::hc_add_series(
-            type = "line",
-            data = cfr_estimate(),
-            highcharter::hcaes(.data$date, .data$severity_mean),
-            name = estimate_label(),
-            color = "darkred"
-          ) %>%
-          highcharter::hc_tooltip(shared = TRUE, sort = TRUE)
-      )
+            ) %>%
+              highcharter::hc_add_series(
+                type = "arearange",
+                data = cfr_estimate(),
+                highcharter::hcaes(
+                  .data$date,
+                  low = .data$severity_low,
+                  high = .data$severity_high
+                ),
+                name = "95% confidence interval",
+                color = "pink",
+              ) %>%
+              highcharter::hc_add_series(
+                type = "line",
+                data = cfr_estimate(),
+                highcharter::hcaes(.data$date, .data$severity_mean),
+                name = estimate_label(),
+                color = "darkred"
+              ) %>%
+              highcharter::hc_tooltip(shared = TRUE, sort = TRUE)
+          ),
+          input$go
+        )
 
       # pass plot to output ui
       output$cfr_plot <- highcharter::renderHighchart(cfr_plot_hc())
