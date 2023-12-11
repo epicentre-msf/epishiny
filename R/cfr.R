@@ -28,7 +28,7 @@
 #' @import shiny
 #' @importFrom dplyr .data
 #' @export
-cfr_ui <- function(id, full_screen = TRUE) {
+cfr_ui <- function(id, opts_btn_lab = "options", full_screen = TRUE) {
   # parameter tabs
   parameter_tabs <- tabsetPanel(
     id = NS(id, "params"),
@@ -81,17 +81,17 @@ cfr_ui <- function(id, full_screen = TRUE) {
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
         tags$span(
-          bsicons::bs_icon("bar-chart-line-fill"), "CFR",
+          bsicons::bs_icon("graph-up"), "CFR estimate",
           class = "pe-2"
         ),
 
         # options button and dropdown menu
         bslib::popover(
-          title = tags$span(icon("sliders"), "Options"),
+          title = tags$span(icon("sliders"), opts_btn_lab),
           trigger = actionButton(
             NS(id, "dropdown"),
             icon = icon("sliders"),
-            label = "Options",
+            label = opts_btn_lab,
             class = "btn-sm pe-2 me-2"
           ),
           selectInput(
@@ -117,11 +117,16 @@ cfr_ui <- function(id, full_screen = TRUE) {
             ),
             parameter_tabs
           ),
-          actionButton("go", "Get estimate")
+          actionButton(
+            inputId = NS(id, "go"),
+            label = "Get estimate",
+            icon = icon("refresh"),
+            class = "btn-sm btn-primary",
+            width = "100%"
+          )
         )
       ),
       bslib::card_body(
-        class = "d-flex justify-content-start align-items-center",
         padding = 0,
         highcharter::highchartOutput(NS(id, "cfr_plot"))
       )
@@ -134,13 +139,16 @@ cfr_ui <- function(id, full_screen = TRUE) {
 #' @name cfr
 #' @rdname cfr
 #' @export
-cfr_server <- function(
-    id, df, date_var = "date",
-    cases_var = "cases", deaths_var = "deaths") {
+cfr_server <- function(id,
+                       df,
+                       date_var = "date",
+                       cases_var = "cases",
+                       deaths_var = "deaths") {
   moduleServer(
     id, function(input, output, session) {
       # rename df columns and select columns
       df <- dplyr::select(
+        df,
         date = date_var,
         cases = cases_var,
         deaths = deaths_var
@@ -207,7 +215,8 @@ cfr_server <- function(
             )
           )
         ),
-        input$go
+        input$go,
+        ignoreNULL = FALSE
       )
 
       # plot line label
@@ -223,28 +232,7 @@ cfr_server <- function(
       cfr_plot_hc <-
         bindEvent(
           x = reactive(
-            highcharter::highchart(
-              hc_opts = list(
-                title = list(
-                  text = "CFR estimate"
-                ),
-                yAxis = list(
-                  max = 1,
-                  title = list(
-                    enabled = FALSE
-                  )
-                ),
-                xAxis = list(
-                  type = "datetime",
-                  labels = list(
-                    format = "{value:%b %Y}"
-                  )
-                ),
-                tooltip = list(
-                  valueDecimals = 3
-                )
-              )
-            ) %>%
+            highcharter::highchart() %>%
               highcharter::hc_add_series(
                 type = "arearange",
                 data = cfr_estimate(),
@@ -263,9 +251,17 @@ cfr_server <- function(
                 name = estimate_label(),
                 color = "darkred"
               ) %>%
-              highcharter::hc_tooltip(shared = TRUE, sort = TRUE)
+              highcharter::hc_chart(zoomType = "xy") %>% 
+              highcharter::hc_xAxis(type = "datetime") %>% 
+              highcharter::hc_yAxis_multiples(
+                list(title = list(text = ""), max = 1),
+                list(title = list(text = ""), opposite = TRUE, linkedTo = 0)
+              ) %>%
+              highcharter::hc_plotOptions(line = list(marker = list(enabled = FALSE))) %>% 
+              highcharter::hc_tooltip(shared = TRUE, sort = TRUE, valueDecimals = 3) %>% 
+              my_hc_export()
           ),
-          input$go
+          cfr_estimate()
         )
 
       # pass plot to output ui
