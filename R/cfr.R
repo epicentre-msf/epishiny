@@ -10,13 +10,19 @@
 #'
 #' @param df A `<data.frame>` of daily cases and deaths to be passed to
 #' `launch_module()`.
-#' Must include the columns `date`, `cases`, and `deaths`, which specify the
+#' Must include columns suitable for conversion to
+#' `date`, `cases`, and `deaths`, which specify the
 #' daily cases and deaths reported during the outbreak.
 #' The CFR module currently only supports aggregated incidence data and does
 #' not support grouping variables.
 #' Dates must be a continuous series and no values may be missing or `NA`.
 #' See `cfr::cfr_rolling()` or `cfr::cfr_time_varying()` for more details on
 #' the CFR functions.
+#' @param date_var A string for the date column; defaults to `"date"`.
+#' @param cases_var A string for the column of cases reported; defaults to
+#' `"cases"`.
+#' @param deaths_var A string for the column of deaths reported; defaults to
+#' `"deaths"`.
 #'
 #' @return Creates a Shiny module to be launched by `launch_module()`.
 #' @import shiny
@@ -127,9 +133,19 @@ cfr_ui <- function(id, full_screen = TRUE) {
 #' @name cfr
 #' @rdname cfr
 #' @export
-cfr_server <- function(id, df) {
+cfr_server <- function(
+    id, df, date_var = "date",
+    cases_var = "cases", deaths_var = "deaths") {
   moduleServer(
     id, function(input, output, session) {
+      # rename df columns and select columns
+      df <- dplyr::select(
+        date = date_var,
+        cases = cases_var,
+        deaths = deaths_var
+      )
+
+      # updaet panel show per CFR choice
       observeEvent(input$type, {
         updateTabsetPanel(inputId = "cfr_options", selected = input$type)
       })

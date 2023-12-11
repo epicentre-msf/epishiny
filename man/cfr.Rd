@@ -8,7 +8,13 @@
 \usage{
 cfr_ui(id, full_screen = TRUE)
 
-cfr_server(id, df)
+cfr_server(
+  id,
+  df,
+  date_var = "date",
+  cases_var = "cases",
+  deaths_var = "deaths"
+)
 }
 \arguments{
 \item{id}{Module id. Must be the same in both the UI and server function to link the two.}
@@ -17,13 +23,22 @@ cfr_server(id, df)
 
 \item{df}{A \verb{<data.frame>} of daily cases and deaths to be passed to
 \code{launch_module()}.
-Must include the columns \code{date}, \code{cases}, and \code{deaths}, which specify the
+Must include columns suitable for conversion to
+\code{date}, \code{cases}, and \code{deaths}, which specify the
 daily cases and deaths reported during the outbreak.
 The CFR module currently only supports aggregated incidence data and does
 not support grouping variables.
 Dates must be a continuous series and no values may be missing or \code{NA}.
 See \code{cfr::cfr_rolling()} or \code{cfr::cfr_time_varying()} for more details on
 the CFR functions.}
+
+\item{date_var}{A string for the date column; defaults to \code{"date"}.}
+
+\item{cases_var}{A string for the column of cases reported; defaults to
+\code{"cases"}.}
+
+\item{deaths_var}{A string for the column of deaths reported; defaults to
+\code{"deaths"}.}
 }
 \value{
 Creates a Shiny module to be launched by \code{launch_module()}.
