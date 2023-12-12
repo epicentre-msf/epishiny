@@ -7,3 +7,6 @@
 docs
 inst/doc
 *.html
+
+# ignore scratch file
+scratch*

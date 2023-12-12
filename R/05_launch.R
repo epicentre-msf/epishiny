@@ -13,7 +13,7 @@
 #' @return No return value, a shiny app is launched.
 #' @example inst/examples/docs/launch-module.R
 #' @export
-launch_module <- function(module = c("time", "place", "person"), ...) {
+launch_module <- function(module = c("time", "place", "person", "cfr"), ...) {
 
   module <- match.arg(module, several.ok = FALSE)
   mod_ui <- paste0(module, "_ui")

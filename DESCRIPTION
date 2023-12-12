@@ -39,7 +39,9 @@ Imports:
     mapview,
     chromote,
     leaflet,
-    leaflet.minicharts
+    leaflet.minicharts,
+    cfr,
+    stats
 Remotes:
     r-spatial/mapview
 Depends: 
