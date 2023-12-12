@@ -252,14 +252,18 @@ cfr_server <- function(id,
                 name = estimate_label(),
                 color = "darkred"
               ) %>%
-              highcharter::hc_chart(zoomType = "xy") %>% 
-              highcharter::hc_xAxis(type = "datetime") %>% 
+              highcharter::hc_chart(zoomType = "xy") %>%
+              highcharter::hc_xAxis(type = "datetime") %>%
               highcharter::hc_yAxis_multiples(
                 list(title = list(text = ""), max = 1),
                 list(title = list(text = ""), opposite = TRUE, linkedTo = 0)
               ) %>%
-              highcharter::hc_plotOptions(line = list(marker = list(enabled = FALSE))) %>% 
-              highcharter::hc_tooltip(shared = TRUE, sort = TRUE, valueDecimals = 3) %>% 
+              highcharter::hc_plotOptions(
+                line = list(marker = list(enabled = FALSE))
+              ) %>%
+              highcharter::hc_tooltip(
+                shared = TRUE, sort = TRUE, valueDecimals = 3
+              ) %>%
               my_hc_export()
           ),
           cfr_estimate()
