@@ -28,7 +28,11 @@
 #' @import shiny
 #' @importFrom dplyr .data
 #' @export
-cfr_ui <- function(id, opts_btn_lab = "options", full_screen = TRUE) {
+cfr_ui <- function(id,
+                   title = "CFR estimate",
+                   icon = bsicons::bs_icon("graph-up"),
+                   opts_btn_lab = "options",
+                   full_screen = TRUE) {
   # parameter tabs
   parameter_tabs <- tabsetPanel(
     id = NS(id, "params"),
@@ -80,11 +84,8 @@ cfr_ui <- function(id, opts_btn_lab = "options", full_screen = TRUE) {
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
-        tags$span(
-          bsicons::bs_icon("graph-up"), "CFR estimate",
-          class = "pe-2"
-        ),
-
+        # title
+        tags$span(icon, title, class = "pe-2"),
         # options button and dropdown menu
         bslib::popover(
           title = tags$span(icon("sliders"), opts_btn_lab),
