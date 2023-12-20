@@ -49,17 +49,8 @@ df <- read_csv(url)
 glimpse(df)
 ```
 
-# Set up geo data
-
-We next need geological data if we want to show maps.
-Unfortunately there is no systematic availability of subnational data.
-A search on the HDX platform reveals that subnational data are available at https://data.humdata.org/dataset/cod-ab-sle
-
-The line list contains Districts (admin 2 level) and Chiefdoms (admin 3 level).
-We can download the corresponding data sets from HDX.
-
-
-```{r load_geo_data}
+```{r load_geo_data_hdx, eval=FALSE, include=FALSE}
+# this link isn't working anymore so switched to geoBoundaries below
 ## common element of both shapefile URLs
 hdx_dir <-
   "https://data.humdata.org/dataset/a4816317-a913-4619-b1e9-d89e21c056b4"
@@ -91,7 +82,31 @@ shapes <- map(shapefiles, \(x) {
 })
 
 # little bit of cleaning on district names to match with data
-shapes$adm2$admin2Name <- gsub("Area ", "", shapes$adm2$admin2Name)
+shapes$adm2$shapeName <- gsub("Area ", "", shapes$adm2$shapeName)
+
+map(shapes, head)
+```
+
+# Set up geo data
+
+We next need geological data if we want to show maps.
+
+[geoBoundaries](https://www.geoboundaries.org/) host sub-national administrative boundary 
+shapefiles in various formats for every country in the world on github.
+
+The line list contains Districts (admin 2 level) and Chiefdoms (admin 3 level).
+We can download the corresponding data sets from geoBoundaries via the following URLs.
+
+```{r load_geo_data_hdx}
+shape_paths <- list(
+  adm2 = "https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM2/geoBoundaries-SLE-ADM2_simplified.geojson",
+  adm3 = "https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM3/geoBoundaries-SLE-ADM3_simplified.geojson"
+)
+
+shapes <- map(shape_paths, st_read)
+
+# little bit of cleaning on district names to match with data
+shapes$adm2$shapeName <- gsub("Area ", "", shapes$adm2$admin2Name)
 
 map(shapes, head)
 ```
@@ -121,14 +136,14 @@ geo_data <- list(
   geo_layer(
     layer_name = "District",
     sf = shapes$adm2,
-    name_var = "admin2Name",
-    join_by = c("admin2Name" = "District")
+    name_var = "shapeName",
+    join_by = c("shapeName" = "District")
   ),
   geo_layer(
     layer_name = "Chiefdom",
     sf = shapes$adm3,
-    name_var = "admin3Name",
-    join_by = c("admin3Name" = "Chiefdom")
+    name_var = "shapeName",
+    join_by = c("shapeName" = "Chiefdom")
   )
 )
 ```
