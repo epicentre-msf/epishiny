@@ -68,7 +68,7 @@ shape_paths <- list(
 shapes <- map(shape_paths, st_read)
 
 # little bit of cleaning on district names to match with data
-shapes$adm2$shapeName <- gsub("Area ", "", shapes$adm2$admin2Name)
+shapes$adm2$shapeName <- gsub("Area ", "", shapes$adm2$shapeName)
 
 map(shapes, head)
 ```
