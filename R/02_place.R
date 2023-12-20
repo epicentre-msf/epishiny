@@ -1053,9 +1053,6 @@ mapshot2 <- function(x,
     several.ok = TRUE
   )
 
-  ## saveWidget (either to provided url or tempfile)
-  do.call(htmlwidgets::saveWidget, append(list(x), sw_ls[sw_args]))
-
   ## if file was provided
   if (avl_file) {
 
@@ -1084,7 +1081,6 @@ mapshot2 <- function(x,
     return(invisible())
   }
 }
-
 
 #' @noRd 
 removeMapJunk <- function(map, junk = NULL) {

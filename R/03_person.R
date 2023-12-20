@@ -362,7 +362,7 @@ hc_as_pyramid <- function(
     dplyr::do(data = .data$n) %>%
     dplyr::ungroup() %>%
     dplyr::rename(id = .data$sex) %>%
-    dplyr::mutate(name = id) %>% 
+    dplyr::mutate(name = .data$id) %>% 
     highcharter::list_parse()
 
   hc_out <- highcharter::highchart() %>%

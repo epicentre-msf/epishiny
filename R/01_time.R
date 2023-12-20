@@ -748,10 +748,32 @@ format_period <- function(date_times, unit) {
   )
 }
 
+#' Copy of internal lubridate:::.other_year funtion
+#' Full credit to lubridate authors
+#' @noRd
+get_epi_year <- function(x, week_start = 1) {
+  x <- as.POSIXlt(x)
+  date <- lubridate::make_date(lubridate::year(x), lubridate::month(x), lubridate::day(x))
+  isodate <- date + lubridate::ddays(4 - lubridate::wday(date, week_start = week_start))
+  lubridate::year(isodate)
+}
+
+#' Copy of internal lubridate:::.other_week funtion
+#' Full credit to lubridate authors
+#' @noRd
+get_epi_week <- function(x, week_start = 1) {
+  x <- as.POSIXlt(x)
+  date <- lubridate::make_date(lubridate::year(x), lubridate::month(x), lubridate::day(x))
+  wday <- lubridate::wday(x, week_start = week_start)
+  date <- date + (4 - wday)
+  jan1 <- as.numeric(lubridate::make_date(lubridate::year(date), 1, 1))
+  1L + (as.numeric(date) - jan1) %/% 7L
+}
+
 #' @noRd
 format_week <- function(date, week_start = getOption("epishiny.week.start", 1)) {
-  year <- lubridate:::.other_year(date, week_start)
-  week <- lubridate:::.other_week(date, week_start)
+  year <- get_epi_year(date, week_start)
+  week <- get_epi_week(date, week_start)
   week_lab <- getOption("epishiny.week.letter", "W")
   paste0(year, "-", week_lab, week)
 }
