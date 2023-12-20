@@ -110,7 +110,7 @@ country, so we can visualise both the time and place component using
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_who_covid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span><span class="st">"https://covid19.who.int/WHO-COVID-19-global-data.csv"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">Rows: </span><span style="color: #0000BB;">336540</span> <span style="font-weight: bold;">Columns: </span><span style="color: #0000BB;">8</span></span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">Rows: </span><span style="color: #0000BB;">342939</span> <span style="font-weight: bold;">Columns: </span><span style="color: #0000BB;">8</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Column specification</span> <span style="color: #00BBBB;">────────────────────────────────────────────────────────</span></span></span>
 <span><span class="co">#&gt; <span style="font-weight: bold;">Delimiter:</span> ","</span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">chr</span>  (3): Country_code, Country, WHO_region</span></span>
@@ -121,7 +121,7 @@ country, so we can visualise both the time and place component using
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Specify the column types or set `show_col_types = FALSE` to quiet this message.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">df_who_covid</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 336,540</span></span>
+<span><span class="co">#&gt; Rows: 342,939</span></span>
 <span><span class="co">#&gt; Columns: 8</span></span>
 <span><span class="co">#&gt; $ Date_reported     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span> 2020-01-03, 2020-01-04, 2020-01-05, 2020-01-06, 202…</span></span>
 <span><span class="co">#&gt; $ Country_code      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "AF", "AF", "AF", "AF", "AF", "AF", "AF", "AF", "AF"…</span></span>
@@ -260,18 +260,18 @@ be used with an aggregated data set below.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 4</span></span></span>
 <span><span class="co">#&gt;    sex    age_group cases deaths</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> Male   &lt;5           77     16</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> Male   5-17         27      4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> Male   18-24        93      1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> Male   25-34        23     15</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> Male   35-49        21      7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> Male   50+          85     17</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> Female &lt;5           31     15</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> Female 5-17         31      6</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> Female 18-24        39     10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Female 25-34        61      6</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> Female 35-49        78      4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> Female 50+          37     16</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> Male   &lt;5           76      7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> Male   5-17         93     15</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> Male   18-24        83     16</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> Male   25-34        51      2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> Male   35-49        33     18</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> Male   50+          90      8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> Female &lt;5           24      4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> Female 5-17         70      1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> Female 18-24        73      7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Female 25-34        82      7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> Female 35-49        80      5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> Female 50+          66      2</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># launch the module passing age, sex and count_var info</span></span>
 <span><span class="fu"><a href="../reference/launch_module.html">launch_module</a></span><span class="op">(</span></span>

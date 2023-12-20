@@ -68,6 +68,7 @@
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Place"</span>,</span>
 <span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/bsicons/man/bs_icon.html" class="external-link">bs_icon</a></span><span class="op">(</span><span class="st">"geo-fill"</span><span class="op">)</span>,</span>
+<span>  tooltip <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  geo_lab <span class="op">=</span> <span class="st">"Geo boundaries"</span>,</span>
 <span>  count_vars_lab <span class="op">=</span> <span class="st">"Indicator"</span>,</span>
 <span>  groups_lab <span class="op">=</span> <span class="st">"Group data by"</span>,</span>
@@ -84,13 +85,15 @@
 <span>  <span class="va">geo_data</span>,</span>
 <span>  count_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  show_parent_borders <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  show_parent_borders <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  choro_lab <span class="op">=</span> <span class="st">"Rate /100 000"</span>,</span>
 <span>  choro_pal <span class="op">=</span> <span class="st">"Reds"</span>,</span>
 <span>  choro_opacity <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  export_width <span class="op">=</span> <span class="fl">1200</span>,</span>
 <span>  export_height <span class="op">=</span> <span class="fl">650</span>,</span>
-<span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  time_filter <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  filter_reset <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -121,6 +124,10 @@ If named, names are used as variable labels.</p></dd>
 
 <dt>icon</dt>
 <dd><p>The icon to be displayed next to the title</p></dd>
+
+
+<dt>tooltip</dt>
+<dd><p>additional title hover text information</p></dd>
 
 
 <dt>geo_lab</dt>
@@ -184,9 +191,19 @@ If named, names are used as variable labels.</p></dd>
 <dd><p>The height of the exported map image.</p></dd>
 
 
+<dt>time_filter</dt>
+<dd><p>supply the output of <code><a href="time.html">time_server()</a></code> wrapped in a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">shiny::reactive()</a></code> here to filter
+the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)</p></dd>
+
+
 <dt>filter_info</dt>
-<dd><p>If contained within an app using <code><a href="filter.html">filter_server()</a></code>, supply the <code>filter_info</code> element
-returned by that function here as a shiny reactive to add filter information to chart exports.</p></dd>
+<dd><p>If contained within an app using <code><a href="filter.html">filter_server()</a></code>, supply the <code>filter_info</code> object
+returned by that function here wrapped in a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">shiny::reactive()</a></code> to add filter information to chart exports.</p></dd>
+
+
+<dt>filter_reset</dt>
+<dd><p>If contained within an app using <code><a href="filter.html">filter_server()</a></code>, supply the <code>filter_reset</code> object
+returned by that function here wrapped in a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">shiny::reactive()</a></code> to reset any click event filters that have been set from by module.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -257,6 +274,7 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>  <span class="co"># sidebar</span></span></span>
 <span class="r-in"><span>  sidebar <span class="op">=</span> <span class="fu"><a href="filter.html">filter_ui</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="st">"filter"</span>,</span></span>
+<span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
 <span class="r-in"><span>    date_range <span class="op">=</span> <span class="va">date_range</span>,</span></span>
 <span class="r-in"><span>    period_lab <span class="op">=</span> <span class="st">"Notification period"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
@@ -299,6 +317,7 @@ returned by that function here as a shiny reactive to add filter information to 
 <span class="r-in"><span>    df <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    date_vars <span class="op">=</span> <span class="va">date_vars</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
+<span class="r-in"><span>    show_ratio <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>    ratio_var <span class="op">=</span> <span class="st">"outcome"</span>,</span></span>
 <span class="r-in"><span>    ratio_lab <span class="op">=</span> <span class="st">"CFR"</span>,</span></span>
 <span class="r-in"><span>    ratio_numer <span class="op">=</span> <span class="st">"Deceased"</span>,</span></span>

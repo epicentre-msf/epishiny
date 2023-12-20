@@ -374,6 +374,7 @@ interface.</p>
 <span>  <span class="co"># sidebar</span></span>
 <span>  sidebar <span class="op">=</span> <span class="fu"><a href="../reference/filter.html">filter_ui</a></span><span class="op">(</span></span>
 <span>    <span class="st">"filter"</span>,</span>
+<span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span>
 <span>    date_range <span class="op">=</span> <span class="va">date_range</span>,</span>
 <span>    period_lab <span class="op">=</span> <span class="st">"Notification period"</span></span>
 <span>  <span class="op">)</span>,</span>
@@ -416,6 +417,7 @@ interface.</p>
 <span>    df <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df</span><span class="op">)</span>,</span>
 <span>    date_vars <span class="op">=</span> <span class="va">date_vars</span>,</span>
 <span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span>
+<span>    show_ratio <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    ratio_var <span class="op">=</span> <span class="st">"outcome"</span>,</span>
 <span>    ratio_lab <span class="op">=</span> <span class="st">"CFR"</span>,</span>
 <span>    ratio_numer <span class="op">=</span> <span class="st">"Deceased"</span>,</span>

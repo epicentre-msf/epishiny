@@ -63,14 +63,15 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">filter_ui</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
+<span>  <span class="va">group_vars</span>,</span>
 <span>  <span class="va">date_range</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Data filters"</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  date_filters_lab <span class="op">=</span> <span class="st">"Date filters"</span>,</span>
 <span>  period_lab <span class="op">=</span> <span class="st">"Period"</span>,</span>
 <span>  missing_dates_lab <span class="op">=</span> <span class="st">"Include patients with missing dates?"</span>,</span>
 <span>  group_filters_lab <span class="op">=</span> <span class="st">"Group filters"</span>,</span>
-<span>  filter_btn_lab <span class="op">=</span> <span class="st">"Filter data"</span>,</span>
-<span>  reset_btn_lab <span class="op">=</span> <span class="st">"Reset filters"</span></span>
+<span>  filter_btn_lab <span class="op">=</span> <span class="st">"Filter"</span>,</span>
+<span>  reset_btn_lab <span class="op">=</span> <span class="st">"Reset"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">filter_server</span><span class="op">(</span></span>
@@ -78,6 +79,8 @@
 <span>  <span class="va">df</span>,</span>
 <span>  <span class="va">date_var</span>,</span>
 <span>  <span class="va">group_vars</span>,</span>
+<span>  time_filter <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  place_filter <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  na_label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"epishiny.na.label"</span>, <span class="st">"(Missing)"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -86,6 +89,10 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>id</dt>
 <dd><p>Module id. Must be the same in both the UI and server function to link the two.</p></dd>
+
+
+<dt>group_vars</dt>
+<dd><p>named character vector of categorical variables for the data grouping input. Names are used as variable labels.</p></dd>
 
 
 <dt>date_range</dt>
@@ -128,8 +135,14 @@
 <dd><p>The name of the date variable in the data frame to be filtered on.</p></dd>
 
 
-<dt>group_vars</dt>
-<dd><p>named character vector of categorical variables for the data grouping input. Names are used as variable labels.</p></dd>
+<dt>time_filter</dt>
+<dd><p>supply the output of <code><a href="time.html">time_server()</a></code> wrapped in a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">shiny::reactive()</a></code> here to add
+its filter information to the filter sidebar</p></dd>
+
+
+<dt>place_filter</dt>
+<dd><p>supply the output of <code><a href="place.html">place_server()</a></code> wrapped in a <code><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">shiny::reactive()</a></code> here to add
+its filter information to the filter sidebar</p></dd>
 
 
 <dt>na_label</dt>
@@ -213,6 +226,7 @@ of the same name in the time, place and person modules wrapped in a <code><a hre
 <span class="r-in"><span>  <span class="co"># sidebar</span></span></span>
 <span class="r-in"><span>  sidebar <span class="op">=</span> <span class="fu">filter_ui</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="st">"filter"</span>,</span></span>
+<span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
 <span class="r-in"><span>    date_range <span class="op">=</span> <span class="va">date_range</span>,</span></span>
 <span class="r-in"><span>    period_lab <span class="op">=</span> <span class="st">"Notification period"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
@@ -255,6 +269,7 @@ of the same name in the time, place and person modules wrapped in a <code><a hre
 <span class="r-in"><span>    df <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="fu">app_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">df</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    date_vars <span class="op">=</span> <span class="va">date_vars</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
+<span class="r-in"><span>    show_ratio <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>    ratio_var <span class="op">=</span> <span class="st">"outcome"</span>,</span></span>
 <span class="r-in"><span>    ratio_lab <span class="op">=</span> <span class="st">"CFR"</span>,</span></span>
 <span class="r-in"><span>    ratio_numer <span class="op">=</span> <span class="st">"Deceased"</span>,</span></span>

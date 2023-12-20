@@ -138,84 +138,82 @@ will use a line list of Ebola in Sierra Leone published in <span class="citation
 <div class="section level2">
 <h2 id="set-up-geo-data">Set up geo data<a class="anchor" aria-label="anchor" href="#set-up-geo-data"></a>
 </h2>
-<p>We next need geological data if we want to show maps. Unfortunately
-there is no systematic availability of subnational data. A search on the
-HDX platform reveals that subnational data are available at <a href="https://data.humdata.org/dataset/cod-ab-sle" class="external-link uri">https://data.humdata.org/dataset/cod-ab-sle</a></p>
+<p>We next need geological data if we want to show maps.</p>
+<p><a href="https://www.geoboundaries.org/" class="external-link">geoBoundaries</a> host
+sub-national administrative boundary shapefiles in various formats for
+every country in the world on github.</p>
 <p>The line list contains Districts (admin 2 level) and Chiefdoms (admin
-3 level). We can download the corresponding data sets from HDX.</p>
+3 level). We can download the corresponding data sets from geoBoundaries
+via the following URLs.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## common element of both shapefile URLs</span></span>
-<span><span class="va">hdx_dir</span> <span class="op">&lt;-</span></span>
-<span>  <span class="st">"https://data.humdata.org/dataset/a4816317-a913-4619-b1e9-d89e21c056b4"</span></span>
-<span><span class="co">## shapefile names and resource ID (from URL)</span></span>
-<span><span class="va">shapefiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  adm2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    filename <span class="op">=</span> <span class="st">"sle_admbnda_adm2_1m_gov_ocha.zip"</span>,</span>
-<span>    resource <span class="op">=</span> <span class="st">"b3963917-8550-478d-9363-736492bf209a"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  adm3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    filename <span class="op">=</span> <span class="st">"sle_admbnda_adm3_1m_gov_ocha_20161017.zip"</span>,</span>
-<span>    resource <span class="op">=</span> <span class="st">"e2aa661d-af2f-42d8-bdea-c7e16a00bdb2"</span></span>
-<span>  <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">shape_paths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  adm2 <span class="op">=</span> <span class="st">"https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM2/geoBoundaries-SLE-ADM2_simplified.geojson"</span>,</span>
+<span>  adm3 <span class="op">=</span> <span class="st">"https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM3/geoBoundaries-SLE-ADM3_simplified.geojson"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">## create temporary dir for downloading</span></span>
-<span><span class="va">tmpdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## download and load shapefiles</span></span>
-<span><span class="va">shapes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">shapefiles</span>, \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co">## construct URL</span></span>
-<span>  <span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
-<span>    <span class="va">hdx_dir</span>, <span class="st">"resource"</span>, <span class="va">x</span><span class="op">$</span><span class="va">resource</span>, <span class="st">"download"</span>, <span class="va">x</span><span class="op">$</span><span class="va">filename</span>, sep <span class="op">=</span> <span class="st">"/"</span></span>
-<span>  <span class="op">)</span></span>
-<span>  <span class="co">## construct file name</span></span>
-<span>  <span class="co">## (`read_sf` expects ending `.shp.zip` for zipped shapefiles)</span></span>
-<span>  <span class="va">destfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"\\.zip$"</span>, <span class="st">".shp.zip"</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmpdir</span>, <span class="va">x</span><span class="op">$</span><span class="va">filename</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, destfile <span class="op">=</span> <span class="va">destfile</span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">destfile</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">shapes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">shape_paths</span>, <span class="va">st_read</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Reading layer `geoBoundaries-SLE-ADM2_simplified' from data source </span></span>
+<span><span class="co">#&gt;   `https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM2/geoBoundaries-SLE-ADM2_simplified.geojson' </span></span>
+<span><span class="co">#&gt;   using driver `GeoJSON'</span></span>
+<span><span class="co">#&gt; Simple feature collection with 14 features and 5 fields</span></span>
+<span><span class="co">#&gt; Geometry type: MULTIPOLYGON</span></span>
+<span><span class="co">#&gt; Dimension:     XY</span></span>
+<span><span class="co">#&gt; Bounding box:  xmin: -13.30893 ymin: 6.923379 xmax: -10.27056 ymax: 9.999253</span></span>
+<span><span class="co">#&gt; Geodetic CRS:  WGS 84</span></span>
+<span><span class="co">#&gt; Reading layer `geoBoundaries-SLE-ADM3_simplified' from data source </span></span>
+<span><span class="co">#&gt;   `https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM3/geoBoundaries-SLE-ADM3_simplified.geojson' </span></span>
+<span><span class="co">#&gt;   using driver `GeoJSON'</span></span>
+<span><span class="co">#&gt; Simple feature collection with 167 features and 5 fields</span></span>
+<span><span class="co">#&gt; Geometry type: MULTIPOLYGON</span></span>
+<span><span class="co">#&gt; Dimension:     XY</span></span>
+<span><span class="co">#&gt; Bounding box:  xmin: -13.30901 ymin: 6.923379 xmax: -10.27056 ymax: 9.999253</span></span>
+<span><span class="co">#&gt; Geodetic CRS:  WGS 84</span></span>
 <span></span>
 <span><span class="co"># little bit of cleaning on district names to match with data</span></span>
-<span><span class="va">shapes</span><span class="op">$</span><span class="va">adm2</span><span class="op">$</span><span class="va">admin2Name</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"Area "</span>, <span class="st">""</span>, <span class="va">shapes</span><span class="op">$</span><span class="va">adm2</span><span class="op">$</span><span class="va">admin2Name</span><span class="op">)</span></span>
+<span><span class="va">shapes</span><span class="op">$</span><span class="va">adm2</span><span class="op">$</span><span class="va">shapeName</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"Area "</span>, <span class="st">""</span>, <span class="va">shapes</span><span class="op">$</span><span class="va">adm2</span><span class="op">$</span><span class="va">shapeName</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">shapes</span>, <span class="va">head</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $adm2</span></span>
-<span><span class="co">#&gt; Simple feature collection with 6 features and 15 fields</span></span>
+<span><span class="co">#&gt; Simple feature collection with 6 features and 5 fields</span></span>
 <span><span class="co">#&gt; Geometry type: MULTIPOLYGON</span></span>
 <span><span class="co">#&gt; Dimension:     XY</span></span>
-<span><span class="co">#&gt; Bounding box:  xmin: -13.30901 ymin: 6.923379 xmax: -10.27056 ymax: 9.608103</span></span>
+<span><span class="co">#&gt; Bounding box:  xmin: -13.30893 ymin: 7.340922 xmax: -10.27056 ymax: 9.999253</span></span>
 <span><span class="co">#&gt; Geodetic CRS:  WGS 84</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 16</span></span></span>
-<span><span class="co">#&gt;   OBJECTID admin2Name admin2Pcod admin2RefN admin2AltN admin2Al_1 admin1Name</span></span>
-<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        1 Pujehun    SL0304     Pujehun    <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>         Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>        2 Port Loko  SL0204     Port Loko  <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>         Northern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>        3 Bonthe     SL0302     Bonthe     <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>         Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>        4 Bo         SL0301     Bo         <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>         Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>        5 Kambia     SL0202     Kambia     <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>         Northern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>        6 Kailahun   SL0101     Kailahun   <span style="color: #BB0000;">NA</span>         <span style="color: #BB0000;">NA</span>         Eastern   </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 9 more variables: admin1Pcod &lt;chr&gt;, admin0Name &lt;chr&gt;, admin0Pcod &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   date &lt;date&gt;, validOn &lt;date&gt;, ValidTo &lt;date&gt;, Shape_Leng &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   Shape_Area &lt;dbl&gt;, geometry &lt;MULTIPOLYGON [°]&gt;</span></span></span>
+<span><span class="co">#&gt;   shapeName shapeISO                 shapeID shapeGroup shapeType</span></span>
+<span><span class="co">#&gt; 1  Kailahun          92492822B20773800307824        SLE      ADM2</span></span>
+<span><span class="co">#&gt; 2    Kenema          92492822B72931932323564        SLE      ADM2</span></span>
+<span><span class="co">#&gt; 3      Kono          92492822B77765797687755        SLE      ADM2</span></span>
+<span><span class="co">#&gt; 4   Bombali          92492822B76753077936535        SLE      ADM2</span></span>
+<span><span class="co">#&gt; 5    Kambia          92492822B57757993837772        SLE      ADM2</span></span>
+<span><span class="co">#&gt; 6 Koinadugu          92492822B53659457212824        SLE      ADM2</span></span>
+<span><span class="co">#&gt;                         geometry</span></span>
+<span><span class="co">#&gt; 1 MULTIPOLYGON (((-10.80489 7...</span></span>
+<span><span class="co">#&gt; 2 MULTIPOLYGON (((-10.85505 8...</span></span>
+<span><span class="co">#&gt; 3 MULTIPOLYGON (((-10.64344 8...</span></span>
+<span><span class="co">#&gt; 4 MULTIPOLYGON (((-12.32046 8...</span></span>
+<span><span class="co">#&gt; 5 MULTIPOLYGON (((-13.2635 8....</span></span>
+<span><span class="co">#&gt; 6 MULTIPOLYGON (((-10.58741 9...</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $adm3</span></span>
-<span><span class="co">#&gt; Simple feature collection with 6 features and 19 fields</span></span>
+<span><span class="co">#&gt; Simple feature collection with 6 features and 5 fields</span></span>
 <span><span class="co">#&gt; Geometry type: MULTIPOLYGON</span></span>
 <span><span class="co">#&gt; Dimension:     XY</span></span>
-<span><span class="co">#&gt; Bounding box:  xmin: -13.13473 ymin: 6.96633 xmax: -11.45532 ymax: 9.032242</span></span>
+<span><span class="co">#&gt; Bounding box:  xmin: -11.02525 ymin: 7.758386 xmax: -10.27056 ymax: 8.505881</span></span>
 <span><span class="co">#&gt; Geodetic CRS:  WGS 84</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 20</span></span></span>
-<span><span class="co">#&gt;   OBJECTID admin3Name     admin3Pcod admin3RefN admin2Name admin2Pcod admin1Name</span></span>
-<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        1 Yakemu Kpukumu SL030412   Yakemu Kp… Pujehun    SL0304     Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>        2 Koya           SL020412   Koya       Port Loko  SL0204     Northern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>        3 Bureh Kasseh … SL020401   Bureh Kas… Port Loko  SL0204     Northern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>        4 Panga Kabonde  SL030404   Panga Kab… Pujehun    SL0304     Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>        5 Galliness Per… SL030402   Galliness… Pujehun    SL0304     Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>        6 Kpaka          SL030403   Kpaka      Pujehun    SL0304     Southern  </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 13 more variables: admin1Pcod &lt;chr&gt;, admin0Name &lt;chr&gt;, admin0Pcod &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   date &lt;date&gt;, validOn &lt;date&gt;, validTo &lt;date&gt;, Shape_Leng &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   Shape_Area &lt;dbl&gt;, Rowcacode0 &lt;chr&gt;, Rowcacode1 &lt;chr&gt;, Rowcacode2 &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   Rowcacode3 &lt;chr&gt;, geometry &lt;MULTIPOLYGON [°]&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt;      shapeName shapeISO                 shapeID shapeGroup shapeType</span></span>
+<span><span class="co">#&gt; 1          Dea          93885176B88884577288656        SLE      ADM3</span></span>
+<span><span class="co">#&gt; 2        Jawie          93885176B40623889028536        SLE      ADM3</span></span>
+<span><span class="co">#&gt; 3   Kissi Kama          93885176B21354692554384        SLE      ADM3</span></span>
+<span><span class="co">#&gt; 4   Kissi Teng          93885176B65469407152324        SLE      ADM3</span></span>
+<span><span class="co">#&gt; 5  Kissi Tongi          93885176B56250152587449        SLE      ADM3</span></span>
+<span><span class="co">#&gt; 6 Kpeje Bongre          93885176B52534318264914        SLE      ADM3</span></span>
+<span><span class="co">#&gt;                         geometry</span></span>
+<span><span class="co">#&gt; 1 MULTIPOLYGON (((-10.60592 7...</span></span>
+<span><span class="co">#&gt; 2 MULTIPOLYGON (((-10.91103 7...</span></span>
+<span><span class="co">#&gt; 3 MULTIPOLYGON (((-10.43962 8...</span></span>
+<span><span class="co">#&gt; 4 MULTIPOLYGON (((-10.43962 8...</span></span>
+<span><span class="co">#&gt; 5 MULTIPOLYGON (((-10.39938 8...</span></span>
+<span><span class="co">#&gt; 6 MULTIPOLYGON (((-10.8119 8....</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="launch-modules">Launch Modules<a class="anchor" aria-label="anchor" href="#launch-modules"></a>
@@ -243,14 +241,14 @@ layer, we combine them in a list:</p>
 <span>  <span class="fu"><a href="../reference/geo_layer.html">geo_layer</a></span><span class="op">(</span></span>
 <span>    layer_name <span class="op">=</span> <span class="st">"District"</span>,</span>
 <span>    sf <span class="op">=</span> <span class="va">shapes</span><span class="op">$</span><span class="va">adm2</span>,</span>
-<span>    name_var <span class="op">=</span> <span class="st">"admin2Name"</span>,</span>
-<span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"admin2Name"</span> <span class="op">=</span> <span class="st">"District"</span><span class="op">)</span></span>
+<span>    name_var <span class="op">=</span> <span class="st">"shapeName"</span>,</span>
+<span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shapeName"</span> <span class="op">=</span> <span class="st">"District"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/geo_layer.html">geo_layer</a></span><span class="op">(</span></span>
 <span>    layer_name <span class="op">=</span> <span class="st">"Chiefdom"</span>,</span>
 <span>    sf <span class="op">=</span> <span class="va">shapes</span><span class="op">$</span><span class="va">adm3</span>,</span>
-<span>    name_var <span class="op">=</span> <span class="st">"admin3Name"</span>,</span>
-<span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"admin3Name"</span> <span class="op">=</span> <span class="st">"Chiefdom"</span><span class="op">)</span></span>
+<span>    name_var <span class="op">=</span> <span class="st">"shapeName"</span>,</span>
+<span>    join_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shapeName"</span> <span class="op">=</span> <span class="st">"Chiefdom"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>We use this to launch the place module:</p>
