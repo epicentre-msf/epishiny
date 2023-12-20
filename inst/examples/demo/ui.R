@@ -8,6 +8,7 @@ ui <-tagList(
 
     theme = bs_theme(
       version = 5,
+      # preset = "bootstrap",
       base_font = font_google(
         app_font,
         wght = c(300, 400, 500, 600, 700, 800),
@@ -18,11 +19,13 @@ ui <-tagList(
 
     # nav pages
     nav_panel(
+      class = "bslib-page-dashboard",
       tags$span(shiny::icon("chart-column"), "Demo"),
       layout_sidebar(
         # sidebar
         sidebar = filter_ui(
           "filter",
+          group_vars = group_vars,
           date_range = date_range,
           period_lab = "Notification period"
         ),
@@ -31,6 +34,7 @@ ui <-tagList(
           width = 1 / 2,
           place_ui(
             id = "map",
+            tooltip = "Click on a polygon to filter other graphics to this region",
             geo_data = geo_data,
             group_vars = group_vars
           ),
@@ -38,7 +42,7 @@ ui <-tagList(
             width = 1,
             time_ui(
               id = "curve",
-              title = "Time",
+              tooltip = "Click on a bar to filter other graphics to this period",
               date_vars = date_vars,
               group_vars = group_vars,
               ratio_line_lab = "Show CFR line?"
@@ -64,14 +68,14 @@ ui <-tagList(
         tags$img(
           src = "epishiny/img/epicentre_logo.png",
           alt = "Epicentre Logo",
-          height = "40px"
+          height = "35px"
         ),
         class = "py-0 d-none d-lg-block",
         title = "Epicentre",
-        href = "https://epicentre.msf.org/",
+        href = "https://epicentre.msf.org/en",
         target = "_blank"
       )
-    ),
+    )
   ),
   # start up loading spinner
   waiter::waiter_preloader(html = waiter::spin_3())

@@ -76,6 +76,7 @@ if (interactive()) {
     df = df_ll,
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_line_lab = "Show CFR line?",
     ratio_var = "outcome",
     ratio_lab = "CFR",

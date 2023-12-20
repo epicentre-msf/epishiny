@@ -13,6 +13,7 @@
 #'  If named, names are used as variable labels.
 #' @param title The title for the card.
 #' @param icon The icon to be displayed next to the title
+#' @param tooltip additional title hover text information
 #' @param geo_lab The label for the geographical level selection.
 #' @param count_vars_lab text label for the aggregate count variables input.
 #' @param groups_lab The label for the group data by selection.
@@ -32,6 +33,7 @@ place_ui <- function(
     group_vars = NULL,
     title = "Place",
     icon = bsicons::bs_icon("geo-fill"),
+    tooltip = NULL,
     geo_lab = "Geo boundaries",
     count_vars_lab = "Indicator",
     groups_lab = "Group data by",
@@ -44,10 +46,10 @@ place_ui <- function(
   ns <- shiny::NS(id)
 
   # check deps are installed
-  # pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "mapview", "chromote")
-  # if (!rlang::is_installed(pkg_deps)) {
-  #   rlang::check_installed(pkg_deps, reason = "to use the epishiny place module.")
-  # }
+  pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "webshot2", "chromote")
+  if (!rlang::is_installed(pkg_deps)) {
+    rlang::check_installed(pkg_deps, reason = "to use the epishiny place module.")
+  }
 
   if (!inherits(geo_data, "epishiny_geo_layer")) {
     if (!all(purrr::map_lgl(geo_data, ~inherits(.x, "epishiny_geo_layer")))) {
@@ -64,13 +66,22 @@ place_ui <- function(
     geo_levels <- purrr::map_chr(geo_data, "layer_name")
   }
 
+  if (length(tooltip)) {
+    tt <- bslib::tooltip(
+      bsicons::bs_icon("info-circle"),
+      tooltip
+    )
+  } else {
+    tt <- NULL
+  }
+
   tagList(
     use_epishiny(),
     bslib::card(
       full_screen = full_screen,
       bslib::card_header(
         class = "d-flex justify-content-start align-items-center",
-        tags$span(icon, title, class = "pe-2"),
+        tags$span(icon, title, tt, class = "pe-2"),
 
         # options button and dropdown menu
         bslib::popover(
@@ -79,7 +90,7 @@ place_ui <- function(
             ns("dropdown"),
             icon = shiny::icon("sliders"),
             label = opts_btn_lab,
-            class = "btn-sm pe-2 me-2"
+            class = "btn-sm btn-light pe-2 me-2"
           ),
           shinyWidgets::radioGroupButtons(
             ns("geo_level"),
@@ -120,7 +131,7 @@ place_ui <- function(
             ns("dl"),
             label = download_lab,
             icon = shiny::icon("camera"),
-            class = "btn-sm pe-2 me-2"
+            class = "btn-sm btn-light pe-2 me-2"
           )
         } 
       ),
@@ -141,8 +152,12 @@ place_ui <- function(
 #' @param choro_opacity Opacity of choropleth colour (only applicable if `geo_data` contains population data)
 #' @param export_width The width of the exported map image.
 #' @param export_height The height of the exported map image.
-#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
-#'   returned by that function here as a shiny reactive to add filter information to chart exports.
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
+#'   returned by that function here wrapped in a [shiny::reactive()] to add filter information to chart exports.
+#' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` object
+#'   returned by that function here wrapped in a [shiny::reactive()] to reset any click event filters that have been set from by module.
+#' @param time_filter supply the output of [time_server()] wrapped in a [shiny::reactive()] here to filter
+#' the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)
 #'
 #' @rdname place
 #'
@@ -155,13 +170,15 @@ place_server <- function(
     geo_data,
     count_vars = NULL,
     group_vars = NULL,
-    show_parent_borders = TRUE,
+    show_parent_borders = FALSE,
     choro_lab = "Rate /100 000",
     choro_pal = "Reds",
     choro_opacity = .7,
     export_width = 1200,
     export_height = 650,
-    filter_info = shiny::reactiveVal()
+    time_filter = shiny::reactiveVal(),
+    filter_info = shiny::reactiveVal(),
+    filter_reset = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
     id,
@@ -209,7 +226,19 @@ place_server <- function(
       # ==========================================================================
 
       df_mod <- reactive({
-        force_reactive(df)
+        df_out <- force_reactive(df)
+        tf <- time_filter()
+        if (length(tf)) {
+          df_out <- df_out %>% dplyr::filter(dplyr::between(.data[[tf$date_var]], tf$from, tf$to))
+        }
+        df_out
+      })
+
+      # adjust filter info if click event filtering has taken place
+      filter_info_out <- reactive({
+        fi <- filter_info()
+        tf <- time_filter()
+        format_filter_info(fi, tf)
       })
 
       geo_select <- reactive({
@@ -275,7 +304,8 @@ place_server <- function(
 
       # basemap
       output$map <- leaflet::renderLeaflet({
-        bbox <- sf::st_bbox(geo_data[[1]]$sf)
+        # bbox <- sf::st_bbox(geo_data[[1]]$sf)
+        bbox <- sf::st_bbox(isolate(rv$sf))
         leaf_basemap(bbox, miniMap = TRUE)
       })
 
@@ -283,9 +313,15 @@ place_server <- function(
       map_click <- reactiveVal(FALSE)
       region_select <- reactiveVal("all")
 
-      observeEvent(input$geo_level, ignoreInit = TRUE, {
+      # reset region select if a filter reset is passed from filter module
+      observe({
         region_select("all")
-      })
+      }) %>% bindEvent(filter_reset(), ignoreInit = TRUE)
+
+      # reset region select if the geo level changes
+      observe({
+        region_select("all")
+      }) %>% bindEvent(input$geo_level, ignoreInit = TRUE)
 
       # if region is selected from map, update region_select value
       observeEvent(input$map_shape_click, {
@@ -346,15 +382,16 @@ place_server <- function(
           dplyr::mutate(name = !!rv$geo_name_col_sym) %>%
           dplyr::select(dplyr::any_of(c(rv$join_cols, rv$geo_pop_var, "name", "lon", "lat"))) %>%
           dplyr::left_join(df_counts, by = rv$geo_join) %>%
-          dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
-          dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
+          dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double))
+          # dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
 
         # add attack rate if there is population data
         if (!is.null(rv$geo_pop_var)) {
           df_out <- df_out %>%
             dplyr::mutate(
+              # attack rate per 100 000
               attack_rate = dplyr::na_if((.data$total / .data[[rv$geo_pop_var]]) * 1e5, 0)
-            ) # attack rate per 100 000
+            ) 
         }
 
         return(df_out)
@@ -394,9 +431,9 @@ place_server <- function(
         
         # change group layers depening on if attack rate is available
         if (is.null(geo_select()$pop_var)) {
-          ogs <- c("Boundaries", "Circles")
+          ogs <- c("Circles")
         } else {
-          ogs <- c("Boundaries", "Choropleth", "Circles")
+          ogs <- c("Choropleth", "Circles")
         }
 
         leaflet::leafletProxy("map", session) %>%
@@ -445,14 +482,14 @@ place_server <- function(
             layerId = boundaries[[rv$join_cols]],
             stroke = TRUE,
             color = "grey",
-            weight = 1,
+            weight = 0.1,
             fillOpacity = 0,
             label = tt,
             group = "Boundaries",
             highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
             options = leaflet::pathOptions(pane = "boundaries")
-          ) %>%
-          leaflet::flyToBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]])
+          )
+          # leaflet::flyToBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]])
       }) %>% bindEvent(df_geo_counts())
 
       # add/update Choropleth polygons when df_geo_counts() changes
@@ -606,10 +643,10 @@ place_server <- function(
 
       output$footer <- renderUI({
         req(missing_text())
-        tags$span(
+        tags$span(tags$small(
           HTML('<i class="fa fa-exclamation-triangle" style="color:red;"></i>'),
           missing_text()
-        )
+        ))
       })
 
       # Map image export ==========================================================
@@ -622,7 +659,7 @@ place_server <- function(
           w_map$show()
           on.exit(w_map$hide())
 
-          # check for chrome browser before attempting mapview::mapshot2
+          # check for chrome browser before attempting mapshot2
           if (is.null(chrome_browser)) {
             shiny::showModal(
               shiny::modalDialog(
@@ -684,7 +721,7 @@ place_server <- function(
             ) %>%
             leaflet::addControl(
               html = shiny::HTML(
-                glue::glue_collapse(c(missing_data_text, filter_info()), sep = "</br>")
+                glue::glue_collapse(c(missing_data_text, filter_info_out()), sep = "</br>")
               ),
               className = "leaflet-control-attribution",
               position = "bottomleft"
@@ -803,7 +840,7 @@ place_server <- function(
             leaf_out <- leaf_out %>% leaflet::addProviderTiles(tiles)
           }
 
-          mapview::mapshot2(
+          mapshot2(
             leaf_out,
             file = file,
             remove_controls = c(
@@ -824,12 +861,16 @@ place_server <- function(
 
       # return region select click information to main app
       shiny::reactive({
-        list(
-          region_select = region_select(),
-          geo_col = rv$geo_col,
-          level_name = rv$geo_level_name,
-          region_name = rv$region_select_name
-        )
+        if (region_select() == "all") {
+          return(NULL)
+        } else {
+          list(
+            region_select = region_select(),
+            geo_col = rv$geo_col,
+            level_name = rv$geo_level_name,
+            region_name = rv$region_select_name
+          )
+        }
       })
     }
   )
@@ -895,7 +936,7 @@ geo_layer <- function(layer_name, sf, name_var, join_by, pop_var = NULL) {
 #' @noRd 
 check_single_string <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
   if (!rlang::is_string(x) | length(x) != 1) {
-    cli::cli_abort("{.arg {arg}} must be a single string.", call = call)
+    cli::cli_abort("{.arg {arg}} must be a character string of length 1.", call = call)
   }
 }
 
@@ -918,12 +959,11 @@ get_geo_counts <- function(
     count_lab
   ) {
     if (is_agg) {
-      df <- df %>%
-        dplyr::count(.data[[geo_var]], wt = .data[[count_var]], name = count_lab)
+      df <- dplyr::count(df, .data[[geo_var]], wt = .data[[count_var]], name = count_lab)
     } else {
-      df <- df %>% dplyr::count(.data[[geo_var]], name = count_lab)
+      df <- dplyr::count(df, .data[[geo_var]], name = count_lab)
     }
-    df %>% dplyr::mutate(total = .data[[count_lab]])
+    dplyr::mutate(df, total = .data[[count_lab]])
   }
 
 #' @noRd 
@@ -942,10 +982,9 @@ get_map_circle_df <- function(
     df <- df_geo_counts
   } else {
     if (is_agg) {
-      df <- df %>%
-        dplyr::count(.data[[geo_var]], .data[[group_var]], wt = .data[[count_var]])
+      df <- dplyr::count(df, .data[[geo_var]], .data[[group_var]], wt = .data[[count_var]])
     } else {
-      df <- df %>% dplyr::count(.data[[geo_var]], .data[[group_var]])
+      df <- dplyr::count(df, .data[[geo_var]], .data[[group_var]])
     }
     # dplyr::mutate(total = rowSums(dplyr::pick(dplyr::where(is.numeric))))
     df <- df_geo_counts %>% 
@@ -954,9 +993,172 @@ get_map_circle_df <- function(
         df %>% tidyr::pivot_wider(names_from = group_var, values_from = "n"), 
         by = geo_join
       ) %>% 
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>% 
       dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
   }
   df %>% dplyr::filter(.data$total > 0) 
 }
 
+#' Copy of mapview::mapshot2 with minor changes to avoid the full dependency on mapview
+#' Full credit to the mapview authors
+#' @noRd 
+mapshot2 <- function(x,
+                     url = NULL,
+                     file = NULL,
+                     remove_controls = c(
+                       "zoomControl",
+                       "layersControl",
+                       "homeButton",
+                       "scaleBar",
+                       "drawToolbar",
+                       "easyButton",
+                       "control"
+                     ),
+                     ...) {
+  stopifnot(requireNamespace("webshot2", quietly = TRUE))
+
+  ## if both 'url' and 'file' are missing, throw an error
+  avl_url <- !is.null(url)
+  avl_file <- !is.null(file)
+
+  if (!avl_url & !avl_file) {
+    stop("Please provide a valid 'url' or 'file' argument (or both).")
+  }
+
+  ## normalize path to ensure webshot is working
+  if (avl_url) url <- normalizePath(url, mustWork = FALSE)
+  if (avl_file) file <- normalizePath(file, mustWork = FALSE)
+
+  ## if no url provided -> set url to tempfile & remove junk
+  if (!avl_url) {
+    url <- tempfile(fileext = ".html")
+    x <- removeMapJunk(x, remove_controls)
+  }
+
+  ## prepare arguments for saveWidget & webshot
+  args <- list(url = url, file = file, ...)
+  sw_ls <- args
+  sw_ls[names(sw_ls) == "file"] <- NULL
+  names(sw_ls)[which(names(sw_ls) == "url")] <- "file"
+
+  ## the arguments to be passed to saveWidget
+  sw_args <- match.arg(names(sw_ls),
+    names(as.list(args(htmlwidgets::saveWidget))),
+    several.ok = TRUE
+  )
+
+  ## the arguments to be passed to webshot
+  ws_args <- match.arg(names(args),
+    names(as.list(args(webshot2::webshot))),
+    several.ok = TRUE
+  )
+
+  ## saveWidget (either to provided url or tempfile)
+  do.call(htmlwidgets::saveWidget, append(list(x), sw_ls[sw_args]))
+
+  ## if file was provided
+  if (avl_file) {
+
+    ## if no junk to remove -> take webshot straight away & return
+    if (is.null(remove_controls)) {
+      suppressMessages(
+        do.call(webshot2::webshot, args)
+      )
+      return(invisible())
+    }
+
+    ## if we land here, we want both url & file with some junk removed
+    tmp_url <- tempfile(fileext = ".html")
+    tmp_fls <- paste0(tools::file_path_sans_ext(tmp_url), "_files")
+
+    sw_ls <- utils::modifyList(sw_ls, list("file" = tmp_url))
+    args$url <- tmp_url
+
+    x <- removeMapJunk(x, remove_controls)
+
+    do.call(htmlwidgets::saveWidget, append(list(x), sw_ls[sw_args]))
+    suppressMessages(
+      do.call(webshot2::webshot, args[ws_args])
+    )
+
+    return(invisible())
+  }
+}
+
+
+#' @noRd 
+removeMapJunk <- function(map, junk = NULL) {
+  if (is.null(junk)) {
+    return(map)
+  }
+  for (jnk in junk) {
+    map <- switch(jnk,
+      "zoomControl" = removeZoomControl(map),
+      "layersControl" = leaflet::removeLayersControl(map),
+      "homeButton" = removeHomeButtons(map),
+      "scaleBar" = removeScalebar(map),
+      "drawToolbar" = removeDrawToolbar(map),
+      "easyButton" = removeEasyButton(map),
+      "control" = removeControl(map),
+      NULL = map
+    )
+  }
+  return(map)
+}
+
+#' @noRd
+removeZoomControl <- function(map) {
+  map$x$options <- append(map$x$options, list("zoomControl" = FALSE))
+  return(map)
+}
+
+#' @noRd
+removeHomeButtons <- function(map) {
+  idx <- getCallEntryFromMap(map, "addHomeButton")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeScalebar <- function(map) {
+  idx <- getCallEntryFromMap(map, "addScaleBar")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeDrawToolbar <- function(map) {
+  idx <- getCallEntryFromMap(map, "addDrawToolbar")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeEasyButton <- function(map) {
+  idx <- getCallEntryFromMap(map, "addEasyButton")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeControl <- function(map) {
+  idx <- getCallEntryFromMap(map, "addControl")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+getCallMethods <- function(map) {
+  sapply(map$x$calls, "[[", "method")
+}
+
+#' @noRd
+getCallEntryFromMap <- function(map, call) {
+  if (length(call) > 1) {
+    call <- paste(call, collapse = "|")
+    fixed <- FALSE
+  } else {
+    fixed <- TRUE
+  }
+  grep(call, getCallMethods(map), fixed = fixed, useBytes = TRUE)
+}

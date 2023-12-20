@@ -74,6 +74,32 @@ epi_pals <- function() {
 }
 
 #' @noRd
+setup_group_filter <- function(var, lab, ns, ...) {
+  if (is.null(lab)) lab <- var
+  shinyWidgets::pickerInput(
+    inputId = ns(var),
+    label = lab,
+    choices = NULL,
+    selected = NULL,
+    options = picker_opts(...),
+    multiple = TRUE
+  )
+}
+
+#' @noRd
+update_group_filter <- function(session, var, df) {
+    vec <- df[[var]]
+    if (is.factor(vec)) {
+      choices <- levels(droplevels(vec))
+    } else if (is.character(vec)) {
+      choices <- sort(unique(vec))
+    } else {
+      stop("Grouping variables must be factor or character class")
+    }
+    shinyWidgets::updatePickerInput(session, var, choices = choices)
+}
+ 
+#' @noRd
 make_select_filter <- function(var, lab, ns, df, ...) {
   vec <- df[[var]]
   if (is.factor(vec)) {
@@ -103,7 +129,7 @@ picker_opts <- function(actions = TRUE,
   shinyWidgets::pickerOptions(
     actionsBox = actions,
     liveSearch = search,
-    selectedTextFormat = "count > 2",
+    selectedTextFormat = "count > 1",
     countSelectedText = paste("{0}", selected_text),
     noneSelectedText = none_text,
     container = container,
@@ -268,19 +294,20 @@ make_leaf_tooltip <- function(
     ar_col = NULL,
     ar_lab = "Attack rate"
 ) {
+  counts <- ifelse(is.na(df[[n_col]]), "No data", scales::number(df[[n_col]], accuracy = 1))
   if (all(!is.null(pop_col), !is.null(ar_col))) {
-    pop <- ifelse(is.na(df[[pop_col]]), "Unknown", scales::number(df[[pop_col]], accuracy = 1))
-    ar <- ifelse(is.na(df[[ar_col]]), "Unknown", scales::number(df[[ar_col]], accuracy = .1))
+    pop <- ifelse(is.na(df[[pop_col]]), "No data", scales::number(df[[pop_col]], accuracy = 1))
+    ar <- ifelse(is.na(df[[ar_col]]), "No data", scales::number(df[[ar_col]], accuracy = .1))
     glue::glue(
       "<b>{df[[name_col]]}</b><br>
-       {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>
+       {n_lab}: <b>{counts}</b><br>
        {pop_lab}: <b>{pop}</b><br>
        {ar_lab}: <b>{ar}</b> / 100 000<br>"
     ) %>% purrr::map(shiny::HTML)
   } else {
     glue::glue(
       "<b>{df[[name_col]]}</b><br>
-       {n_lab}: <b>{scales::number(df[[n_col]], accuracy = 1)}</b><br>"
+       {n_lab}: <b>{counts}</b><br>"
     ) %>% purrr::map(shiny::HTML)
   }
 }
@@ -293,4 +320,29 @@ get_label <- function(selected, choices, .default = getOption("epishiny.count.la
   } else {
     .default
   }
+}
+
+#' @noRd 
+format_filter_info <- function(fi = NULL, tf = NULL, pf = NULL) {
+  if (length(tf)) {
+    if (length(fi)) {
+      # since we already have a period filter value from the date input, replace it with bar click period
+      fi <- stringr::str_replace(
+        fi,
+        "\\d{2}/[A-Za-z]{3}/\\d{2} - \\d{2}/[A-Za-z]{3}/\\d{2}",
+        tf$lab
+      )
+    } else {
+      fi <- paste("<b>Filters applied</b></br>Period:", tf$lab)
+    }
+  }
+  if (length(pf)) {
+    pf_lab <- glue::glue("{pf$level_name}: {pf$region_name}")
+    if (length(fi)) {
+      fi <- glue::glue("{fi}</br>{pf_lab}")
+    } else {
+      fi <- paste0("<b>Filters applied</b></br>", pf_lab)
+    }
+  }
+  fi
 }

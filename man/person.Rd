@@ -29,8 +29,10 @@ person_server(
   age_var_lab = "Age (years)",
   age_group_lab = "Age group",
   n_lab = "N patients",
-  colours = c("#f15f36", "#19a0aa"),
-  filter_info = shiny::reactiveVal()
+  colours = c("#19a0aa", "#f15f36"),
+  filter_info = shiny::reactiveVal(),
+  time_filter = shiny::reactiveVal(),
+  place_filter = shiny::reactiveVal()
 )
 }
 \arguments{
@@ -75,8 +77,14 @@ If ages have already been binned into groups, use \code{age_group_var} instead.}
 
 \item{colours}{Vector of 2 colours to represent male and female, respectively.}
 
-\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
-returned by that function here as a shiny reactive to add filter information to chart exports.}
+\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to add filter information to chart exports.}
+
+\item{time_filter}{supply the output of \code{\link[=time_server]{time_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
+the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)}
+
+\item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
+the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)}
 }
 \value{
 A \link[bslib:navset]{bslib::navset_card_tab} UI element with chart and table tabs.
@@ -141,6 +149,7 @@ ui <- page_sidebar(
   # sidebar
   sidebar = filter_ui(
     "filter",
+    group_vars = group_vars,
     date_range = date_range,
     period_lab = "Notification period"
   ),
@@ -183,6 +192,7 @@ server <- function(input, output, session) {
     df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_var = "outcome",
     ratio_lab = "CFR",
     ratio_numer = "Deceased",

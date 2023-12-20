@@ -12,6 +12,7 @@ time_ui(
   group_vars = NULL,
   title = "Time",
   icon = bsicons::bs_icon("bar-chart-line-fill"),
+  tooltip = NULL,
   opts_btn_lab = "options",
   date_lab = "Date axis",
   date_int_lab = "Date interval",
@@ -36,7 +37,9 @@ time_server(
   ratio_lab = NULL,
   ratio_numer = NULL,
   ratio_denom = NULL,
-  filter_info = shiny::reactiveVal()
+  place_filter = shiny::reactiveVal(),
+  filter_info = shiny::reactiveVal(),
+  filter_reset = shiny::reactiveVal()
 )
 }
 \arguments{
@@ -54,6 +57,8 @@ If named, names are used as variable labels.}
 \item{title}{Header title for the card.}
 
 \item{icon}{The icon to display next to the title.}
+
+\item{tooltip}{additional title hover text information}
 
 \item{opts_btn_lab}{text label for the dropdown menu button.}
 
@@ -93,8 +98,14 @@ For aggregated data, character string of numeric count column to use of ratio nu
 \item{ratio_denom}{For patient level data, values in \code{ratio_var} to be used for the ratio denominator i.e. \code{c('Death', 'Recovery')}.
 For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.}
 
-\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
-returned by that function here as a shiny reactive to add filter information to chart exports.}
+\item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
+the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)}
+
+\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to add filter information to chart exports.}
+
+\item{filter_reset}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_reset} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to reset any click event filters that have been set from by module.}
 }
 \value{
 the module server function returns any point click event data of the highchart.

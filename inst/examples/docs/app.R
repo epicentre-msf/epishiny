@@ -54,6 +54,7 @@ ui <- page_sidebar(
   # sidebar
   sidebar = filter_ui(
     "filter",
+    group_vars = group_vars,
     date_range = date_range,
     period_lab = "Notification period"
   ),
@@ -96,6 +97,7 @@ server <- function(input, output, session) {
     df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_var = "outcome",
     ratio_lab = "CFR",
     ratio_numer = "Deceased",

@@ -12,6 +12,7 @@ place_ui(
   group_vars = NULL,
   title = "Place",
   icon = bsicons::bs_icon("geo-fill"),
+  tooltip = NULL,
   geo_lab = "Geo boundaries",
   count_vars_lab = "Indicator",
   groups_lab = "Group data by",
@@ -28,13 +29,15 @@ place_server(
   geo_data,
   count_vars = NULL,
   group_vars = NULL,
-  show_parent_borders = TRUE,
+  show_parent_borders = FALSE,
   choro_lab = "Rate /100 000",
   choro_pal = "Reds",
   choro_opacity = 0.7,
   export_width = 1200,
   export_height = 650,
-  filter_info = shiny::reactiveVal()
+  time_filter = shiny::reactiveVal(),
+  filter_info = shiny::reactiveVal(),
+  filter_reset = shiny::reactiveVal()
 )
 }
 \arguments{
@@ -52,6 +55,8 @@ If named, names are used as variable labels.}
 \item{title}{The title for the card.}
 
 \item{icon}{The icon to be displayed next to the title}
+
+\item{tooltip}{additional title hover text information}
 
 \item{geo_lab}{The label for the geographical level selection.}
 
@@ -84,8 +89,14 @@ If named, names are used as variable labels.}
 
 \item{export_height}{The height of the exported map image.}
 
-\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
-returned by that function here as a shiny reactive to add filter information to chart exports.}
+\item{time_filter}{supply the output of \code{\link[=time_server]{time_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
+the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)}
+
+\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to add filter information to chart exports.}
+
+\item{filter_reset}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_reset} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to reset any click event filters that have been set from by module.}
 }
 \value{
 A \link[bslib:card]{bslib::card} UI element with options and download button and a leaflet map.
@@ -152,6 +163,7 @@ ui <- page_sidebar(
   # sidebar
   sidebar = filter_ui(
     "filter",
+    group_vars = group_vars,
     date_range = date_range,
     period_lab = "Notification period"
   ),
@@ -194,6 +206,7 @@ server <- function(input, output, session) {
     df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_var = "outcome",
     ratio_lab = "CFR",
     ratio_numer = "Deceased",
