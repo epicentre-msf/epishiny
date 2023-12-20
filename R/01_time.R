@@ -87,7 +87,7 @@ time_ui <- function(
             ns("dropdown"),
             icon = shiny::icon("sliders"),
             label = opts_btn_lab,
-            class = "btn-sm pe-2 me-2"
+            class = "btn-sm btn-light pe-2 me-2"
           ),
           selectInput(
             ns("date"),
@@ -162,10 +162,10 @@ time_ui <- function(
 #'  For aggregated data, character string of numeric count column to use of ratio numerator i.e. 'deaths'.
 #' @param ratio_denom For patient level data, values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
 #'  For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.
-#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
-#'   returned by that function here as a shiny reactive to add filter information to chart exports.
-#' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` element
-#'   returned by that function here as a shiny reactive to reset any click event filters that have been set from this module
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
+#'   returned by that function here wrapped in a [shiny::reactive()] to add filter information to chart exports.
+#' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` object
+#'   returned by that function here wrapped in a [shiny::reactive()] to reset any click event filters that have been set from by module.
 #' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to filter
 #'  the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)
 #'
@@ -367,7 +367,6 @@ time_server <- function(
         }
 
         hc <- hc %>%
-          # highcharter::hc_add_event_point(event = "click") %>%
           highcharter::hc_title(text = NULL) %>%
           highcharter::hc_chart(zoomType = "x", alignTicks = TRUE) %>%
           highcharter::hc_plotOptions(
@@ -392,6 +391,7 @@ time_server <- function(
               gridLineWidth = 0
             )
           ) %>%
+          highcharter::hc_boost(enabled = TRUE) %>% 
           # highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip) %>%
           my_hc_export(caption = isolate(filter_info_out()))
 
@@ -738,17 +738,14 @@ get_ratio_df <- function(
 
 #' @noRd 
 format_period <- function(date_times, unit) {
-  if (unit == "day") {
-    format(date_times[1], "%a %d %b %Y")
-  } else if (unit == "week") {
-    format_week(date_times[1])
-  } else if (unit == "month") {
-    format(date_times[1], "%B %Y")
-  } else if (unit == "year") {
-    format(date_times[1], "%Y")
-  } else {
-    paste(date_times[1], date_times[2], sep = " - ")
-  }
+  dplyr::case_match(
+    unit,
+    "day" ~ format(date_times[1], "%a %d %b %Y"),
+    "week" ~ format_week(date_times[1]),
+    "month" ~ format(date_times[1], "%B %Y"),
+    "year" ~ format(date_times[1], "%Y"),
+    .default = paste(date_times[1], date_times[2], sep = " - ")
+  )
 }
 
 #' @noRd

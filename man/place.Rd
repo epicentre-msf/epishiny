@@ -92,11 +92,11 @@ If named, names are used as variable labels.}
 \item{time_filter}{supply the output of \code{\link[=time_server]{time_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
 the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)}
 
-\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
-returned by that function here as a shiny reactive to add filter information to chart exports.}
+\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to add filter information to chart exports.}
 
-\item{filter_reset}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_reset} element
-returned by that function here as a shiny reactive to reset any click event filters that have been set from this module}
+\item{filter_reset}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_reset} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to reset any click event filters that have been set from by module.}
 }
 \value{
 A \link[bslib:card]{bslib::card} UI element with options and download button and a leaflet map.
@@ -163,6 +163,7 @@ ui <- page_sidebar(
   # sidebar
   sidebar = filter_ui(
     "filter",
+    group_vars = group_vars,
     date_range = date_range,
     period_lab = "Notification period"
   ),
@@ -205,6 +206,7 @@ server <- function(input, output, session) {
     df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_var = "outcome",
     ratio_lab = "CFR",
     ratio_numer = "Deceased",

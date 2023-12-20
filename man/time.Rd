@@ -101,11 +101,11 @@ For aggregated data, character string of numeric count column to use of ratio de
 \item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
 the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)}
 
-\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} element
-returned by that function here as a shiny reactive to add filter information to chart exports.}
+\item{filter_info}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_info} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to add filter information to chart exports.}
 
-\item{filter_reset}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_reset} element
-returned by that function here as a shiny reactive to reset any click event filters that have been set from this module}
+\item{filter_reset}{If contained within an app using \code{\link[=filter_server]{filter_server()}}, supply the \code{filter_reset} object
+returned by that function here wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} to reset any click event filters that have been set from by module.}
 }
 \value{
 the module server function returns any point click event data of the highchart.

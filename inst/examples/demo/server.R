@@ -9,18 +9,13 @@ server <- function(input, output, session) {
     group_vars = group_vars
   )
 
-  filter_reset <- reactive({
-    app_data()$filter_reset
-  })
-
   map_click <- place_server(
     id = "map",
     df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
     time_filter = reactive(bar_click()),
-    filter_info = reactive(app_data()$filter_info),
-    filter_reset = filter_reset
+    filter_info = reactive(app_data()$filter_info)
   )
 
   # uncomment to see data returned from map click events
@@ -39,8 +34,7 @@ server <- function(input, output, session) {
     ratio_numer = "Deceased",
     ratio_denom = c("Deceased", "Healed", "Abandonment"),
     place_filter = reactive(map_click()),
-    filter_info = reactive(app_data()$filter_info),
-    filter_reset = filter_reset
+    filter_info = reactive(app_data()$filter_info)
   )
 
   # uncomment to see data returned from chart click events

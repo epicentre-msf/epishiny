@@ -7,14 +7,15 @@
 \usage{
 filter_ui(
   id,
+  group_vars,
   date_range,
-  title = "Data filters",
+  title = NULL,
   date_filters_lab = "Date filters",
   period_lab = "Period",
   missing_dates_lab = "Include patients with missing dates?",
   group_filters_lab = "Group filters",
-  filter_btn_lab = "Filter data",
-  reset_btn_lab = "Reset filters"
+  filter_btn_lab = "Filter",
+  reset_btn_lab = "Reset"
 )
 
 filter_server(
@@ -29,6 +30,8 @@ filter_server(
 }
 \arguments{
 \item{id}{Module id. Must be the same in both the UI and server function to link the two.}
+
+\item{group_vars}{named character vector of categorical variables for the data grouping input. Names are used as variable labels.}
 
 \item{date_range}{A vector containing the minimum and maximum dates for the date range input.}
 
@@ -49,8 +52,6 @@ filter_server(
 \item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
 
 \item{date_var}{The name of the date variable in the data frame to be filtered on.}
-
-\item{group_vars}{named character vector of categorical variables for the data grouping input. Names are used as variable labels.}
 
 \item{time_filter}{supply the output of \code{\link[=time_server]{time_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to add
 its filter information to the filter sidebar}
@@ -127,6 +128,7 @@ ui <- page_sidebar(
   # sidebar
   sidebar = filter_ui(
     "filter",
+    group_vars = group_vars,
     date_range = date_range,
     period_lab = "Notification period"
   ),
@@ -169,6 +171,7 @@ server <- function(input, output, session) {
     df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
+    show_ratio = TRUE,
     ratio_var = "outcome",
     ratio_lab = "CFR",
     ratio_numer = "Deceased",

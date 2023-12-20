@@ -46,7 +46,7 @@ place_ui <- function(
   ns <- shiny::NS(id)
 
   # check deps are installed
-  pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "mapview", "chromote")
+  pkg_deps <- c("sf", "leaflet", "leaflet.minicharts", "webshot2", "chromote")
   if (!rlang::is_installed(pkg_deps)) {
     rlang::check_installed(pkg_deps, reason = "to use the epishiny place module.")
   }
@@ -90,7 +90,7 @@ place_ui <- function(
             ns("dropdown"),
             icon = shiny::icon("sliders"),
             label = opts_btn_lab,
-            class = "btn-sm pe-2 me-2"
+            class = "btn-sm btn-light pe-2 me-2"
           ),
           shinyWidgets::radioGroupButtons(
             ns("geo_level"),
@@ -131,7 +131,7 @@ place_ui <- function(
             ns("dl"),
             label = download_lab,
             icon = shiny::icon("camera"),
-            class = "btn-sm pe-2 me-2"
+            class = "btn-sm btn-light pe-2 me-2"
           )
         } 
       ),
@@ -152,10 +152,10 @@ place_ui <- function(
 #' @param choro_opacity Opacity of choropleth colour (only applicable if `geo_data` contains population data)
 #' @param export_width The width of the exported map image.
 #' @param export_height The height of the exported map image.
-#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` element
-#'   returned by that function here as a shiny reactive to add filter information to chart exports.
-#' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` element
-#'   returned by that function here as a shiny reactive to reset any click event filters that have been set from this module
+#' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
+#'   returned by that function here wrapped in a [shiny::reactive()] to add filter information to chart exports.
+#' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` object
+#'   returned by that function here wrapped in a [shiny::reactive()] to reset any click event filters that have been set from by module.
 #' @param time_filter supply the output of [time_server()] wrapped in a [shiny::reactive()] here to filter
 #' the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)
 #'
@@ -304,7 +304,8 @@ place_server <- function(
 
       # basemap
       output$map <- leaflet::renderLeaflet({
-        bbox <- sf::st_bbox(geo_data[[1]]$sf)
+        # bbox <- sf::st_bbox(geo_data[[1]]$sf)
+        bbox <- sf::st_bbox(isolate(rv$sf))
         leaf_basemap(bbox, miniMap = TRUE)
       })
 
@@ -658,7 +659,7 @@ place_server <- function(
           w_map$show()
           on.exit(w_map$hide())
 
-          # check for chrome browser before attempting mapview::mapshot2
+          # check for chrome browser before attempting mapshot2
           if (is.null(chrome_browser)) {
             shiny::showModal(
               shiny::modalDialog(
@@ -839,7 +840,7 @@ place_server <- function(
             leaf_out <- leaf_out %>% leaflet::addProviderTiles(tiles)
           }
 
-          mapview::mapshot2(
+          mapshot2(
             leaf_out,
             file = file,
             remove_controls = c(
@@ -935,7 +936,7 @@ geo_layer <- function(layer_name, sf, name_var, join_by, pop_var = NULL) {
 #' @noRd 
 check_single_string <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
   if (!rlang::is_string(x) | length(x) != 1) {
-    cli::cli_abort("{.arg {arg}} must be a single string.", call = call)
+    cli::cli_abort("{.arg {arg}} must be a character string of length 1.", call = call)
   }
 }
 
@@ -998,3 +999,166 @@ get_map_circle_df <- function(
   df %>% dplyr::filter(.data$total > 0) 
 }
 
+#' Copy of mapview::mapshot2 with minor changes to avoid the full dependency on mapview
+#' Full credit to the mapview authors
+#' @noRd 
+mapshot2 <- function(x,
+                     url = NULL,
+                     file = NULL,
+                     remove_controls = c(
+                       "zoomControl",
+                       "layersControl",
+                       "homeButton",
+                       "scaleBar",
+                       "drawToolbar",
+                       "easyButton",
+                       "control"
+                     ),
+                     ...) {
+  stopifnot(requireNamespace("webshot2", quietly = TRUE))
+
+  ## if both 'url' and 'file' are missing, throw an error
+  avl_url <- !is.null(url)
+  avl_file <- !is.null(file)
+
+  if (!avl_url & !avl_file) {
+    stop("Please provide a valid 'url' or 'file' argument (or both).")
+  }
+
+  ## normalize path to ensure webshot is working
+  if (avl_url) url <- normalizePath(url, mustWork = FALSE)
+  if (avl_file) file <- normalizePath(file, mustWork = FALSE)
+
+  ## if no url provided -> set url to tempfile & remove junk
+  if (!avl_url) {
+    url <- tempfile(fileext = ".html")
+    x <- removeMapJunk(x, remove_controls)
+  }
+
+  ## prepare arguments for saveWidget & webshot
+  args <- list(url = url, file = file, ...)
+  sw_ls <- args
+  sw_ls[names(sw_ls) == "file"] <- NULL
+  names(sw_ls)[which(names(sw_ls) == "url")] <- "file"
+
+  ## the arguments to be passed to saveWidget
+  sw_args <- match.arg(names(sw_ls),
+    names(as.list(args(htmlwidgets::saveWidget))),
+    several.ok = TRUE
+  )
+
+  ## the arguments to be passed to webshot
+  ws_args <- match.arg(names(args),
+    names(as.list(args(webshot2::webshot))),
+    several.ok = TRUE
+  )
+
+  ## saveWidget (either to provided url or tempfile)
+  do.call(htmlwidgets::saveWidget, append(list(x), sw_ls[sw_args]))
+
+  ## if file was provided
+  if (avl_file) {
+
+    ## if no junk to remove -> take webshot straight away & return
+    if (is.null(remove_controls)) {
+      suppressMessages(
+        do.call(webshot2::webshot, args)
+      )
+      return(invisible())
+    }
+
+    ## if we land here, we want both url & file with some junk removed
+    tmp_url <- tempfile(fileext = ".html")
+    tmp_fls <- paste0(tools::file_path_sans_ext(tmp_url), "_files")
+
+    sw_ls <- utils::modifyList(sw_ls, list("file" = tmp_url))
+    args$url <- tmp_url
+
+    x <- removeMapJunk(x, remove_controls)
+
+    do.call(htmlwidgets::saveWidget, append(list(x), sw_ls[sw_args]))
+    suppressMessages(
+      do.call(webshot2::webshot, args[ws_args])
+    )
+
+    return(invisible())
+  }
+}
+
+
+#' @noRd 
+removeMapJunk <- function(map, junk = NULL) {
+  if (is.null(junk)) {
+    return(map)
+  }
+  for (jnk in junk) {
+    map <- switch(jnk,
+      "zoomControl" = removeZoomControl(map),
+      "layersControl" = leaflet::removeLayersControl(map),
+      "homeButton" = removeHomeButtons(map),
+      "scaleBar" = removeScalebar(map),
+      "drawToolbar" = removeDrawToolbar(map),
+      "easyButton" = removeEasyButton(map),
+      "control" = removeControl(map),
+      NULL = map
+    )
+  }
+  return(map)
+}
+
+#' @noRd
+removeZoomControl <- function(map) {
+  map$x$options <- append(map$x$options, list("zoomControl" = FALSE))
+  return(map)
+}
+
+#' @noRd
+removeHomeButtons <- function(map) {
+  idx <- getCallEntryFromMap(map, "addHomeButton")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeScalebar <- function(map) {
+  idx <- getCallEntryFromMap(map, "addScaleBar")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeDrawToolbar <- function(map) {
+  idx <- getCallEntryFromMap(map, "addDrawToolbar")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeEasyButton <- function(map) {
+  idx <- getCallEntryFromMap(map, "addEasyButton")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+removeControl <- function(map) {
+  idx <- getCallEntryFromMap(map, "addControl")
+  if (length(idx) > 0) map$x$calls[idx] <- NULL
+  return(map)
+}
+
+#' @noRd
+getCallMethods <- function(map) {
+  sapply(map$x$calls, "[[", "method")
+}
+
+#' @noRd
+getCallEntryFromMap <- function(map, call) {
+  if (length(call) > 1) {
+    call <- paste(call, collapse = "|")
+    fixed <- FALSE
+  } else {
+    fixed <- TRUE
+  }
+  grep(call, getCallMethods(map), fixed = fixed, useBytes = TRUE)
+}

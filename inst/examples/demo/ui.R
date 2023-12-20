@@ -1,5 +1,4 @@
 ui <-tagList(
-  tags$head(tags$style("body {background-color: #f5f5f5;}")),
   page_navbar(
     title = app_title,
     window_title = app_title,
@@ -9,7 +8,7 @@ ui <-tagList(
 
     theme = bs_theme(
       version = 5,
-      preset = "bootstrap",
+      # preset = "bootstrap",
       base_font = font_google(
         app_font,
         wght = c(300, 400, 500, 600, 700, 800),
@@ -20,11 +19,13 @@ ui <-tagList(
 
     # nav pages
     nav_panel(
+      class = "bslib-page-dashboard",
       tags$span(shiny::icon("chart-column"), "Demo"),
       layout_sidebar(
         # sidebar
         sidebar = filter_ui(
           "filter",
+          group_vars = group_vars,
           date_range = date_range,
           period_lab = "Notification period"
         ),
@@ -67,14 +68,14 @@ ui <-tagList(
         tags$img(
           src = "epishiny/img/epicentre_logo.png",
           alt = "Epicentre Logo",
-          height = "40px"
+          height = "35px"
         ),
         class = "py-0 d-none d-lg-block",
         title = "Epicentre",
         href = "https://epicentre.msf.org/en",
         target = "_blank"
       )
-    ),
+    )
   ),
   # start up loading spinner
   waiter::waiter_preloader(html = waiter::spin_3())

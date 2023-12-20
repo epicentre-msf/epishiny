@@ -33,13 +33,6 @@ group_vars <- "WHO_region"
 
 ui <- page_sidebar(
   title = "epishiny covid19 dashboard",
-  sidebar = sidebar(
-    radioButtons(
-      inputId = "indicator",
-      label = "Indicator",
-      choices = count_vars
-    )
-  ),
   layout_columns(
     # col_widths = 12,
     time_ui(

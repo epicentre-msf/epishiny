@@ -74,6 +74,32 @@ epi_pals <- function() {
 }
 
 #' @noRd
+setup_group_filter <- function(var, lab, ns, ...) {
+  if (is.null(lab)) lab <- var
+  shinyWidgets::pickerInput(
+    inputId = ns(var),
+    label = lab,
+    choices = NULL,
+    selected = NULL,
+    options = picker_opts(...),
+    multiple = TRUE
+  )
+}
+
+#' @noRd
+update_group_filter <- function(session, var, df) {
+    vec <- df[[var]]
+    if (is.factor(vec)) {
+      choices <- levels(droplevels(vec))
+    } else if (is.character(vec)) {
+      choices <- sort(unique(vec))
+    } else {
+      stop("Grouping variables must be factor or character class")
+    }
+    shinyWidgets::updatePickerInput(session, var, choices = choices)
+}
+ 
+#' @noRd
 make_select_filter <- function(var, lab, ns, df, ...) {
   vec <- df[[var]]
   if (is.factor(vec)) {
@@ -103,7 +129,7 @@ picker_opts <- function(actions = TRUE,
   shinyWidgets::pickerOptions(
     actionsBox = actions,
     liveSearch = search,
-    selectedTextFormat = "count > 2",
+    selectedTextFormat = "count > 1",
     countSelectedText = paste("{0}", selected_text),
     noneSelectedText = none_text,
     container = container,
