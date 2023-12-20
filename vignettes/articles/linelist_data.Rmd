@@ -49,44 +49,6 @@ df <- read_csv(url)
 glimpse(df)
 ```
 
-```{r load_geo_data_hdx, eval=FALSE, include=FALSE}
-# this link isn't working anymore so switched to geoBoundaries below
-## common element of both shapefile URLs
-hdx_dir <-
-  "https://data.humdata.org/dataset/a4816317-a913-4619-b1e9-d89e21c056b4"
-## shapefile names and resource ID (from URL)
-shapefiles <- list(
-  adm2 = list(
-    filename = "sle_admbnda_adm2_1m_gov_ocha.zip",
-    resource = "b3963917-8550-478d-9363-736492bf209a"
-  ),
-  adm3 = list(
-    filename = "sle_admbnda_adm3_1m_gov_ocha_20161017.zip",
-    resource = "e2aa661d-af2f-42d8-bdea-c7e16a00bdb2"
-  )
-)
-## create temporary dir for downloading
-tmpdir <- tempdir()
-
-## download and load shapefiles
-shapes <- map(shapefiles, \(x) {
-  ## construct URL
-  url <- paste(
-    hdx_dir, "resource", x$resource, "download", x$filename, sep = "/"
-  )
-  ## construct file name
-  ## (`read_sf` expects ending `.shp.zip` for zipped shapefiles)
-  destfile <- sub("\\.zip$", ".shp.zip", file.path(tmpdir, x$filename))
-  download.file(url, destfile = destfile)
-  return(read_sf(destfile))
-})
-
-# little bit of cleaning on district names to match with data
-shapes$adm2$shapeName <- gsub("Area ", "", shapes$adm2$shapeName)
-
-map(shapes, head)
-```
-
 # Set up geo data
 
 We next need geological data if we want to show maps.
@@ -97,7 +59,7 @@ shapefiles in various formats for every country in the world on github.
 The line list contains Districts (admin 2 level) and Chiefdoms (admin 3 level).
 We can download the corresponding data sets from geoBoundaries via the following URLs.
 
-```{r load_geo_data_hdx}
+```{r load_geo_data}
 shape_paths <- list(
   adm2 = "https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM2/geoBoundaries-SLE-ADM2_simplified.geojson",
   adm3 = "https://github.com/wmgeolab/geoBoundaries/raw/905b0ba/releaseData/gbHumanitarian/SLE/ADM3/geoBoundaries-SLE-ADM3_simplified.geojson"
