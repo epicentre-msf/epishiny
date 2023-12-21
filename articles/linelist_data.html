@@ -44,8 +44,8 @@
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <h6 class="dropdown-header" data-toc-skip>Use Cases</h6>
-    <a class="dropdown-item" href="../articles/linelist_data.html">Linelists</a>
+    <h6 class="dropdown-header" data-toc-skip>Data Types</h6>
+    <a class="dropdown-item" href="../articles/linelist_data.html">Individual Data (Linelists)</a>
     <a class="dropdown-item" href="../articles/aggregated_data.html">Aggregated Data</a>
     <div class="dropdown-divider"></div>
     <a class="dropdown-item" href="../articles/contributing.html">Contributing</a>
@@ -76,8 +76,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Using epishiny with linelist data</h1>
-                        <h4 data-toc-skip class="author">Sebastian
-Funk</h4>
+                        <h4 data-toc-skip class="author">Sebastian Funk,
+Paul Campbell</h4>
             
       
       <small class="dont-index">Source: <a href="https://github.com/epicentre-msf/epishiny/blob/HEAD/vignettes/articles/linelist_data.Rmd" class="external-link"><code>vignettes/articles/linelist_data.Rmd</code></a></small>
@@ -259,6 +259,11 @@ layer, we combine them in a list:</p>
 <span>  geo_data <span class="op">=</span> <span class="va">geo_data</span>,</span>
 <span>  group_vars <span class="op">=</span> <span class="va">group_vars</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="co"># only pass sex variable since district is already visualised on map</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>If you select the Chiefdom admin 3 level from the options dropdown
+menu you will see a warning meassage informing you that more that 50% of
+the cases could not be matched to the shapefile, so some matching of
+disparate place names would be required in this case. We won’t do that
+here but if you need help with this task check out our <a href="https://epicentre-msf.github.io/hmatch/" class="external-link">hmatch package</a>.</p>
 </div>
 <div class="section level3">
 <h3 id="time-module">Time module<a class="anchor" aria-label="anchor" href="#time-module"></a>
