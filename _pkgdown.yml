@@ -7,8 +7,8 @@ navbar:
    articles:
     text: Articles
     menu:
-    - text: Use Cases
-    - text: Linelists
+    - text: Data Types
+    - text: Individual Data (Linelists)
       href: articles/linelist_data.html
     - text: Aggregated Data 
       href: articles/aggregated_data.html

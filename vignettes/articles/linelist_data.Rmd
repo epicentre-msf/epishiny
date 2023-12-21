@@ -1,6 +1,6 @@
 ---
 title: "Using epishiny with linelist data"
-author: "Sebastian Funk"
+author: "Sebastian Funk, Paul Campbell"
 bibliography: references.bib
 nocite: '@*'
 link-citations: true
@@ -120,6 +120,11 @@ launch_module(
   group_vars = group_vars[1] # only pass sex variable since district is already visualised on map
 )
 ```
+
+If you select the Chiefdom admin 3 level from the options dropdown menu you will see a warning meassage informing
+you that more that 50% of the cases could not be matched to the shapefile, so some matching of disparate
+place names would be required in this case. We won't do that here but if you need help with this task check out
+our [hmatch package](https://epicentre-msf.github.io/hmatch/).
 
 ## Time module
 
