@@ -43,21 +43,28 @@ person_ui <- function(
       class = "d-flex justify-content-start align-items-center",
       tags$span(icon, title, class = "pe-2"),
       bslib::popover(
-        title = tags$span(shiny::icon("sliders"), opts_btn_lab),
         trigger = actionButton(
           ns("dropdown"),
           icon = shiny::icon("sliders"),
           label = opts_btn_lab,
-          class = "btn-sm"
+          class = "btn-sm btn-light"
         ),
-        selectInput(
-          ns("count_var"),
-          label = count_vars_lab,
-          choices = count_vars,
-          multiple = FALSE,
-          selectize = FALSE,
-          width = 200
-        )
+        # shinyWidgets::radioGroupButtons(
+        #   ns("cnt_pcnt"),
+        #   label = NULL,
+        #   choices = c("Counts" = "n", "Percents" = "n_prop"),
+        #   size = "sm",
+        #   status = "outline-dark"
+        # ),
+        if (length(count_vars)) {
+          shinyWidgets::radioGroupButtons(
+            ns("count_var"),
+            label = count_vars_lab,
+            choices = count_vars,
+            size = "sm",
+            status = "outline-dark"
+          )
+        }
       )
     ),
 
@@ -246,6 +253,10 @@ person_server <- function(
           x_levels <- levels(df_age_sex$age_group)
           x_levels <- x_levels[x_levels != getOption("epishiny.ns.label", "(Missing)")]
           xaxis <- list(categories = x_levels, reversed = FALSE, title = list(text = age_group_lab))
+          # value_lab <- paste(
+          #   get_label(input$count_var, count_vars),
+          #   ifelse(input$cnt_pcnt == "n", "", "%")
+          # )
 
           series <- df_age_sex %>%
             dplyr::group_by(.data$sex) %>%
@@ -291,7 +302,7 @@ person_server <- function(
               credits = list(enabled = FALSE)
             )
         }
-      }) %>% bindEvent(hc_dat())
+      }) %>% bindEvent(hc_dat(), input$cnt_pcnt, ignoreInit = TRUE)
 
       output$as_tbl <- gt::render_gt({
         # show loading spinner
@@ -369,8 +380,16 @@ hc_as_pyramid <- function(
     highcharter::hc_chart(type = "bar") %>%
     highcharter::hc_add_series_list(series) %>%
     highcharter::hc_plotOptions(
-      series = list(stacking = "normal"),
-      bar = list(groupPadding = 0.05, pointPadding = 0.05, borderWidth = 0.05)
+      bar = list(
+        stacking = "normal",
+        groupPadding = 0.05, 
+        pointPadding = 0.05, 
+        borderWidth = 0.05,
+        dataLabels = list(
+          enabled = FALSE,
+          formatter = highcharter::JS("function(){ return Math.abs(this.y); }")
+        )
+      )
     ) %>%
     highcharter::hc_yAxis(
       title = list(text = xlab),
@@ -390,8 +409,8 @@ hc_as_pyramid <- function(
       shared = FALSE,
       formatter = highcharter::JS(
         sprintf(
-          "function () { return '<b>' + this.series.name + ', age ' + this.point.category + '</b><br/>' + '%s: ' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}",
-          value_name,
+          "function () { return '<b>' + this.series.name + ', age ' + this.point.category + '</b><br/>' + Highcharts.numberFormat(Math.abs(this.point.y), %s)+'%s';}",
+          # value_name,
           value_digit,
           value_unit
         )
@@ -467,7 +486,11 @@ get_as_df <- function(
       )
   }
   df_age_sex <- df_age_sex %>%
-    dplyr::mutate(n = dplyr::if_else(.data$sex == male_level, -.data$n, .data$n)) %>% 
+    dplyr::mutate(
+      n_prop = (.data$n / sum(.data$n)) * 100,
+      n = dplyr::if_else(.data$sex == male_level, -.data$n, .data$n),
+      n_prop = dplyr::if_else(.data$sex == male_level, -.data$n_prop, .data$n_prop)
+    ) %>% 
     dplyr::filter(!is.na(.data$sex), !is.na(.data$age_group)) %>%
     dplyr::arrange(.data$sex, .data$age_group)
   

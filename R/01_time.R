@@ -82,7 +82,6 @@ time_ui <- function(
 
         # options button and dropdown menu
         bslib::popover(
-          title =  tags$span(shiny::icon("sliders"), opts_btn_lab),
           trigger = actionButton(
             ns("dropdown"),
             icon = shiny::icon("sliders"),
@@ -371,7 +370,7 @@ time_server <- function(
           highcharter::hc_chart(zoomType = "x", alignTicks = TRUE) %>%
           highcharter::hc_plotOptions(
             column = list(stacking = isolate(input$bar_stacking)),
-            series = list(cursor = "pointer", stickyTracking = FALSE, events = list(click = click_js))
+            series = list(cursor = "pointer", stickyTracking = TRUE, events = list(click = click_js))
           ) %>% 
           highcharter::hc_xAxis(
             title = list(text = date_lab),
@@ -392,7 +391,6 @@ time_server <- function(
             )
           ) %>%
           highcharter::hc_boost(enabled = TRUE) %>% 
-          # highcharter::hc_tooltip(shared = TRUE, pointFormat = stacked_tooltip) %>%
           my_hc_export(caption = isolate(filter_info_out()))
 
         if (isolate(input$date_interval == "week")) {

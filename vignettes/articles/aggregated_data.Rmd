@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 ```
 
 Epidemiological surveillance data is often reported in an aggregated form by ministries of health.
-A typical aggregation would be by a geographical and time unit, cases and deaths by health areaa and week for example.
+A typical aggregation would be by a geographical and time unit, cases and deaths by health area and week for example.
 
 You can use `epishiny` to visualise data in this form by declaring one or more `count_vars` in the data 
 (numeric columns containing the aggregation count totals).
@@ -42,7 +42,7 @@ glimpse(df_who_covid)
 ```{r geo-data}
 world_map <- ne_countries(scale = "small", type = "countries", returnclass = "sf") %>%
   st_transform(crs = 4326) %>%
-  select(iso_a2, name, pop_est)
+  select(iso_a2_eh, name, pop_est)
 
 # setup the geo layer for epishiny
 geo_data <- geo_layer(
@@ -50,7 +50,7 @@ geo_data <- geo_layer(
   sf = world_map,
   name_var = "name",
   pop_var = "pop_est",
-  join_by = c("iso_a2" = "Country_code")
+  join_by = c("iso_a2_eh" = "Country_code")
 )
 
 geo_data
@@ -86,7 +86,7 @@ launch_module(
 ## Launch place module
 
 ```{r place-module, eval=FALSE}
-# filter to data in ongoing here for more relevant attack rate estimates
+# filter to data in ongoing year for more relevant attack rate estimates
 map_data_filter <- df_who_covid %>% 
   filter(between(Date_reported, as.Date("2023-01-01"), as.Date("2023-12-31")))
 
@@ -100,7 +100,7 @@ launch_module(
 
 ## Launch person module
 
-Now the COVID-19 data has no age or sex variables so we can't use the person module, but for demonstation
+The COVID-19 data has no age or sex variables so we can't use the person module, but for demonstation
 purposes we will show this can also be used with an aggregated data set below.
 
 ```{r}

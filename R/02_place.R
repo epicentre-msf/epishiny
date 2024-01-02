@@ -85,7 +85,6 @@ place_ui <- function(
 
         # options button and dropdown menu
         bslib::popover(
-          title =  tags$span(shiny::icon("sliders"), opts_btn_lab),
           trigger = actionButton(
             ns("dropdown"),
             icon = shiny::icon("sliders"),

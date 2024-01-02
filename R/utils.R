@@ -76,13 +76,21 @@ epi_pals <- function() {
 #' @noRd
 setup_group_filter <- function(var, lab, ns, ...) {
   if (is.null(lab)) lab <- var
-  shinyWidgets::pickerInput(
+  # shinyWidgets::pickerInput(
+  #   inputId = ns(var),
+  #   label = lab,
+  #   choices = NULL,
+  #   selected = NULL,
+  #   options = picker_opts(...),
+  #   multiple = TRUE
+  # )
+  shiny::selectizeInput(
     inputId = ns(var),
     label = lab,
     choices = NULL,
     selected = NULL,
-    options = picker_opts(...),
-    multiple = TRUE
+    multiple = TRUE,
+    options = list(placeholder = "All", plugins = "remove_button")
   )
 }
 
@@ -96,7 +104,8 @@ update_group_filter <- function(session, var, df) {
     } else {
       stop("Grouping variables must be factor or character class")
     }
-    shinyWidgets::updatePickerInput(session, var, choices = choices)
+    # shinyWidgets::updatePickerInput(session, var, choices = choices)
+    shiny::updateSelectizeInput(session, var, choices = choices)
 }
  
 #' @noRd
