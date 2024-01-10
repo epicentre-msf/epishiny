@@ -317,7 +317,7 @@ time_server <- function(
             id = "n_bars",
             name = rv$n_lab
           ) %>% 
-          highcharter::hc_tooltip(shared = TRUE)
+            highcharter::hc_tooltip(shared = TRUE)
         } else {
           group_lab <- get_label(group, group_vars)
 
@@ -325,8 +325,11 @@ time_server <- function(
             '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'
           )
 
-          hc <-
-            highcharter::hchart(df, "column", highcharter::hcaes(!!date_sym, !!n_var, group = !!group_sym)) %>%
+          hc <- highcharter::hchart(
+            df,
+            "column",
+            highcharter::hcaes(!!date_sym, !!n_var, group = !!group_sym)
+          ) %>%
             highcharter::hc_legend(
               title = list(text = text_legend),
               layout = "vertical",
@@ -358,7 +361,6 @@ time_server <- function(
               zIndex = 1,
               from = highcharter::datetime_to_timestamp(pb_limits$from),
               to = highcharter::datetime_to_timestamp(pb_limits$to)
-              # label = list(text = "filter")
             )
           )
         } else {
@@ -612,7 +614,6 @@ time_server <- function(
                   zIndex = 1,
                   from = highcharter::datetime_to_timestamp(pb_limits$from),
                   to = highcharter::datetime_to_timestamp(pb_limits$to)
-                  # label = list(text = "filter")
                 )
               ))
             )

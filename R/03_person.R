@@ -144,6 +144,8 @@ person_server <- function(
         color = waiter::transparent(alpha = 0)
       )
 
+      age_labels <- reactiveVal(age_labels)
+
       df_prep <- reactive({
         df <- force_reactive(df) 
         df$sex <- df[[sex_var]]
@@ -164,6 +166,7 @@ person_server <- function(
           }
           df <- df %>% bin_ages(age_var, age_breaks, age_labels)
         } else {
+          # browser()
           # ensure age_group is a factor
           df$age_group <- df[[age_group_var]]
           if (!is.factor(df$age_group)) {
@@ -176,6 +179,9 @@ person_server <- function(
               getOption("epishiny.na.label", "(Missing)")
             )
           }
+          labs <- levels(df$age_group)
+          labs <- labs[labs != getOption("epishiny.na.label", "(Missing)")]
+          age_labels(labs)
         }
         df
       })
@@ -212,7 +218,7 @@ person_server <- function(
           male_level = male_level,
           female_level = female_level,
           age_breaks = age_breaks,
-          age_labels = age_labels
+          age_labels = age_labels()
         )
       })
 

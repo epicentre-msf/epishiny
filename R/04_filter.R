@@ -160,9 +160,9 @@ filter_server <- function(
 
       # also send back to main app to reset module click filters
       # if they have been applied
-      observe({
-        rv$filter_reset <- input$reset
-      })
+      # observe({
+      #   rv$filter_reset <- input$reset
+      # })
 
       # observe({
       #   date_range <- range(df_mod()[[date_var]], na.rm = TRUE)

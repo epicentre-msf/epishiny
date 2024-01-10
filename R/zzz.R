@@ -24,8 +24,8 @@
   hc_opts$plotOptions$column <- list(
     zIndex = 2,
     stacking = "normal",
-    groupPadding = 0.05,
-    pointPadding = 0.05,
+    groupPadding = 0.01,
+    pointPadding = 0.01,
     borderWidth = 1,
     borderColor = "white"
   )

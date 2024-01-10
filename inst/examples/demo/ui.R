@@ -78,5 +78,16 @@ ui <-tagList(
     )
   ),
   # start up loading spinner
-  waiter::waiter_preloader(html = waiter::spin_3())
+  waiter::waiter_preloader(
+    html = tagList(
+      tags$img(
+        src = "epishiny/img/epicentre_logo.png",
+        width = 600,
+        style = "padding: 20px;"
+      ),
+      tags$br(),
+      waiter::spin_3()
+    ),
+    color = "#FFFFFF"
+  )
 )
