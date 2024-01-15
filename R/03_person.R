@@ -164,7 +164,7 @@ person_server <- function(
           if (!is.numeric(df[[age_var]])) {
             cli::cli_abort("{.arg age_group} must be numeric. Use {.arg age_group} instead if ages have already been binned into groups.", call = NULL)
           }
-          df <- df %>% bin_ages(age_var, age_breaks, age_labels)
+          df <- df %>% bin_ages(age_var, age_breaks, age_labels())
         } else {
           # browser()
           # ensure age_group is a factor
