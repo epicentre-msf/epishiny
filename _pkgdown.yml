@@ -12,6 +12,8 @@ navbar:
       href: articles/linelist_data.html
     - text: Aggregated Data 
       href: articles/aggregated_data.html
+    - text: Case fatality risk
+      href: articles/cfr_module.html
     - text: -------
     - text: Contributing
       href: articles/contributing.html
