@@ -40,8 +40,8 @@ Imports:
     leaflet,
     leaflet.minicharts,
     chromote,
-    webshot2
-    cfr
+    webshot2,
+    cfr,
     stats
 Remotes:
     r-spatial/mapview
