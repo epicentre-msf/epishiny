@@ -41,23 +41,15 @@ library(dplyr)
 ## Importing aggregated COVID-19 data from WHO
 
 First import data and filter it for a single country, the U.K., and then filter for the first calendar year of the pandemic.
-
+"https://covid19.who.int/WHO-COVID-19-global-data.csv"
 ```{r covid-data-readin}
-df_who_covid <- read_csv("https://covid19.who.int/WHO-COVID-19-global-data.csv")
-
-glimpse(df_who_covid)
-
-# filter and rename columns
-df_covid_uk <- filter(
-  df_who_covid,
-  grepl("United Kingdom", Country),
-  between(Date_reported, as.Date("2020-01-01"), as.Date("2021-01-01"))
-) %>%
-  select(
-    date = Date_reported,
-    cases = New_cases,
-    deaths = New_deaths
+df_covid_uk <- cfr::covid_data %>%
+  filter(
+    country == "United Kingdom",
+    between(date, as.Date("2020-01-01"), as.Date("2021-01-01"))
   )
+
+glimpse(df_covid_uk)
 ```
 
 ## Launch the CFR module

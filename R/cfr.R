@@ -220,6 +220,28 @@ cfr_server <- function(id,
         ignoreNULL = FALSE
       )
 
+      # get static estimate for plot title
+      cfr_estimate_static <- bindEvent(
+        x = reactive(
+          cfr::cfr_static(
+            data = df,
+            delay_density = ddens(),
+            poisson_threshold = input$poisson_threshold
+          )
+        ),
+        input$go,
+        ignoreNULL = FALSE
+      )
+
+      # get flag for whether correction is applied
+      correction_applied <- bindEvent(
+        x = reactive(
+          !is.null(ddens())
+        ),
+        input$go,
+        ignoreNULL = FALSE
+      )
+
       # plot line label
       estimate_type <- reactive(
         switch(input$type,
@@ -263,6 +285,22 @@ cfr_server <- function(id,
               ) %>%
               highcharter::hc_tooltip(
                 shared = TRUE, sort = TRUE, valueDecimals = 3
+              ) %>%
+              highcharter::hc_title(
+                text = sprintf(
+                  "Overall (static) CFR estimate: %.3f, 95%% CI: %.3f — %.3f",
+                  cfr_estimate_static()$severity_mean,
+                  cfr_estimate_static()$severity_low,
+                  cfr_estimate_static()$severity_high
+                ),
+                margin = 20,
+                align = "left"
+              ) %>%
+              highcharter::hc_subtitle(
+                text = sprintf(
+                  "Delay correction %s",
+                  ifelse(correction_applied(), "applied", "not applied")
+                )
               ) %>%
               my_hc_export()
           ),
