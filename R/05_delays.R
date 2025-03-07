@@ -1,0 +1,139 @@
+# UI ----------------------------------------------------------------------
+delay_ui <- function(
+  id,
+  title = "Delays",
+  icon = bsicons::bs_icon("clock-history"),
+  opts_btn_lab = "Options",
+  full_screen = TRUE
+) {
+  ns <- shiny::NS(id)
+
+  # Check dependencies
+  pkg_deps <- c("highcharter", "gt", "bslib", "shinyWidgets")
+  if (!rlang::is_installed(pkg_deps)) {
+    rlang::check_installed(pkg_deps, reason = "to use the delay module.")
+  }
+
+  bslib::navset_card_tab(
+    wrapper = function(...) {
+      bslib::card_body(..., padding = 0, class = "delay-container")
+    },
+    full_screen = full_screen,
+    id = ns("tabs"),
+
+    title = tags$div(
+      class = "d-flex justify-content-start align-items-center",
+      tags$span(icon, title, class = "pe-2")
+    ),
+
+    # Tab for Barchart
+    bslib::nav_panel(
+      title = shiny::icon("bar-chart"),
+      tags$div(
+        class = "d-flex justify-content-between align-items-center",
+
+        selectInput(
+          ns("delays"),
+          label = "Select delay",
+          choices = NULL
+        ),
+
+        sliderInput(
+          ns("co_value"),
+          label = "Maximum delay",
+          min = 0,
+          max = 30,
+          value = 30,
+          step = 1
+        ),
+
+        # Checkbox to enable fitting distribution
+        checkboxInput(
+          ns("fit_dist"),
+          label = "Fit Distribution",
+          value = TRUE
+        ),
+
+        # Conditional selectInput for distribution choice
+        conditionalPanel(
+          condition = sprintf("input['%s']", ns("fit_dist")),
+          selectInput(
+            ns("which_dist"),
+            label = "Select Distribution",
+            choices = c("gamma", "weibull", "lnorm"),
+            selected = "gamma",
+            multiple = TRUE
+          )
+        )
+      ),
+
+      highcharter::highchartOutput(ns("delay_barchart"), height = "100%")
+    ),
+
+    # Tab for Timeline
+    bslib::nav_panel(
+      title = shiny::icon("clock"),
+      highcharter::highchartOutput(ns("delay_timeline"))
+    )
+  )
+}
+
+
+# SERVER ------------------------------------------------------------------
+# Define Server
+delay_server <- function(id, linelist, date_vars) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      ns <- session$ns
+
+      # calculate delays
+      delay_df <- reactive({
+        get_delay_df(linelist, date_vars)
+      })
+
+      # names of all delays
+      delay_choices <- reactive({
+        delay_df() |> select(contains("__")) |> names()
+      })
+
+      # Update delay choices
+      observeEvent(delay_df(), {
+        updateSelectInput(
+          session,
+          "delays",
+          choices = delay_choices()
+        )
+      })
+
+      # Plot barchart
+      output$delay_barchart <- renderHighchart({
+        plot_delay_bar(
+          delay_df(),
+          co_value = input$co_value,
+          input$delays,
+          fit_dist = input$fit_dist,
+          which_dist = input$which_dist,
+        )
+      })
+
+      # Plot Timeline
+      output$delay_timeline <- renderHighchart({
+        plot_delay_timeline(
+          delay_df = delay_df(),
+          statistic = "mean",
+          date_var_seq = c(
+            "date_onset",
+            "date_consultation",
+            "date_hospitalisation",
+            "date_outcome"
+          ),
+          co_value = 30,
+          group_var = NULL,
+          color_pal = c("#FFEDA0", "#FEB24C", "#F03B20"),
+          display_lab = TRUE
+        )
+      })
+    }
+  )
+}
