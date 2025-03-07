@@ -5,27 +5,23 @@ source("R/get_delay_df.R")
 source("R/plot_delay_bar.R")
 source("R/plot_delay_timeline.R")
 
-
-# Define a simple test app
 ui <- fluidPage(
   delay_ui(id = "delay_module")
 )
 
 server <- function(input, output, session) {
-  date_vars <- c(
-    "date_onset",
-    "date_consultation",
-    "date_admission",
-    "date_outcome"
+  date_variables <- c(
+    "Onset" = "date_onset",
+    "Consultation" = "date_consultation",
+    "Admission" = "date_admission",
+    "Outcome" = "date_outcome"
   )
 
-  # Sample delay data (replace with actual data)
   linelist <- reactive({
     episimdata::moissala_linelist_clean_EN
   })
 
-  # Call the delay module
-  delay_server(id = "delay_module", linelist(), date_vars = date_vars)
+  delay_server(id = "delay_module", linelist(), date_vars = date_variables)
 }
 
 shinyApp(ui = ui, server = server)

@@ -315,22 +315,21 @@ plot_delay_bar <- function(
   return(hc)
 }
 
-
 # TEST ZONE ---------------------------------------------------------------
 
-linelist <- episimdata::moissala_linelist_clean_EN
-date_vars <- c(
-  "date_onset",
-  "date_consultation",
-  "date_admission",
-  "date_outcome"
-)
-
-# calculate delays
-delay_df <- get_delay_df(linelist, date_vars)
-
-plot_delay_bar(
-  delay_df,
-  "date_consultation__date_admission",
-  fit_dist = TRUE
-)
+# linelist <- episimdata::moissala_linelist_clean_EN
+# date_vars <- c(
+#   "date_onset",
+#   "date_consultation",
+#   "date_admission",
+#   "date_outcome"
+# )
+#
+# # calculate delays
+# delay_df <- get_delay_df(linelist, date_vars)
+#
+# plot_delay_bar(
+#   delay_df,
+#   "date_consultation__date_admission",
+#   fit_dist = TRUE
+# )

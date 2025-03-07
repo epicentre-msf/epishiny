@@ -229,7 +229,6 @@ plot_delay_timeline <- function(
     select(event, event_lab, start, position)
 
   # special case for the last event
-
   n_position <- length(unique(xrange_final$position))
 
   last_event_df <- tibble(
@@ -353,3 +352,23 @@ plot_delay_timeline <- function(
     )
   return(hc)
 }
+
+# TEST ZONE ========================================================================================================================
+# linelist <- episimdata::moissala_linelist_clean_EN
+#
+# date_vars <- c(
+#   "date_onset",
+#   "date_consultation",
+#   "date_admission",
+#   "date_outcome"
+# )
+#
+# # calculate delays
+# delay_df <- get_delay_df(linelist, date_vars)
+#
+# plot_delay_timeline(
+#   delay_df,
+#   date_var_seq = date_vars,
+#   co_value = 30,
+#   statistic = "mean"
+# )
