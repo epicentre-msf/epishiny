@@ -9,7 +9,9 @@ source("R/plot_delay_bar.R")
 source("R/plot_delay_timeline.R")
 source("R/utils.R")
 
-ui <- fluidPage(
+
+ui <- bslib::page_fluid(
+  use_epishiny(),
   delay_ui(id = "delay_module"),
   person_ui(id = "person_module")
 )

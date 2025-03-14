@@ -2,7 +2,7 @@
 delay_ui <- function(
   id,
   title = "Delays",
-  icon = bsicons::bs_icon("clock-history"),
+  icon = bsicons::bs_icon("hourglass-split"),
   opts_btn_lab = "Options",
   full_screen = TRUE
 ) {
@@ -22,30 +22,19 @@ delay_ui <- function(
 
     title = tags$div(
       class = "d-flex justify-content-start align-items-center",
-      tags$span(icon, title, class = "pe-2")
-    ),
-
-    # Tab for Barchart
-    bslib::nav_panel(
-      title = shiny::icon("bar-chart"),
-      tags$div(
-        class = "d-flex justify-content-between align-items-center",
-        selectInput(
-          ns("delays"),
-          label = "Select delay",
-          choices = NULL
+      tags$span(icon, title, class = "pe-2"),
+      bslib::popover(
+        trigger = actionButton(
+          ns("dropdown"),
+          icon = shiny::icon("sliders"),
+          label = opts_btn_lab,
+          class = "btn-sm btn-light"
         ),
         selectInput(
           ns("group_var"),
           label = "Select grouping variable",
           choices = NULL
         ),
-        checkboxGroupInput(
-          inputId = ns("show_stat"),
-          label = "Select statistics to display:",
-          choices = c("Mean" = "mean", "Median" = "median"),
-          selected = c("mean", "median")
-        ),
         sliderInput(
           ns("co_value"),
           label = "Maximum delay",
@@ -54,59 +43,70 @@ delay_ui <- function(
           value = 30,
           step = 1
         ),
-        checkboxInput(
-          ns("fit_dist"),
-          label = "Fit Distribution",
-          value = TRUE
-        ),
-        conditionalPanel(
-          condition = sprintf("input['%s']", ns("fit_dist")),
+        div(
+          id = ns("bar_inputs"),
           selectInput(
-            ns("which_dist"),
-            label = "Select Distribution",
-            choices = c("gamma", "weibull", "lnorm"),
-            selected = "gamma",
+            ns("delays"),
+            label = "Select delay",
+            choices = NULL
+          ),
+          checkboxGroupInput(
+            inputId = ns("show_stat"),
+            label = "Select statistics to display:",
+            choices = c("Mean" = "mean", "Median" = "median"),
+            selected = c("mean", "median")
+          ),
+          checkboxInput(
+            ns("fit_dist"),
+            label = "Fit Distribution",
+            value = TRUE
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s']", ns("fit_dist")),
+            selectInput(
+              ns("which_dist"),
+              label = "Select Distribution",
+              choices = c("gamma", "weibull", "lnorm"),
+              selected = "gamma",
+              multiple = TRUE
+            )
+          )
+        ),
+
+        div(
+          id = ns("timeline_inputs"),
+          selectInput(
+            ns("dates"),
+            label = "Select events",
+            choices = NULL,
             multiple = TRUE
+          ),
+
+          radioButtons(
+            inputId = ns("mean_median"),
+            label = "Select Statistic",
+            choices = c("Mean" = "mean", "Median" = "median"),
+            selected = "mean",
+            inline = TRUE
+          ),
+          checkboxInput(
+            ns("display_lab"),
+            label = "Display labels",
+            value = TRUE
           )
         )
-      ),
+      )
+    ),
 
+    bslib::nav_panel(
+      title = shiny::icon("bar-chart"),
+      value = "bar_nav",
       highcharter::highchartOutput(ns("delay_barchart"), height = "100%")
     ),
 
-    # Tab for Timeline
     bslib::nav_panel(
       title = shiny::icon("clock"),
-      tags$div(
-        class = "d-flex justify-content-between align-items-center",
-
-        selectInput(
-          ns("dates"),
-          label = "Select events",
-          choices = NULL,
-          multiple = TRUE
-        ),
-        radioButtons(
-          inputId = ns("mean_median"),
-          label = "Select Statistic",
-          choices = c("Mean" = "mean", "Median" = "median"),
-          selected = "mean",
-          inline = TRUE
-        ),
-        sliderInput(
-          ns("co_value"),
-          label = "Maximum delay",
-          min = 0,
-          max = 30,
-          value = 30,
-          step = 1
-        ),
-        checkboxInput(
-          ns("display_lab"),
-          label = "Display labels",
-          value = TRUE
-        )
-      ),
+      value = "timeline_nav",
       highcharter::highchartOutput(ns("delay_timeline"))
     )
   )
@@ -119,6 +119,17 @@ delay_server <- function(id, linelist, date_vars, group_vars) {
     id,
     function(input, output, session) {
       ns <- session$ns
+
+      observe({
+        shinyjs::toggle("bar_inputs", condition = input$tabs == "bar_nav")
+      })
+
+      observe({
+        shinyjs::toggle(
+          "timeline_inputs",
+          condition = input$tabs == "timeline_nav"
+        )
+      })
 
       # names of all delays
       delay_choices <- reactive({
@@ -144,23 +155,14 @@ delay_server <- function(id, linelist, date_vars, group_vars) {
         )
       })
 
-      observeEvent(group_vars, {
-        updateSelectInput(
-          session,
-          "group_var_timeline",
-          choices = c("None" = "none", group_vars),
-          selected = "none"
-        )
-      })
-
-      group_var_value <- reactive({
+      group_var <- reactive({
         if (input$group_var == "none") NULL else input$group_var
       })
 
       # calculate delays
       delay_df <- reactive({
         req(input$group_var)
-        get_delay_df(linelist, date_vars, group_var = group_var_value())
+        get_delay_df(linelist, date_vars, group_var = group_var())
       })
 
       # Plot barchart
@@ -173,7 +175,7 @@ delay_server <- function(id, linelist, date_vars, group_vars) {
           input$delays,
           fit_dist = input$fit_dist,
           which_dist = input$which_dist,
-          group_var = group_var_value(),
+          group_var = group_var(),
           show_stat = input$show_stat
         )
       })
@@ -203,7 +205,7 @@ delay_server <- function(id, linelist, date_vars, group_vars) {
           date_var_seq = choice_dates(),
           co_value = input$co_value,
           display_lab = input$display_lab,
-          group_var = group_var_value()
+          group_var = group_var()
         )
       })
     }
