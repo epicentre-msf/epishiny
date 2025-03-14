@@ -48,3 +48,20 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server)
+
+
+linelist <- episimdata::moissala_linelist_clean_EN
+group_variables <- c("Sex" = "sex", "Age group" = "age_group")
+date_variables <- c(
+  "Onset" = "date_onset",
+  "Consultation" = "date_consultation",
+  "Admission" = "date_admission",
+  "Outcome" = "date_outcome"
+)
+
+launch_module(
+  "delay",
+  linelist,
+  date_vars = date_variables,
+  group_vars = group_variables
+)

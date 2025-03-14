@@ -50,8 +50,9 @@ delay_ui <- function(
             label = "Select delay",
             choices = NULL
           ),
-          checkboxGroupInput(
+          shinyWidgets::checkboxGroupButtons(
             inputId = ns("show_stat"),
+            size = "xs",
             label = "Select statistics to display:",
             choices = c("Mean" = "mean", "Median" = "median"),
             selected = c("mean", "median")
