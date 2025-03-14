@@ -1,4 +1,25 @@
-# UI ----------------------------------------------------------------------
+#' Delay Module UI
+#'
+#' Creates the UI components for the delay visualization module, including
+#' distribution of delays, and mean/median time between key events.
+#'
+#' @rdname delay
+#'
+#' @param id Module ID, must be the same in both the UI and server function to link the two.
+#' @param title Title of the module (default: "Delays").
+#' @param icon A Bootstrap icon for the module header (default: hourglass-split).
+#' @param opts_btn_lab Label for the options button (default: "Options").
+#' @param full_screen Logical, whether to allow fullscreen mode (default: TRUE).
+#'
+#' @return A Shiny UI object containing navigation panels for a bar chart and timeline visualization.
+#'
+#' @importFrom shiny NS selectInput sliderInput checkboxInput conditionalPanel radioButtons actionButton updateSelectInput
+#' @importFrom bslib navset_card_tab nav_panel card_body popover
+#' @importFrom highcharter highchartOutput
+#' @importFrom bsicons bs_icon
+#' @importFrom shinyWidgets checkboxGroupButtons
+#'
+#' @export
 delay_ui <- function(
   id,
   title = "Delays",
@@ -113,8 +134,23 @@ delay_ui <- function(
   )
 }
 
-# SERVER ------------------------------------------------------------------
-# Define Server
+#' Delay Module Server
+#'
+#' Manages the server-side logic for the delay visualization module, handling
+#' user interactions, data transformations, and plotting.
+#'
+#' @param id  Module ID, must be the same in both the UI and server function to link the two.
+#' @param linelist Linelist containing the event data.
+#' @param date_vars A vector of date-related variable names for event selection, in the chronological order. If named vector then names are used in selection/display
+#' @param group_vars A vector of categorical variables available for grouping.
+#'
+#' @return A Shiny module server function that generates reactive plots and updates UI elements.
+#'
+#' @importFrom shiny moduleServer observeEvent updateSelectInput reactive req renderHighchart
+#' @importFrom highcharter renderHighchart
+#' @importFrom shinyjs toggle
+#'
+#' @export
 delay_server <- function(id, linelist, date_vars, group_vars) {
   shiny::moduleServer(
     id,
