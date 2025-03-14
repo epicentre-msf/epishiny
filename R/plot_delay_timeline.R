@@ -47,7 +47,6 @@ plot_delay_timeline <- function(
   date_var_seq,
   co_value,
   group_var = NULL,
-  color_pal = c("#FFEDA0", "#FEB24C", "#F03B20"),
   display_lab = TRUE
 ) {
   max <- length(date_var_seq)
@@ -205,55 +204,48 @@ plot_delay_timeline <- function(
       filter(stat == statistic)
   }
 
-  # Create a Df of event points to be plotted
+  # Create a df of the events to be plotted as scatter and labels
   last_event <- names(tail(date_var_seq, 1))
 
-  events_df <- tibble(
-    event = date_var_seq,
-    event_lab = names(date_var_seq),
-    row.names = NULL
-  ) |>
-    left_join(
-      distinct(xrange_final, first, end, start, position),
-      by = c("event_lab" = "first")
-    ) |>
-
+  events_df <- xrange_final |>
+    select(any_of(c(
+      "first",
+      "second",
+      "start",
+      "end",
+      "graph_value",
+      "group",
+      "position"
+    ))) |>
     mutate(
-      start = if_else(
-        event_lab == last_event,
-        max(end, na.rm = TRUE),
-        start
-      )
+      event = map(first, ~.x),
+      event_2 = map2(first, second, ~ c(.x, .y)),
+      event_final = if_else(second == last_event, event_2, event)
     ) |>
-    filter(event_lab != last_event) |>
-    select(event, event_lab, start, position)
+    unnest(event_final) |>
 
-  # special case for the last event
-  n_position <- length(unique(xrange_final$position))
-
-  last_event_df <- tibble(
-    event = tail(date_var_seq, 1),
-    event_lab = last_event,
-    start = max(xrange_final$end, na.rm = TRUE)
-  ) |>
-    slice(rep(1, n_position)) |>
-    mutate(position = c(seq(0, to = max(xrange_final$position))))
-
-  # bind last event back
-  events_df <- events_df |> bind_rows(last_event_df)
+    mutate(x = if_else(event_final == last_event, end, start)) |>
+    select(event_final, x, position)
 
   if (!is.null(group_var)) {
     group_cat <- levels(xrange_final[xrange_final$stat == statistic, ]$group)
   }
 
   # PLOT TIMELINE ======================================================================================================================
-  if (length(color_pal) != length(steps)) {
-    stop(
-      "color_pal must have the same length as the number of intervals (ie: if 3 dates provided, number of interval is 2"
-    )
-  }
 
   # color palette
+  generate_palette <- function(n) {
+    # Choose a palette from RColorBrewer
+    palette <- RColorBrewer::brewer.pal(n, "Set1") # You can choose from other palettes like "Set3", "Paired", etc.
+    return(palette)
+  }
+
+  color_pal <- suppressWarnings(generate_palette(length(steps)))
+
+  if (length(steps) == 2) {
+    color_pal <- color_pal[-1]
+  }
+
   val_col <- data.frame(value = unique(xrange_final$first), col = color_pal)
 
   xrange_final$color <- val_col$col[match(xrange_final$first, val_col$value)]
@@ -275,7 +267,7 @@ plot_delay_timeline <- function(
       "scatter",
       name = "event",
       data = events_df,
-      hcaes(x = start, y = position),
+      hcaes(x = x, y = position),
       color = "darkred",
       showInLegend = FALSE,
       enableMouseTracking = FALSE
@@ -284,7 +276,7 @@ plot_delay_timeline <- function(
     hc_xAxis(
       visible = FALSE,
       #extend the limit of the x axis to display the last event label
-      max = max(events_df$start) + 1
+      max = max(events_df$x) + 1
     ) |>
 
     hc_yAxis(
@@ -308,7 +300,7 @@ plot_delay_timeline <- function(
 
           formatter = JS(
             "function(){
-          outHTML =  this.point.event_lab
+          outHTML =  this.point.event_final
           return(outHTML) }"
           ),
 
@@ -357,18 +349,19 @@ plot_delay_timeline <- function(
 # linelist <- episimdata::moissala_linelist_clean_EN
 #
 # date_vars <- c(
-#   "date_onset",
-#   "date_consultation",
-#   "date_admission",
-#   "date_outcome"
+#   "Onset" = "date_onset",
+#   "Consultation" = "date_consultation",
+#   "Admission" = "date_admission",
+#   "Outcome" = "date_outcome"
 # )
 #
 # # calculate delays
-# delay_df <- get_delay_df(linelist, date_vars)
+# delay_df <- get_delay_df(linelist, date_vars, "age_group")
 #
 # plot_delay_timeline(
 #   delay_df,
 #   date_var_seq = date_vars,
 #   co_value = 30,
-#   statistic = "mean"
+#   statistic = "mean",
+#   group_var = "age_group"
 # )

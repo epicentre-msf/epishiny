@@ -35,6 +35,17 @@ delay_ui <- function(
           label = "Select delay",
           choices = NULL
         ),
+        selectInput(
+          ns("group_var"),
+          label = "Select grouping variable",
+          choices = NULL
+        ),
+        checkboxGroupInput(
+          inputId = ns("show_stat"),
+          label = "Select statistics to display:",
+          choices = c("Mean" = "mean", "Median" = "median"),
+          selected = c("mean", "median")
+        ),
         sliderInput(
           ns("co_value"),
           label = "Maximum delay",
@@ -94,7 +105,7 @@ delay_ui <- function(
           ns("display_lab"),
           label = "Display labels",
           value = TRUE
-        ),
+        )
       ),
       highcharter::highchartOutput(ns("delay_timeline"))
     )
@@ -103,16 +114,11 @@ delay_ui <- function(
 
 # SERVER ------------------------------------------------------------------
 # Define Server
-delay_server <- function(id, linelist, date_vars) {
+delay_server <- function(id, linelist, date_vars, group_vars) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
-
-      # calculate delays
-      delay_df <- reactive({
-        get_delay_df(linelist, date_vars)
-      })
 
       # names of all delays
       delay_choices <- reactive({
@@ -128,6 +134,35 @@ delay_server <- function(id, linelist, date_vars) {
         )
       })
 
+      # Update group variables choices
+      observeEvent(group_vars, {
+        updateSelectInput(
+          session,
+          "group_var",
+          choices = c("None" = "none", group_vars),
+          selected = "none"
+        )
+      })
+
+      observeEvent(group_vars, {
+        updateSelectInput(
+          session,
+          "group_var_timeline",
+          choices = c("None" = "none", group_vars),
+          selected = "none"
+        )
+      })
+
+      group_var_value <- reactive({
+        if (input$group_var == "none") NULL else input$group_var
+      })
+
+      # calculate delays
+      delay_df <- reactive({
+        req(input$group_var)
+        get_delay_df(linelist, date_vars, group_var = group_var_value())
+      })
+
       # Plot barchart
       output$delay_barchart <- renderHighchart({
         req(input$delays)
@@ -138,6 +173,8 @@ delay_server <- function(id, linelist, date_vars) {
           input$delays,
           fit_dist = input$fit_dist,
           which_dist = input$which_dist,
+          group_var = group_var_value(),
+          show_stat = input$show_stat
         )
       })
 
@@ -165,9 +202,8 @@ delay_server <- function(id, linelist, date_vars) {
           statistic = input$mean_median,
           date_var_seq = choice_dates(),
           co_value = input$co_value,
-          group_var = NULL,
-          color_pal = c("#FFEDA0", "#FEB24C", "#F03B20"),
-          display_lab = input$display_lab
+          display_lab = input$display_lab,
+          group_var = group_var_value()
         )
       })
     }

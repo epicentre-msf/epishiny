@@ -44,7 +44,8 @@ plot_delay_bar <- function(
   co_value = 30,
   group_var = NULL,
   fit_dist = FALSE,
-  which_dist = c("gamma", "weibull", "lnorm")
+  which_dist = c("gamma", "weibull", "lnorm"),
+  show_stat = c("mean", "median")
 ) {
   if (length(group_var) > 1) {
     stop("Please provide only one group variable")
@@ -226,7 +227,7 @@ plot_delay_bar <- function(
       hc_chart(type = "column", zoomtype = "x") |>
       hc_add_series(
         data = hc_df,
-        hcaes(x = timespan, y = n),
+        hcaes(x = as.factor(timespan), y = n),
         name = "count",
         type = "column"
       ) |>
@@ -240,7 +241,7 @@ plot_delay_bar <- function(
       hc_chart(type = "column", zoomtype = "x") |>
       hc_add_series(
         data = hc_df,
-        hcaes(x = timespan, y = n, group = !!group_var_sym),
+        hcaes(x = as.factor(timespan), y = n, group = !!group_var_sym),
         type = "column",
         stacking = "normal"
       ) |>
@@ -275,18 +276,31 @@ plot_delay_bar <- function(
       )
   }
 
-  hc <- hc |>
+  # Stat line ?
+  stat_line <- list()
 
-    hc_xAxis(
-      title = list(text = "Delay (days)"),
-      allowDecimals = FALSE,
-      plotLines = list(
+  if ("mean" %in% show_stat) {
+    stat_line <- append(
+      stat_line,
+      list(
         list(
           color = "red",
           zIndex = 1,
           value = stat_df$mean,
-          label = list(text = "Mean", verticalAlign = "top", textAlign = "left")
-        ),
+          label = list(
+            text = "Mean",
+            verticalAlign = "top",
+            textAlign = "left"
+          )
+        )
+      )
+    )
+  }
+
+  if ("median" %in% show_stat) {
+    stat_line <- append(
+      stat_line,
+      list(
         list(
           color = "red",
           zIndex = 1,
@@ -298,10 +312,26 @@ plot_delay_bar <- function(
           )
         )
       )
+    )
+  }
+
+  hc <- hc |>
+
+    hc_xAxis(type = "category") |> # Ensures bars align properly
+
+    hc_xAxis(
+      title = list(text = "Delay (days)"),
+      allowDecimals = FALSE,
+      # Show stat line
+      plotLines = stat_line
     ) |>
+
     hc_plotOptions(
       column = list(
-        pointWidth = 60
+        pointPadding = 0, # No spacing within individual bars
+        groupPadding = 0, # No spacing between different bars
+        borderWidth = 0, # Keeps visible separation between bars
+        shadow = FALSE
       )
     ) |>
 
@@ -316,7 +346,7 @@ plot_delay_bar <- function(
 }
 
 # TEST ZONE ---------------------------------------------------------------
-
+#
 # linelist <- episimdata::moissala_linelist_clean_EN
 # date_vars <- c(
 #   "date_onset",
@@ -326,10 +356,10 @@ plot_delay_bar <- function(
 # )
 #
 # # calculate delays
-# delay_df <- get_delay_df(linelist, date_vars)
+# delay_df <- get_delay_df(linelist, date_vars, "sex")
 #
 # plot_delay_bar(
 #   delay_df,
-#   "date_consultation__date_admission",
+#   "date_onset__date_outcome",
 #   fit_dist = TRUE
 # )
