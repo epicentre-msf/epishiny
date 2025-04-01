@@ -1,63 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/404.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/articles/aggregated_data.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/articles/contributing.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/articles/epishiny.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/articles/linelist_data.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/index.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/df_ll.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/filter.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/geo_layer.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/launch_demo_dashboard.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/launch_module.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/person.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/place.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/sf_yem.html</loc>
-  </url>
-  <url>
-    <loc>https://epicentre-msf.github.io/epishiny/reference/time.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://epicentre-msf.github.io/epishiny/404.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/LICENSE-text.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/LICENSE.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/articles/aggregated_data.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/articles/contributing.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/articles/epishiny.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/articles/index.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/articles/linelist_data.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/authors.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/index.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/df_ll.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/filter.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/geo_layer.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/index.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/launch_demo_dashboard.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/launch_module.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/person.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/place.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/sf_yem.html</loc></url>
+<url><loc>https://epicentre-msf.github.io/epishiny/reference/time.html</loc></url>
 </urlset>
+
