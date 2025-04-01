@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# epishiny
+# epishiny <a href="https://epicentre-msf.github.io/epishiny/"><img src="man/figures/logo.png" align="right" height="138" alt="epishiny website" /></a>
 
 <!-- badges: start -->
 
