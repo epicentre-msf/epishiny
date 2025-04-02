@@ -1,0 +1,89 @@
+---
+title: "Using the CFR module"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the CFR module}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+A common and important use case in outbreak response is determining the severity of the disease.
+The **case fatality risk** (CFR) is a standard measure of severity that is easily communicated to policymakers.
+
+The CFR module enables the visualisation of the outbreak's CFR using the [_cfr_ package](https://cran.r-project.org/package=cfr) developed at the London School of Hygiene and Tropical Medicine as part of the [Epiverse TRACE initiative](https://epiverse-trace.github.io/).
+
+The _cfr_ package (and the CFR module) allow correcting for delays in reporting between cases and their outcomes (i.e., deaths) being known.
+
+::: {.alert .alert-info}
+**New to calculating disease severity while correcting for reporting delays?** It may be useful to read a [vignette on getting started with CFR calculations](https://epiverse-trace.github.io/cfr/articles/cfr.html) from the _cfr_ package.
+See especially the [section on how reporting delays can bias CFR estimates](https://epiverse-trace.github.io/cfr/articles/cfr.html#concept-how-reporting-delays-bias-cfr-estimates).
+:::
+
+::: {.alert .alert-warning}
+**Note that** the CFR module currently only supports aggregated daily data of cases and deaths, and does not support grouping within the data.
+:::
+
+```{r setup, message=FALSE}
+library(epishiny)
+
+# libraries for data wrangling
+library(readr)
+library(dplyr)
+```
+
+## Importing aggregated COVID-19 data from WHO
+
+First import data and filter it for a single country, the U.K., and then filter for the first calendar year of the pandemic.
+"https://covid19.who.int/WHO-COVID-19-global-data.csv"
+```{r covid-data-readin}
+df_covid_uk <- cfr::covid_data %>%
+  filter(
+    country == "United Kingdom",
+    between(date, as.Date("2020-01-01"), as.Date("2021-01-01"))
+  )
+
+glimpse(df_covid_uk)
+```
+
+## Launch the CFR module
+
+The next step is simply to launch the CFR module using `launch_module()`, specifying the module name and passing the daily case and death data as `df`.
+
+```{r launch-cfr-module, eval=FALSE}
+launch_module(
+  module = "cfr",
+  df = df_covid_uk
+)
+```
+
+The module cannot be shown live in this vignette but should run from the code shown.
+Note how the CFR estimates at the start of the outbreak have very large confidence intervals due to the quality of the data.
+
+## CFR module options
+
+The CFR module offers two main options:
+
+- Whether to show an expanding window of CFR estimates or time-varying CFR estimates,
+- Whether to apply a correction for reporting delays, and which distribution to use for these delays.
+
+### Expanding window vs time-varying CFR
+
+- The option `"Rolling"` is suitable for understanding how the addition of new data has changed the CFR estimate. It works by using the function `cfr::cfr_rolling()`, which calculates the CFR for each day in the data, using cases and deaths known up to that day. The final value of the 'rolling' CFR is the overall CFR of the outbreak. The rolling CFR is expected to stabilise as the outbreak progresses.
+
+- The option `"Time-varying"` is suitable for longer outbreaks for which factors such as changing case definitions, changes to testing capacity, the emergence of new pathogen variants, or the rollout of immunisation or other therapeutics changes the severity of the disease. This option works by using `cfr::cfr_time_varying()`, with the option of a smoothing window to account for reporting artefacts, and a burn in period for which data is ignored.
+
+### Correcting for delays
+
+The CFR module allows for delay correction using _cfr_ package functionality.
+Delays in the outcomes of cases being known can bias CFR estimates that simply divide the number of deaths by the number of cases.
+This can be corrected for if the distribution of the duration between case reporting and outcomes (deaths) is known.
+
+The CFR module currently supports applying delay correction using three distributions: the normal, Gamma, and log-normal distributions.
+The choice of distributions is shown upon checking the `"Correct for delays?"` box in the module options.

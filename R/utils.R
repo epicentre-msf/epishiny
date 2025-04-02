@@ -221,6 +221,7 @@ my_hc_export <- function(
   subtitle <- set_hc_val(subtitle, hc$x$hc_opts$subtitle$text)
   colors <- set_hc_val(colors, hc$x$hc_opts$colors)
   credits <- set_hc_val(credits, hc$x$hc_opts$credits$text)
+  caption <- set_hc_val(caption, hc$x$hc_opts$caption$text)
   show_credits <- ifelse(length(credits), TRUE, FALSE)
   show_caption <- ifelse(length(caption), TRUE, FALSE)
 
