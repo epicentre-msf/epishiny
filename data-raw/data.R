@@ -3,7 +3,7 @@ library(tidyverse)
 library(fs)
 
 # Yemen admin 1 and 2
-dir_geo <- max(dir_ls("~/Library/CloudStorage/OneDrive-SharedLibraries-MSF/OutbreakTools - GeoBase/YEM"))
+dir_geo <- max(dir_ls(path(Sys.getenv("SHAREPOINT_PATH"), "OutbreakTools - GeoBase", "YEM")))
 
 sf_yem <-
   dir_ls(path(dir_geo, "sf"), regexp = "adm[1-2]") %>%
@@ -37,7 +37,7 @@ bin_ages <- function(
   )
 }
 
-df_ll <- df_ll_raw %>%
+df_ll_measles <- df_ll_raw %>%
   left_join(
     sf::st_drop_geometry(sf_yem$adm1) %>% select(adm1_name, adm1_pcode = pcode),
     by = c("adm1_origin" = "adm1_name")
@@ -83,4 +83,4 @@ df_ll <- df_ll_raw %>%
     death_cause
   )
 
-usethis::use_data(df_ll, sf_yem, overwrite = TRUE)
+usethis::use_data(df_ll_measles, sf_yem, overwrite = TRUE)

@@ -25,10 +25,9 @@ person_server(
   age_var = NULL,
   count_vars = NULL,
   age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
-  age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
+  age_labels = label_breaks(age_breaks, lab_accuracy = 1),
   age_var_lab = "Age (years)",
   age_group_lab = "Age group",
-  n_lab = "N patients",
   colours = c("#19a0aa", "#f15f36"),
   filter_info = shiny::reactiveVal(),
   time_filter = shiny::reactiveVal(),
@@ -72,8 +71,6 @@ If ages have already been binned into groups, use \code{age_group_var} instead.}
 \item{age_var_lab}{The label for the age variable.}
 
 \item{age_group_lab}{The label for the age group variable.}
-
-\item{n_lab}{The label for the raw count variable.}
 
 \item{colours}{Vector of 2 colours to represent male and female, respectively.}
 

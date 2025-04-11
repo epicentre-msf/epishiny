@@ -1,4 +1,3 @@
-
 #' Person module
 #'
 #' Visualise age and sex demographics in a population pyramid chart and summary table.
@@ -18,14 +17,14 @@
 #' @export
 #' @example inst/examples/docs/app.R
 person_ui <- function(
-    id,
-    count_vars = NULL,
-    title = "Person",
-    icon = bsicons::bs_icon("people-fill"),
-    opts_btn_lab = "options",
-    count_vars_lab = "Indicator",
-    full_screen = TRUE
-) { 
+  id,
+  count_vars = NULL,
+  title = "Person",
+  icon = bsicons::bs_icon("people-fill"),
+  opts_btn_lab = "options",
+  count_vars_lab = "Indicator",
+  full_screen = TRUE
+) {
   ns <- shiny::NS(id)
 
   # check deps are installed
@@ -35,7 +34,9 @@ person_ui <- function(
   }
 
   bslib::navset_card_tab(
-    wrapper = function(...) {bslib::card_body(..., padding = 0, class = "person-container")}, 
+    wrapper = function(...) {
+      bslib::card_body(..., padding = 0, class = "person-container")
+    },
     full_screen = full_screen,
     id = ns("tabs"),
 
@@ -47,7 +48,7 @@ person_ui <- function(
           ns("dropdown"),
           icon = shiny::icon("sliders"),
           label = opts_btn_lab,
-          class = "btn-sm btn-light"
+          class = "btn-sm btn-link"
         ),
         # shinyWidgets::radioGroupButtons(
         #   ns("cnt_pcnt"),
@@ -69,11 +70,11 @@ person_ui <- function(
     ),
 
     bslib::nav_panel(
-      title = shiny::icon("chart-bar"),
+      title = shiny::icon("chart-bar") |> bslib::tooltip("Chart"),
       highcharter::highchartOutput(ns("as_pyramid"))
     ),
     bslib::nav_panel(
-      title = bsicons::bs_icon("table"),
+      title = bsicons::bs_icon("table") |> bslib::tooltip("Table"),
       tags$div(
         id = ns("as_tbl_container"),
         style = "min-height: 300px;",
@@ -81,13 +82,12 @@ person_ui <- function(
       )
     )
   )
-
 }
 
 #' @param df Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.
-#' @param age_var The name of a numeric age variable in the data. 
+#' @param age_var The name of a numeric age variable in the data.
 #'  If ages have already been binned into groups, use `age_group_var` instead.
-#' @param age_group_var The name of a character/factor variable in the data with age groups. 
+#' @param age_group_var The name of a character/factor variable in the data with age groups.
 #'  If specified, `age_var` is ignored.
 #' @param sex_var The name of the sex variable in the data.
 #' @param male_level The level representing males in the sex variable.
@@ -96,36 +96,35 @@ person_ui <- function(
 #' @param age_labels Labels corresponding to the age breaks.
 #' @param age_var_lab The label for the age variable.
 #' @param age_group_lab The label for the age group variable.
-#' @param n_lab The label for the raw count variable.
 #' @param colours Vector of 2 colours to represent male and female, respectively.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
 #'   returned by that function here wrapped in a [shiny::reactive()] to add filter information to chart exports.
-#' @param time_filter supply the output of [time_server()] wrapped in a [shiny::reactive()] here to filter 
+#' @param time_filter supply the output of [time_server()] wrapped in a [shiny::reactive()] here to filter
 #' the data by click events on the time module bar chart (clicking a bar will filter the data to the period the bar represents)
-#' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to filter 
+#' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to filter
 #'  the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)
 #'
 #' @rdname person
 #'
 #' @export
 person_server <- function(
-    id,
-    df,
-    sex_var,
-    male_level,
-    female_level,
-    age_group_var = NULL,
-    age_var = NULL,
-    count_vars = NULL,
-    age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
-    age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
-    age_var_lab = "Age (years)",
-    age_group_lab = "Age group",
-    n_lab = "N patients",
-    colours = c("#19a0aa", "#f15f36"),
-    filter_info = shiny::reactiveVal(),
-    time_filter = shiny::reactiveVal(),
-    place_filter = shiny::reactiveVal()
+  id,
+  df,
+  sex_var,
+  male_level,
+  female_level,
+  age_group_var = NULL,
+  age_var = NULL,
+  count_vars = NULL,
+  age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
+  age_labels = label_breaks(age_breaks, lab_accuracy = 1),
+  # age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
+  age_var_lab = "Age (years)",
+  age_group_lab = "Age group",
+  colours = c("#19a0aa", "#f15f36"),
+  filter_info = shiny::reactiveVal(),
+  time_filter = shiny::reactiveVal(),
+  place_filter = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
     id,
@@ -147,7 +146,7 @@ person_server <- function(
       age_labels <- reactiveVal(age_labels)
 
       df_prep <- reactive({
-        df <- force_reactive(df) 
+        df <- force_reactive(df)
         df$sex <- df[[sex_var]]
         # ensure sex var is factor
         if (!is.factor(df$sex)) {
@@ -162,7 +161,10 @@ person_server <- function(
             cli::cli_abort("if {.arg age_group_var} if not provided then {.arg age_var} must be.", call = NULL)
           }
           if (!is.numeric(df[[age_var]])) {
-            cli::cli_abort("{.arg age_group} must be numeric. Use {.arg age_group} instead if ages have already been binned into groups.", call = NULL)
+            cli::cli_abort(
+              "{.arg age_group} must be numeric. Use {.arg age_group} instead if ages have already been binned into groups.",
+              call = NULL
+            )
           }
           df <- df %>% bin_ages(age_var, age_breaks, age_labels())
         } else {
@@ -238,7 +240,8 @@ person_server <- function(
           value_name = get_label(input$count_var, count_vars),
           filter_info = filter_info_out()
         )
-      }) %>% bindEvent(NULL, ignoreNULL = FALSE) # only run once then update via proxy
+      }) %>%
+        bindEvent(NULL, ignoreNULL = FALSE) # only run once then update via proxy
 
       observe({
         hc_dat <- hc_dat()
@@ -292,10 +295,10 @@ person_server <- function(
               )
             )
         }
-        
+
         if (sum(hc_dat$missing_age, hc_dat$missing_sex, na.rm = TRUE) > 0) {
           txt <- glue::glue("Missing data: Age ({scales::number(hc_dat$missing_age)}), Sex ({scales::number(hc_dat$missing_sex)} missing/other)")
-          highcharter::highchartProxy(ns("as_pyramid")) %>% 
+          highcharter::highchartProxy(ns("as_pyramid")) %>%
             highcharter::hcpxy_update(
               credits = list(enabled = TRUE, text = txt),
               exporting = list(
@@ -308,7 +311,8 @@ person_server <- function(
               credits = list(enabled = FALSE)
             )
         }
-      }) %>% bindEvent(hc_dat(), input$cnt_pcnt, ignoreInit = TRUE)
+      }) %>%
+        bindEvent(hc_dat(), input$cnt_pcnt, ignoreInit = TRUE)
 
       output$as_tbl <- gt::render_gt({
         # show loading spinner
@@ -319,16 +323,16 @@ person_server <- function(
         df_gt <- df_mod()
 
         if (length(count_vars)) {
-          df_gt <- df_gt %>% 
-            dplyr::select(.data$sex, .data$age_group, .data[[input$count_var]]) %>% 
+          df_gt <- df_gt %>%
+            dplyr::select(.data$sex, .data$age_group, .data[[input$count_var]]) %>%
             tidyr::uncount(.data[[input$count_var]])
-        } 
+        }
 
         df_gt %>%
-          dplyr::select(.data$sex, .data$age_group) %>% 
+          dplyr::select(.data$sex, .data$age_group) %>%
           gtsummary::tbl_summary(
             by = "sex",
-            label  = list(
+            label = list(
               # age_var ~ age_var_lab,
               "age_group" ~ age_group_lab
             ),
@@ -346,28 +350,26 @@ person_server <- function(
           gtsummary::italicize_levels() %>%
           gtsummary::modify_footnote(update = gtsummary::everything() ~ NA) %>%
           gtsummary::bold_labels() %>%
-          gtsummary::as_gt() 
+          gtsummary::as_gt()
       })
-
     }
   )
 }
 
 #' @noRd
 hc_as_pyramid <- function(
-    df_age_sex,
-    missing_age,
-    missing_sex,
-    value_name = "Patients",
-    value_digit = 0,
-    value_unit = "",
-    title = NULL,
-    xlab = value_name,
-    ylab = "Age group",
-    colours = c("#f15f36", "#19a0aa"),
-    filter_info = NULL
+  df_age_sex,
+  missing_age,
+  missing_sex,
+  value_name = "Patients",
+  value_digit = 0,
+  value_unit = "",
+  title = NULL,
+  xlab = value_name,
+  ylab = "Age group",
+  colours = c("#f15f36", "#19a0aa"),
+  filter_info = NULL
 ) {
-
   max_value <- max(abs(df_age_sex$n))
   x_levels <- levels(df_age_sex$age_group)
   x_levels <- x_levels[x_levels != getOption("epishiny.ns.label", "(Missing)")]
@@ -375,11 +377,11 @@ hc_as_pyramid <- function(
 
   series <- df_age_sex %>%
     dplyr::group_by(.data$sex) %>%
-    dplyr::arrange(.data$age_group) %>% 
+    dplyr::arrange(.data$age_group) %>%
     dplyr::do(data = .data$n) %>%
     dplyr::ungroup() %>%
     dplyr::rename(id = .data$sex) %>%
-    dplyr::mutate(name = .data$id) %>% 
+    dplyr::mutate(name = .data$id) %>%
     highcharter::list_parse()
 
   hc_out <- highcharter::highchart() %>%
@@ -388,8 +390,8 @@ hc_as_pyramid <- function(
     highcharter::hc_plotOptions(
       bar = list(
         stacking = "normal",
-        groupPadding = 0.05, 
-        pointPadding = 0.05, 
+        groupPadding = 0.05,
+        pointPadding = 0.05,
         borderWidth = 0.05,
         dataLabels = list(
           enabled = FALSE,
@@ -401,6 +403,9 @@ hc_as_pyramid <- function(
       title = list(text = xlab),
       labels = list(
         formatter = highcharter::JS("function(){ return Math.abs(this.value); }")
+      ),
+      plotBands = list(
+        list(color = "black", width = 1, value = 0, zIndex = 10)
       ),
       min = -max_value,
       max = max_value,
@@ -441,7 +446,7 @@ hc_as_pyramid <- function(
   hc_out %>% my_hc_export(caption = filter_info, width = 700)
 }
 
-#' @noRd 
+#' @noRd
 get_as_df <- function(
   df,
   sex_var,
@@ -456,27 +461,27 @@ get_as_df <- function(
   sex_levels <- c(male_level, female_level)
   # get missing data numbers depending on whether data is pre-aggregated or not
   if (length(count_var)) {
-    missing_sex <- df %>% 
-      dplyr::filter(!.data$sex %in% sex_levels | is.na(.data$sex)) %>% 
-      dplyr::pull(.data[[count_var]]) %>% 
+    missing_sex <- df %>%
+      dplyr::filter(!.data$sex %in% sex_levels | is.na(.data$sex)) %>%
+      dplyr::pull(.data[[count_var]]) %>%
       sum(na.rm = TRUE)
-    missing_age <- df %>% 
-      dplyr::filter(is.na(.data$age_group) | .data$age_group == getOption("epishiny.na.label", "(Missing)")) %>% 
+    missing_age <- df %>%
+      dplyr::filter(is.na(.data$age_group) | .data$age_group == getOption("epishiny.na.label", "(Missing)")) %>%
       dplyr::pull(.data[[count_var]]) %>%
       sum(na.rm = TRUE)
   } else {
     missing_sex <- nrow(dplyr::filter(df, !.data$sex %in% sex_levels | is.na(.data$sex)))
     missing_age <- sum(is.na(df$age_group) | df$age_group == getOption("epishiny.na.label", "(Missing)"))
   }
-  
+
   df_age_sex <- df %>%
     dplyr::filter(.data$sex %in% sex_levels) %>%
     dplyr::mutate(!!rlang::sym("sex") := droplevels(.data$sex))
-    # browser()
+  # browser()
   # if data is pre-aggregated add the count_var weight to the count function
   if (length(count_var)) {
     df_age_sex <- df_age_sex %>%
-      dplyr::count(.data$sex, .data$age_group, wt = .data[[count_var]]) %>% 
+      dplyr::count(.data$sex, .data$age_group, wt = .data[[count_var]]) %>%
       tidyr::complete(
         !!rlang::sym("sex") := factor(sex_levels, sex_levels),
         .data$age_group,
@@ -484,7 +489,7 @@ get_as_df <- function(
       )
   } else {
     df_age_sex <- df_age_sex %>%
-      dplyr::count(.data$sex, .data$age_group) %>% 
+      dplyr::count(.data$sex, .data$age_group) %>%
       tidyr::complete(
         !!rlang::sym("sex") := factor(sex_levels, sex_levels),
         !!rlang::sym("age_group") := factor(age_labels, age_labels),
@@ -496,20 +501,20 @@ get_as_df <- function(
       n_prop = (.data$n / sum(.data$n)) * 100,
       n = dplyr::if_else(.data$sex == male_level, -.data$n, .data$n),
       n_prop = dplyr::if_else(.data$sex == male_level, -.data$n_prop, .data$n_prop)
-    ) %>% 
+    ) %>%
     dplyr::filter(!is.na(.data$sex), !is.na(.data$age_group)) %>%
     dplyr::arrange(.data$sex, .data$age_group)
-  
+
   tibble::lst(df_age_sex, missing_age, missing_sex)
 }
 
 
 #' @noRd
 bin_ages <- function(
-    df,
-    age_var,
-    age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
-    age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+")
+  df,
+  age_var,
+  age_breaks = c(0, 5, 18, 25, 35, 50, Inf),
+  age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+")
 ) {
   dplyr::mutate(
     df,

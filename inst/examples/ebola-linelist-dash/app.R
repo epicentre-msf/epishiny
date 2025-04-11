@@ -21,14 +21,14 @@ geo_data <- list(
 )
 
 # range of dates used in filter module to filter time period
-date_range <- range(df_ll_ebola$date_hospitalisation, na.rm = TRUE)
+date_range <- range(df_ll_ebola$date_of_hospitalisation, na.rm = TRUE)
 
 # define date variables in data as named list to be used in app
 date_vars <- c(
-  "Date of hospitalisation" = "date_hospitalisation",
-  "Date of infection" = "date_infection",
-  "Date of onset" = "date_onset",
-  "Date of outcome" = "date_outcome"
+  "Date of hospitalisation" = "date_of_hospitalisation",
+  "Date of infection" = "date_of_infection",
+  "Date of onset" = "date_of_onset",
+  "Date of outcome" = "date_of_outcome"
 )
 
 # define categorical grouping variables
@@ -36,37 +36,58 @@ date_vars <- c(
 group_vars <- c(
   "Hospital" = "hospital",
   "Gender" = "gender",
-  "Age group" = "age_cat",
   "Outcome" = "outcome"
 )
 
 # user interface
 ui <- page_sidebar(
-  padding = 10,
+  class = "bslib-page-dashboard",
+  # theme = bs_theme(
+  #   preset = "minty",
+  #   font_scale = .8,
+  #   primary = "#4682B4",
+  #   secondary = "#D37331",
+  #   success = "#94BA3B"
+  # ),
+  # padding = 10,
   title = "epishiny",
   # sidebar
   sidebar = filter_ui(
     "filter",
     group_vars = group_vars,
-    date_range = date_range,
+    # date_range = date_range,
     period_lab = "Hospitalisation period"
   ),
   # main content
   layout_columns(
     col_widths = c(12, 7, 5),
+    row_heights = c(2, 3),
     time_ui(
-      id = "curve",
+      id = "time",
       title = "Time",
       date_vars = date_vars,
       group_vars = group_vars,
       ratio_line_lab = "Show CFR line?"
     ),
     place_ui(
-      id = "map",
+      id = "place",
       geo_data = geo_data,
       group_vars = group_vars
     ),
-    person_ui(id = "age_sex")
+    person_ui(id = "person")
+  ),
+  # start up loading spinner
+  waiter::waiter_preloader(
+    html = tagList(
+      tags$img(
+        src = "epishiny/img/epicentre_logo.png",
+        width = 600,
+        style = "padding: 20px;"
+      ),
+      tags$br(),
+      waiter::spin_3()
+    ),
+    color = "#FFFFFF"
   )
 )
 
@@ -75,13 +96,13 @@ server <- function(input, output, session) {
   app_data <- filter_server(
     id = "filter",
     df = df_ll_ebola,
-    date_var = "date_hospitalisation",
+    date_var = "date_of_hospitalisation",
     group_vars = group_vars,
     time_filter = reactive(bar_click()),
     place_filter = reactive(map_click())
   )
   map_click <- place_server(
-    id = "map",
+    id = "place",
     df = reactive(app_data()$df),
     geo_data = geo_data,
     group_vars = group_vars,
@@ -89,7 +110,7 @@ server <- function(input, output, session) {
     filter_info = reactive(app_data()$filter_info)
   )
   bar_click <- time_server(
-    id = "curve",
+    id = "time",
     df = reactive(app_data()$df),
     date_vars = date_vars,
     group_vars = group_vars,
@@ -102,10 +123,10 @@ server <- function(input, output, session) {
     filter_info = reactive(app_data()$filter_info)
   )
   person_server(
-    id = "age_sex",
+    id = "person",
     df = reactive(app_data()$df),
-    age_group_var = "age_cat",
-    # age_labels = c("0-4", "5-9", "10-14", "15-19", "20-29", "30-49", "50-69", "70+"),
+    age_var = "age",
+    age_breaks = c(seq(0, 50, by = 5), Inf), # 5 year intervals
     sex_var = "gender",
     male_level = "m",
     female_level = "f",

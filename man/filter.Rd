@@ -9,13 +9,15 @@ filter_ui(
   id,
   group_vars,
   date_range,
-  title = NULL,
+  title = tags$span(bsicons::bs_icon("filter"), "Filters"),
   date_filters_lab = "Date filters",
   period_lab = "Period",
   missing_dates_lab = "Include patients with missing dates?",
   group_filters_lab = "Group filters",
-  filter_btn_lab = "Filter",
-  reset_btn_lab = "Reset"
+  filter_btn_lab = "update",
+  filter_btn_tooltip = "Click here to apply filters and update the graphics",
+  reset_btn_lab = "Reset",
+  bg = "#fff"
 )
 
 filter_server(
@@ -47,7 +49,11 @@ filter_server(
 
 \item{filter_btn_lab}{The label for the filter data button.}
 
+\item{filter_btn_tooltip}{The tooltip for the filter data button.}
+
 \item{reset_btn_lab}{The label for the reset filters button.}
+
+\item{bg}{The background color of the sidebar.}
 
 \item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
 

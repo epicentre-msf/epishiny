@@ -11,9 +11,9 @@ time_ui(
   count_vars = NULL,
   group_vars = NULL,
   title = "Time",
-  icon = bsicons::bs_icon("bar-chart-line-fill"),
+  icon = bsicons::bs_icon("calendar2-week"),
   tooltip = NULL,
-  opts_btn_lab = "options",
+  opts_btn_lab = "Chart options",
   date_lab = "Date axis",
   date_int_lab = "Date interval",
   date_intervals = c(Day = "day", Week = "week", Month = "month"),
@@ -23,6 +23,7 @@ time_ui(
   bar_stacking_lab = "Bar stacking",
   cumul_data_lab = "Show cumulative data?",
   ratio_line_lab = "Show ratio line?",
+  zoom_control_lab = "Add zoom control slider?",
   full_screen = TRUE
 )
 
@@ -81,6 +82,8 @@ argument of \link[lubridate:round_date]{lubridate::floor_date}. If named, names 
 
 \item{ratio_line_lab}{text label for the ratio line input. This input will only be visable if
 \code{show_ratio} is TRUE in \link{time_server}}
+
+\item{zoom_control_lab}{text label for the zoom control option.}
 
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 

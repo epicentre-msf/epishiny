@@ -9,7 +9,7 @@
 #' @param count_vars If data is aggregated, variable name(s) of count variable(s) in data. If more than one is variable provided,
 #'  a select input will appear in the options dropdown. If named, names are used as variable labels.
 #' @param group_vars Character vector of categorical variable names. If provided, a select input will appear
-#'  in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit. 
+#'  in the options dropdown allowing for data groups to be visualised on the map in pie charts per geographical unit.
 #'  If named, names are used as variable labels.
 #' @param title The title for the card.
 #' @param icon The icon to be displayed next to the title
@@ -27,21 +27,21 @@
 #' @export
 #' @example inst/examples/docs/app.R
 place_ui <- function(
-    id,
-    geo_data,
-    count_vars = NULL,
-    group_vars = NULL,
-    title = "Place",
-    icon = bsicons::bs_icon("geo-fill"),
-    tooltip = NULL,
-    geo_lab = "Geo boundaries",
-    count_vars_lab = "Indicator",
-    groups_lab = "Group data by",
-    no_grouping_lab = "No grouping",
-    circle_size_lab = "Circle size multiplyer",
-    opts_btn_lab = "options",
-    download_lab = "download",
-    full_screen = TRUE
+  id,
+  geo_data,
+  count_vars = NULL,
+  group_vars = NULL,
+  title = "Place",
+  icon = bsicons::bs_icon("geo-fill"),
+  tooltip = NULL,
+  geo_lab = "Geo boundaries",
+  count_vars_lab = "Indicator",
+  groups_lab = "Group data by",
+  no_grouping_lab = "No grouping",
+  circle_size_lab = "Circle size multiplyer",
+  opts_btn_lab = "Map options",
+  download_lab = "Download image of current map",
+  full_screen = TRUE
 ) {
   ns <- shiny::NS(id)
 
@@ -52,7 +52,7 @@ place_ui <- function(
   }
 
   if (!inherits(geo_data, "epishiny_geo_layer")) {
-    if (!all(purrr::map_lgl(geo_data, ~inherits(.x, "epishiny_geo_layer")))) {
+    if (!all(purrr::map_lgl(geo_data, ~ inherits(.x, "epishiny_geo_layer")))) {
       cli::cli_abort(c(
         "{.arg geo_data} must be an epishiny geo layer or a list of epishiny geo layers.",
         "i" = "see ?epishiny::geo_layer for details on how to setup your geo data."
@@ -68,7 +68,7 @@ place_ui <- function(
 
   if (length(tooltip)) {
     tt <- bslib::tooltip(
-      bsicons::bs_icon("info-circle"),
+      bsicons::bs_icon("info-circle", class = "ms-2 text-primary", size = "1.2em"),
       tooltip
     )
   } else {
@@ -80,65 +80,172 @@ place_ui <- function(
     bslib::card(
       full_screen = full_screen,
       bslib::card_header(
-        class = "d-flex justify-content-start align-items-center",
-        tags$span(icon, title, tt, class = "pe-2"),
-
-        # options button and dropdown menu
-        bslib::popover(
-          trigger = actionButton(
-            ns("dropdown"),
-            icon = shiny::icon("sliders"),
-            label = opts_btn_lab,
-            class = "btn-sm btn-light pe-2 me-2"
-          ),
+        class = "d-flex align-items-center",
+        # title
+        tags$div(
+          class = "d-flex align-items-center me-auto",
+          tags$span(icon, title, class = "pe-2"),
+          # Geo boundaries select ==========
           shinyWidgets::radioGroupButtons(
             ns("geo_level"),
-            label = geo_lab,
+            label = NULL, # geo_lab,
+            choices = geo_levels,
             size = "sm",
-            status = "outline-dark",
-            choices = geo_levels
+            status = "outline-primary"
+          )
+        ),
+        # options button and dropdown menu
+        bslib::popover(
+          title = opts_btn_lab,
+          id = ns("popover"),
+          placement = "left",
+          trigger = bsicons::bs_icon(
+            "gear",
+            title = opts_btn_lab,
+            class = "ms-2 text-primary",
+            size = "1.2em"
+          ),
+          # # Geo boundaries select ==========
+          # shinyWidgets::radioGroupButtons(
+          #   ns("geo_level"),
+          #   label = geo_lab,
+          #   size = "sm",
+          #   status = "outline-primary",
+          #   choices = geo_levels
+          # ),
+          # Choropleth Inputs ==============
+          tags$div(
+            class = "d-flex",
+            tags$h6("Choropleth Layer", class = "fw-bold text-decoration-underline pe-2"),
+            bslib::input_switch(
+              id = ns("choro_active"),
+              label = NULL,
+              value = TRUE,
+              width = "30px"
+            ) |>
+              bslib::tooltip(
+                "Show/Hide layer",
+                id = ns("tt-choro"),
+                placement = "top"
+              )
+          ),
+          selectInput(
+            ns("choro_pal"),
+            label = "Palette",
+            choices = choro_pals(),
+            selected = "Reds",
+            multiple = FALSE,
+            selectize = FALSE
+          ),
+          bslib::input_switch(
+            id = ns("choro_pal_rev"),
+            label = "Reverse palette direction",
+            value = FALSE
+          ),
+          tags$div(
+            # id = ns("choro_inputs"),
+            class = "d-flex justify-content-center align-items-start",
+            selectInput(
+              ns("choro_breaks"),
+              label = "Breaks Method",
+              choices = choro_breaks(),
+              selected = "quantile",
+              multiple = FALSE,
+              selectize = FALSE,
+              width = 180
+            ),
+            numericInput(
+              inputId = ns("choro_nbreaks"),
+              label = "N Breaks",
+              value = 5,
+              min = 2,
+              max = 10,
+              step = 1,
+              width = "60px"
+            )
+          ),
+          tags$hr(),
+          # Symbols Inputs ==================
+          tags$div(
+            class = "d-flex",
+            tags$h6("Symbols Layer", class = "fw-bold text-decoration-underline pe-2"),
+            bslib::input_switch(
+              id = ns("symbols_active"),
+              label = NULL,
+              value = TRUE,
+              width = "30px"
+            ) |>
+              bslib::tooltip(id = ns("symbols_tt"), "Show/Hide layer", placement = "top")
           ),
           selectInput(
             ns("count_var"),
             label = count_vars_lab,
             choices = count_vars,
             multiple = FALSE,
-            selectize = FALSE,
-            width = 200
+            selectize = FALSE
           ),
           selectInput(
             ns("var"),
             label = groups_lab,
             choices = c(purrr::set_names("n", no_grouping_lab), group_vars),
             multiple = FALSE,
-            selectize = FALSE,
-            width = 200
+            selectize = FALSE
           ),
           sliderInput(
             ns("circle_size_mult"),
             label = circle_size_lab,
-            min = 0,
+            min = 1,
             max = 10,
             value = 6,
-            step = 1,
-            width = 200
+            step = 1
           )
         ),
         # only show download button if chrome available
-        if (!is.null(chromote::find_chrome())) { 
-          downloadButton(
+        if (!is.null(chromote::find_chrome())) {
+          downloadLink(
             ns("dl"),
-            label = download_lab,
-            icon = shiny::icon("camera"),
-            class = "btn-sm btn-light pe-2 me-2"
-          )
-        } 
+            label = bsicons::bs_icon("download", class = "text-primary", size = "1.2em"),
+            title = download_lab,
+            class = "ms-2"
+            # icon = shiny::icon("camera"),
+            # class = "btn-sm btn-link pe-2 me-2"
+          ) |>
+            bslib::tooltip(download_lab)
+        },
+        # tooltip at the end
+        tt
       ),
       bslib::card_body(
         padding = 0,
         leaflet::leafletOutput(ns("map"))
       ),
       bslib::card_footer(uiOutput(ns("footer")))
+    ),
+    # add script to return dimensions of map back to server
+    # to be used in the map export to replicate map on screen
+    htmlwidgets::onStaticRenderComplete(
+      sprintf(
+        "
+          const mapDiv = document.getElementById('%s');
+          const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+              if (entry.contentBoxSize) {
+                const width = entry.contentBoxSize[0].inlineSize;
+                const height = entry.contentBoxSize[0].blockSize;
+                Shiny.setInputValue('%s', { width: width, height: height });
+              } else {
+                const width = entry.contentRect.width;
+                const height = entry.contentRect.height;
+                Shiny.setInputValue('%s', { width: width, height: height });
+              }
+            }
+          });
+          resizeObserver.observe(mapDiv);
+        ",
+        ns("map"),
+        ns("map_dimensions"),
+        ns("map_dimensions")
+      )
     )
   )
 }
@@ -146,8 +253,9 @@ place_ui <- function(
 #' @param df Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.
 #' @param show_parent_borders Show borders of parent boundary levels?
 #' @param choro_lab Label for attack rate choropleth (only applicable if `geo_data` contains population data)
-#' @param choro_pal Colour palette passed to [`leaflet::colorBin()`] for attack rate choropleth 
-#'  (only applicable if `geo_data` contains population data)
+#' @param choro_pal Colour palette passed to [`leaflet::colorBin()`] for attack rate choropleth
+#'  (only applicable if `geo_data` contains population data). See details of [`leaflet::colorBin()`]
+#'  for all palette options.
 #' @param choro_opacity Opacity of choropleth colour (only applicable if `geo_data` contains population data)
 #' @param export_width The width of the exported map image.
 #' @param export_height The height of the exported map image.
@@ -164,20 +272,20 @@ place_ui <- function(
 #'
 #' @export
 place_server <- function(
-    id,
-    df,
-    geo_data,
-    count_vars = NULL,
-    group_vars = NULL,
-    show_parent_borders = FALSE,
-    choro_lab = "Rate /100 000",
-    choro_pal = "Reds",
-    choro_opacity = .7,
-    export_width = 1200,
-    export_height = 650,
-    time_filter = shiny::reactiveVal(),
-    filter_info = shiny::reactiveVal(),
-    filter_reset = shiny::reactiveVal()
+  id,
+  df,
+  geo_data,
+  count_vars = NULL,
+  group_vars = NULL,
+  show_parent_borders = FALSE,
+  choro_lab = "Rate /100 000",
+  choro_pal = "OrRd",
+  choro_opacity = .7,
+  export_width = 1200,
+  export_height = 650,
+  time_filter = shiny::reactiveVal(),
+  filter_info = shiny::reactiveVal(),
+  filter_reset = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
     id,
@@ -211,7 +319,7 @@ place_server <- function(
       }
 
       # sf settings
-      sf::sf_use_s2(FALSE)
+      suppressMessages(sf::sf_use_s2(FALSE))
 
       # loading spinner for map export
       w_map <- waiter::Waiter$new(
@@ -251,6 +359,17 @@ place_server <- function(
         }
       })
 
+      # update choropleth switch tooltip on popover open/close
+      observe({
+        req(geo_select())
+        if (is.null(geo_select()$pop_var)) {
+          bslib::update_tooltip("tt-choro", "Population data required for choropleth layer")
+        } else {
+          bslib::update_tooltip("tt-choro", "Show/Hide layer")
+        }
+      }) |>
+        bindEvent(input$popover)
+
       rv <- reactiveValues()
 
       # update reactive values whenever inputs change
@@ -269,7 +388,7 @@ place_server <- function(
         map_var_lab <- get_label(map_var, var_list)
         count_var <- input$count_var
         n_lab <- get_label(count_var, count_vars)
-        
+
         # save as reactive values
         rv$geo_join <- geo_join
         rv$join_cols <- join_cols
@@ -308,6 +427,10 @@ place_server <- function(
         leaf_basemap(bbox, miniMap = TRUE)
       })
 
+      # observe({
+      #   print(input$map_dimensions)
+      # })
+
       # manage map click events to return selected regions
       map_click <- reactiveVal(FALSE)
       region_select <- reactiveVal("all")
@@ -315,12 +438,14 @@ place_server <- function(
       # reset region select if a filter reset is passed from filter module
       observe({
         region_select("all")
-      }) %>% bindEvent(filter_reset(), ignoreInit = TRUE)
+      }) %>%
+        bindEvent(filter_reset(), ignoreInit = TRUE)
 
       # reset region select if the geo level changes
       observe({
         region_select("all")
-      }) %>% bindEvent(input$geo_level, ignoreInit = TRUE)
+      }) %>%
+        bindEvent(input$geo_level, ignoreInit = TRUE)
 
       # if region is selected from map, update region_select value
       observeEvent(input$map_shape_click, {
@@ -382,7 +507,7 @@ place_server <- function(
           dplyr::select(dplyr::any_of(c(rv$join_cols, rv$geo_pop_var, "name", "lon", "lat"))) %>%
           dplyr::left_join(df_counts, by = rv$geo_join) %>%
           dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double))
-          # dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
+        # dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
 
         # add attack rate if there is population data
         if (!is.null(rv$geo_pop_var)) {
@@ -390,16 +515,17 @@ place_server <- function(
             dplyr::mutate(
               # attack rate per 100 000
               attack_rate = dplyr::na_if((.data$total / .data[[rv$geo_pop_var]]) * 1e5, 0)
-            ) 
+            )
         }
 
         return(df_out)
-      }) %>% bindEvent(df_mod(), rv$sf, rv$count_var)
+      }) %>%
+        bindEvent(df_mod(), rv$sf, rv$count_var)
 
       df_map_circles <- reactive({
         # drop geometry and unneeded cols
-        df_geo_counts <- df_geo_counts() %>% 
-          sf::st_drop_geometry() %>% 
+        df_geo_counts <- df_geo_counts() %>%
+          sf::st_drop_geometry() %>%
           dplyr::select(-dplyr::any_of(c("attack_rate", rv$geo_pop_var)))
         # is the data pre-aggregated
         is_agg <- as.logical(length(count_vars))
@@ -417,22 +543,28 @@ place_server <- function(
           geo_join = rv$geo_join,
           n_lab = rv$n_lab
         )
-      }) %>% bindEvent(df_geo_counts(), rv$map_var)
+      }) %>%
+        bindEvent(df_geo_counts(), rv$map_var)
 
       # add polygon boundaries with tooltip data info
       observe({
         req(df_geo_counts())
-        boundaries <- df_geo_counts()
 
         leaflet::leafletProxy("map", session) %>%
-          leaflet::clearGroup("Boundaries") %>% 
+          leaflet::clearGroup("Boundaries") %>%
           leaflet::clearControls()
-        
+
         # change group layers depening on if attack rate is available
         if (is.null(geo_select()$pop_var)) {
           ogs <- c("Circles")
+          bslib::update_switch("choro_active", value = FALSE)
+          shinyjs::disable("choro_active")
+          bslib::update_tooltip("tt-choro", "Population data required for choropleth layer")
         } else {
           ogs <- c("Choropleth", "Circles")
+          bslib::update_switch("choro_active", value = TRUE)
+          shinyjs::enable("choro_active")
+          bslib::update_tooltip("tt-choro", "Show/Hide layer")
         }
 
         leaflet::leafletProxy("map", session) %>%
@@ -442,27 +574,35 @@ place_server <- function(
             position = "topleft"
           )
 
-        req(nrow(boundaries) > 0)
-
         # if not first admin level, map borders of parent admin levels
         if (show_parent_borders) {
           gd <- geo_data
           geo_level <- which(purrr::map_chr(gd, "layer_name") == isolate(input$geo_level))
           if (geo_level > 1) {
             lower_levels <- 1:(geo_level - 1)
-            purrr::walk(lower_levels, ~ {
-              stroke_width <- (geo_level - .x) + 1
-              borders <- suppressMessages(sf::st_filter(gd[[.x]]$sf, boundaries))
-              leaflet::leafletProxy("map", session) %>%
-                leaflet::addPolylines(
-                  data = borders,
-                  group = "Boundaries",
-                  color = "grey",
-                  weight = stroke_width
-                )
-            })
+            purrr::walk(
+              lower_levels,
+              ~ {
+                stroke_width <- (geo_level - .x) + 1
+                borders <- suppressMessages(sf::st_filter(gd[[.x]]$sf, df_geo_counts())) |>
+                  dplyr::filter(sf::st_is(geometry, c("POLYGON", "MULTIPOLYGON")))
+                leaflet::leafletProxy("map", session) %>%
+                  leaflet::addPolylines(
+                    data = borders,
+                    group = "Boundaries",
+                    color = "grey",
+                    weight = stroke_width
+                  )
+              }
+            )
           }
         }
+
+        # only contunue if layer has polygon geometries
+        boundaries <- df_geo_counts() |>
+          dplyr::filter(sf::st_is(geometry, c("POLYGON", "MULTIPOLYGON")))
+
+        req(nrow(boundaries) > 0)
 
         # get bbox for fly to step
         bbox <- sf::st_bbox(boundaries)
@@ -481,15 +621,16 @@ place_server <- function(
             layerId = boundaries[[rv$join_cols]],
             stroke = TRUE,
             color = "grey",
-            weight = 0.1,
+            weight = 1,
             fillOpacity = 0,
             label = tt,
             group = "Boundaries",
             highlightOptions = leaflet::highlightOptions(bringToFront = TRUE, weight = 3),
             options = leaflet::pathOptions(pane = "boundaries")
           )
-          # leaflet::flyToBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]])
-      }) %>% bindEvent(df_geo_counts())
+        # leaflet::flyToBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]])
+      }) %>%
+        bindEvent(df_geo_counts())
 
       # add/update Choropleth polygons when df_geo_counts() changes
       observe({
@@ -500,15 +641,36 @@ place_server <- function(
           leaflet::removeControl(layerId = "attack_legend")
 
         # only plot polygons with incidence
-        df_map <- df_geo_counts() %>% dplyr::filter(.data$total > 0)
+        df_map <- df_geo_counts() %>%
+          dplyr::filter(
+            sf::st_is(geometry, c("POLYGON", "MULTIPOLYGON")),
+            .data$total > 0
+          )
 
-        if (isTruthy(nrow(df_map) > 0) & !is.null(rv$geo_pop_var)) {
+        if (isTruthy(nrow(df_map) > 0) && !is.null(rv$geo_pop_var) && input$choro_active) {
+          req(!all(is.na(df_map$attack_rate)))
           # lvls <- levels(df_map$ar_bin)
           # pal <- leaflet::colorFactor(cols, levels = lvls, na.color = "transparent", ordered = TRUE)
+          req(input$choro_nbreaks)
+          safe_breaks <- purrr::safely(mapsf::mf_get_breaks, otherwise = 4)
+          bins <- suppressWarnings(safe_breaks(
+            df_map$attack_rate,
+            nbreaks = input$choro_nbreaks,
+            breaks = input$choro_breaks
+          ))
+
+          if (!is.null(bins$error)) {
+            shiny::showNotification(
+              stringr::str_glue("{input$choro_breaks} breaks could not be calculated for this data. Reverting to standard breaks."),
+              type = "error"
+            )
+          }
+
           pal <- leaflet::colorBin(
-            palette = choro_pal,
+            palette = input$choro_pal,
             domain = df_map$attack_rate,
-            bins = 5,
+            bins = bins$result,
+            reverse = input$choro_pal_rev,
             na.color = "transparent"
           )
 
@@ -535,9 +697,17 @@ place_server <- function(
               layerId = "attack_legend"
             )
         }
-      }) %>% bindEvent(df_geo_counts())
+      }) %>%
+        bindEvent(
+          df_geo_counts(),
+          input$choro_pal,
+          input$choro_pal_rev,
+          input$choro_breaks,
+          input$choro_nbreaks,
+          input$choro_active
+        )
 
-      # minichart circles/pies 
+      # minichart circles/pies
       minicharts_init <- reactiveVal(TRUE)
       minicharts_on <- reactiveVal(TRUE)
       observe({
@@ -547,17 +717,20 @@ place_server <- function(
 
         req(nrow(df_map) > 0)
 
-        if (isTruthy("Circles" %in% isolate(input$map_groups)) | minicharts_init()) {
+        if (input$symbols_active | minicharts_init()) {
+          # isTruthy("Circles" %in% isolate(input$map_groups))
           chart_data <- df_map %>%
-            dplyr::select(-dplyr::any_of(c(
-              rv$join_cols,
-              rv$geo_pop_var,
-              "attack_rate",
-              "name",
-              "lon",
-              "lat",
-              "total"
-            )))
+            dplyr::select(
+              -dplyr::any_of(c(
+                rv$join_cols,
+                rv$geo_pop_var,
+                "attack_rate",
+                "name",
+                "lon",
+                "lat",
+                "total"
+              ))
+            )
 
           pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
 
@@ -578,11 +751,13 @@ place_server <- function(
 
           minicharts_init(FALSE)
         }
-      }) %>% bindEvent(df_map_circles(), input$circle_size_mult)
+      }) %>%
+        bindEvent(df_map_circles(), input$circle_size_mult)
 
       # show/hide circles when selected/unselected from map groups
-      observeEvent(input$map_groups, {
-        if (!"Circles" %in% input$map_groups) {
+      observeEvent(input$symbols_active, {
+        if (!input$symbols_active) {
+          # !"Circles" %in% input$map_group
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::clearMinicharts()
           minicharts_on(FALSE)
@@ -590,15 +765,17 @@ place_server <- function(
           df_map <- df_map_circles()
           req(nrow(df_map) > 0)
           chart_data <- df_map %>%
-            dplyr::select(-dplyr::any_of(c(
-              rv$join_cols,
-              rv$geo_pop_var,
-              "attack_rate",
-              "name",
-              "lon",
-              "lat",
-              "total"
-            )))
+            dplyr::select(
+              -dplyr::any_of(c(
+                rv$join_cols,
+                rv$geo_pop_var,
+                "attack_rate",
+                "name",
+                "lon",
+                "lat",
+                "total"
+              ))
+            )
           pie_width <- (input$circle_size_mult * 10) * (sqrt(df_map$total) / sqrt(max(df_map$total)))
           leaflet::leafletProxy("map", session) %>%
             leaflet.minicharts::addMinicharts(
@@ -635,7 +812,7 @@ place_server <- function(
         if (n_missing == 0) {
           return(NULL)
         } else {
-          lab_missing <- glue::glue("{scales::number(n_missing)} ({scales::percent(pcnt_missing, accuracy = 1)})")
+          lab_missing <- glue::glue("{scales::number(n_missing)} ({scales::percent(pcnt_missing, accuracy = .1)})")
           glue::glue("Missing/Unknown {rv$geo_level_name} data for {lab_missing} {tolower(rv$n_lab)}")
         }
       })
@@ -654,10 +831,6 @@ place_server <- function(
           glue::glue("EPI-MAP-{time_stamp()}.png")
         },
         content = function(file) {
-          # show loading spinner
-          w_map$show()
-          on.exit(w_map$hide())
-
           # check for chrome browser before attempting mapshot2
           if (is.null(chrome_browser)) {
             shiny::showModal(
@@ -672,32 +845,39 @@ place_server <- function(
           }
           req(chrome_browser)
 
-          showNotification(
-            "Generating map export. This can take up to a minute...",
+          # show loading spinner and notif and remove when done
+          w_map$show()
+          ntf <- showNotification(
+            "Generating map export. This can take a while...",
             type = "default",
-            duration = 8
+            duration = NULL
           )
+          on.exit({
+            w_map$hide()
+            removeNotification(ntf)
+          })
 
           # rebuild current map shown on dashboard
-          boundaries <- rv$sf
-
           missing_data_text <- missing_text()
           if (!is.null(missing_data_text)) {
             missing_data_text <- glue::glue("<b>Missing data</b></br>{missing_data_text}")
-          } 
+          }
 
-          # get the centroid coordinates of current onscreen map view 
+          # get the centroid coordinates of current onscreen map view
           # to set the view in export map
-          bbox <- sf::st_bbox(c(
-            xmin = input$map_bounds$east,
-            xmax = input$map_bounds$west,
-            ymax = input$map_bounds$north,
-            ymin = input$map_bounds$south
-          ), crs = sf::st_crs(4326))
+          bbox <- sf::st_bbox(
+            c(
+              xmin = input$map_bounds$east,
+              xmax = input$map_bounds$west,
+              ymax = input$map_bounds$north,
+              ymin = input$map_bounds$south
+            ),
+            crs = sf::st_crs(4326)
+          )
           sv <- dplyr::as_tibble(sf::st_coordinates(suppressWarnings(sf::st_centroid(sf::st_as_sfc(bbox)))))
 
           leaf_out <- leaflet::leaflet() %>%
-            leaflet::setView(sv$X, sv$Y, zoom = input$map_zoom) %>% 
+            leaflet::setView(sv$X, sv$Y, zoom = input$map_zoom) %>%
             # leaflet::fitBounds(
             #   input$map_bounds$east,
             #   input$map_bounds$south,
@@ -724,30 +904,40 @@ place_server <- function(
               ),
               className = "leaflet-control-attribution",
               position = "bottomleft"
-            ) %>%
-            leaflet::addPolygons(
-              data = boundaries,
-              stroke = TRUE,
-              color = "grey",
-              weight = 1,
-              fillOpacity = 0,
-              label = boundaries[[rv$geo_name_col]],
-              group = "Boundaries",
-              options = leaflet::pathOptions(pane = "boundaries")
             )
+
+          # plot boundaries of polygons if there are any in the data
+          boundaries <- rv$sf |>
+            dplyr::filter(sf::st_is(geometry, c("MULTIPOLYGON", "POLYGON")))
+
+          if (nrow(boundaries) > 0) {
+            leaf_out <- leaf_out |>
+              leaflet::addPolygons(
+                data = boundaries,
+                stroke = TRUE,
+                color = "grey",
+                weight = 1,
+                fillOpacity = 0,
+                label = boundaries[[rv$geo_name_col]],
+                group = "Boundaries",
+                options = leaflet::pathOptions(pane = "boundaries")
+              )
+          }
 
           if (isTruthy("Circles" %in% input$map_groups)) {
             df_circles <- df_map_circles()
             chart_data <- df_circles %>%
-              dplyr::select(-dplyr::any_of(c(
-                rv$join_cols,
-                rv$geo_pop_var,
-                "attack_rate",
-                "name",
-                "lon",
-                "lat",
-                "total"
-              )))
+              dplyr::select(
+                -dplyr::any_of(c(
+                  rv$join_cols,
+                  rv$geo_pop_var,
+                  "attack_rate",
+                  "name",
+                  "lon",
+                  "lat",
+                  "total"
+                ))
+              )
             # * 7 instead of * 10 like in the app map because
             # circles are coming out larger in the image export
             pie_width <- (input$circle_size_mult * 7) * (sqrt(df_circles$total) / sqrt(max(df_circles$total)))
@@ -766,12 +956,19 @@ place_server <- function(
                 width = pie_width
               )
           }
-          
-          if (isTruthy("Choropleth" %in% input$map_groups)) { # !is.null(rv$geo_pop_var)
-            df_map <- df_geo_counts()
+
+          if (isTruthy("Choropleth" %in% input$map_groups) && !is.null(rv$geo_pop_var)) {
+            df_map <- df_geo_counts() %>%
+              dplyr::filter(
+                sf::st_is(geometry, c("POLYGON", "MULTIPOLYGON")),
+                .data$total > 0
+              )
+
+            req(nrow(df_map) > 0)
+            req(!all(is.na(df_map$attack_rate)))
 
             pal <- leaflet::colorBin(
-              palette = choro_pal,
+              palette = input$choro_pal,
               domain = df_map$attack_rate,
               bins = 5,
               na.color = "transparent"
@@ -850,8 +1047,8 @@ place_server <- function(
               "easyButton"
             ),
             selfcontained = FALSE,
-            vwidth = export_width,
-            vheight = export_height,
+            vwidth = round(input$map_dimensions$width, 0),
+            vheight = round(input$map_dimensions$height, 0),
             zoom = 2,
             delay = 0.5
           )
@@ -876,8 +1073,8 @@ place_server <- function(
 }
 
 #' Build a geo layer to be used in the 'place' module
-#' 
-#' @param layer_name the name of the geo layer, for example 'State', 'Department', 'Admin2' etc. 
+#'
+#' @param layer_name the name of the geo layer, for example 'State', 'Department', 'Admin2' etc.
 #'  If providing multiple layers, layer names must be unique.
 #' @param sf geographical data of class 'sf' (simple features).
 #' @param name_var character string of the variable name in `sf` containing the names of each geographical feature.
@@ -886,10 +1083,10 @@ place_server <- function(
 #'  join variable of the dataset. i.e. `c("pcode" = "place_code")` LHS = geo, RHS = data.
 #' @param pop_var character string of the variable name in `sf` containing population data for each feature.
 #'  If provided, attack rates will be shown on the map as a choropleth.
-#' 
+#'
 #' @return named list of class "epishiny_geo_layer"
-#' 
-#' @examples 
+#'
+#' @examples
 #' geo_layer(
 #'   layer_name = "Governorate",
 #'   sf = sf_yem$adm1,
@@ -897,7 +1094,7 @@ place_server <- function(
 #'   pop_var = "adm1_pop",
 #'   join_by = c("pcode" = "adm1_pcode")
 #' )
-#' @export 
+#' @export
 geo_layer <- function(layer_name, sf, name_var, join_by, pop_var = NULL) {
   # check arguments
   rlang::check_required(layer_name)
@@ -932,14 +1129,14 @@ geo_layer <- function(layer_name, sf, name_var, join_by, pop_var = NULL) {
   )
 }
 
-#' @noRd 
+#' @noRd
 check_single_string <- function(x, arg = rlang::caller_arg(x), call = rlang::caller_env()) {
   if (!rlang::is_string(x) | length(x) != 1) {
     cli::cli_abort("{.arg {arg}} must be a character string of length 1.", call = call)
   }
 }
 
-#' @noRd 
+#' @noRd
 add_coords <- function(sf) {
   if (all(c("lon", "lat") %in% colnames(sf))) {
     sf
@@ -951,21 +1148,21 @@ add_coords <- function(sf) {
 
 #' @noRd
 get_geo_counts <- function(
-    df,
-    is_agg,
-    geo_var,
-    count_var,
-    count_lab
-  ) {
-    if (is_agg) {
-      df <- dplyr::count(df, .data[[geo_var]], wt = .data[[count_var]], name = count_lab)
-    } else {
-      df <- dplyr::count(df, .data[[geo_var]], name = count_lab)
-    }
-    dplyr::mutate(df, total = .data[[count_lab]])
+  df,
+  is_agg,
+  geo_var,
+  count_var,
+  count_lab
+) {
+  if (is_agg) {
+    df <- dplyr::count(df, .data[[geo_var]], wt = .data[[count_var]], name = count_lab)
+  } else {
+    df <- dplyr::count(df, .data[[geo_var]], name = count_lab)
   }
+  dplyr::mutate(df, total = .data[[count_lab]])
+}
 
-#' @noRd 
+#' @noRd
 get_map_circle_df <- function(
   df,
   is_agg,
@@ -986,34 +1183,36 @@ get_map_circle_df <- function(
       df <- dplyr::count(df, .data[[geo_var]], .data[[group_var]])
     }
     # dplyr::mutate(total = rowSums(dplyr::pick(dplyr::where(is.numeric))))
-    df <- df_geo_counts %>% 
-      dplyr::select(-dplyr::any_of(n_lab)) %>% 
+    df <- df_geo_counts %>%
+      dplyr::select(-dplyr::any_of(n_lab)) %>%
       dplyr::left_join(
-        df %>% tidyr::pivot_wider(names_from = group_var, values_from = "n"), 
+        df %>% tidyr::pivot_wider(names_from = group_var, values_from = "n"),
         by = geo_join
-      ) %>% 
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>% 
+      ) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), as.double)) %>%
       dplyr::mutate(dplyr::across(dplyr::where(is.double), ~ dplyr::if_else(is.na(.x), 0, .x)))
   }
-  df %>% dplyr::filter(.data$total > 0) 
+  df %>% dplyr::filter(.data$total > 0)
 }
 
 #' Copy of mapview::mapshot2 with minor changes to avoid the full dependency on mapview
 #' Full credit to the mapview authors
-#' @noRd 
-mapshot2 <- function(x,
-                     url = NULL,
-                     file = NULL,
-                     remove_controls = c(
-                       "zoomControl",
-                       "layersControl",
-                       "homeButton",
-                       "scaleBar",
-                       "drawToolbar",
-                       "easyButton",
-                       "control"
-                     ),
-                     ...) {
+#' @noRd
+mapshot2 <- function(
+  x,
+  url = NULL,
+  file = NULL,
+  remove_controls = c(
+    "zoomControl",
+    "layersControl",
+    "homeButton",
+    "scaleBar",
+    "drawToolbar",
+    "easyButton",
+    "control"
+  ),
+  ...
+) {
   stopifnot(requireNamespace("webshot2", quietly = TRUE))
 
   ## if both 'url' and 'file' are missing, throw an error
@@ -1041,20 +1240,13 @@ mapshot2 <- function(x,
   names(sw_ls)[which(names(sw_ls) == "url")] <- "file"
 
   ## the arguments to be passed to saveWidget
-  sw_args <- match.arg(names(sw_ls),
-    names(as.list(args(htmlwidgets::saveWidget))),
-    several.ok = TRUE
-  )
+  sw_args <- match.arg(names(sw_ls), names(as.list(args(htmlwidgets::saveWidget))), several.ok = TRUE)
 
   ## the arguments to be passed to webshot
-  ws_args <- match.arg(names(args),
-    names(as.list(args(webshot2::webshot))),
-    several.ok = TRUE
-  )
+  ws_args <- match.arg(names(args), names(as.list(args(webshot2::webshot))), several.ok = TRUE)
 
   ## if file was provided
   if (avl_file) {
-
     ## if no junk to remove -> take webshot straight away & return
     if (is.null(remove_controls)) {
       suppressMessages(
@@ -1081,13 +1273,14 @@ mapshot2 <- function(x,
   }
 }
 
-#' @noRd 
+#' @noRd
 removeMapJunk <- function(map, junk = NULL) {
   if (is.null(junk)) {
     return(map)
   }
   for (jnk in junk) {
-    map <- switch(jnk,
+    map <- switch(
+      jnk,
       "zoomControl" = removeZoomControl(map),
       "layersControl" = leaflet::removeLayersControl(map),
       "homeButton" = removeHomeButtons(map),

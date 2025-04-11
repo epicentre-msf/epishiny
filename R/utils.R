@@ -9,18 +9,28 @@ use_epishiny <- function() {
   shiny::singleton(header)
 }
 
+#' Pipe operator re-export
 #' @importFrom magrittr %>%
 #' @noRd
 magrittr::`%>%`
 
+#' Assignment pipe operator re-export
 #' @importFrom magrittr %<>%
 #' @noRd
 magrittr::`%<>%`
 
+#' Definition operator re-export
 #' @importFrom rlang :=
 #' @noRd
 rlang::`:=`
 
+#' Force evaluation of reactive expressions
+#'
+#' @description
+#' Evaluates reactive expressions if the input is reactive, otherwise returns the input as-is
+#'
+#' @param x A reactive expression or regular value
+#' @return The evaluated reactive expression or the original value
 #' @noRd
 force_reactive <- function(x) {
   if (shiny::is.reactive(x)) {
@@ -30,6 +40,14 @@ force_reactive <- function(x) {
   }
 }
 
+#' Filter vector based on value membership
+#'
+#' @description
+#' Creates a logical vector indicating which elements of x are in val
+#'
+#' @param x Vector to filter
+#' @param val Values to match against
+#' @return Logical vector indicating membership
 #' @noRd
 filter_var <- function(x, val) {
   if (length(val)) {
@@ -39,38 +57,157 @@ filter_var <- function(x, val) {
   }
 }
 
+#' Generate timestamp string
+#'
+#' @description
+#' Creates a formatted timestamp string in "YYYY-MM-DD_HHMMSS" format
+#'
+#' @return Character string containing formatted current timestamp
 #' @noRd
 time_stamp <- function() {
   format(Sys.time(), "%Y-%m-%d_%H%M%S")
 }
 
+#' Generate epidemiological color palettes
+#'
+#' @description
+#' Returns a list containing predefined color palettes for epidemiological visualizations
+#'
+#' @return A list containing color palettes:
+#'   \item{pal20}{A 20-color palette suitable for categorical data}
 #' @noRd
 epi_pals <- function() {
   x <- list()
 
   x$pal20 <- c(
-    "#4E79A7FF", "#A0CBE8FF", "#F28E2BFF", "#FFBE7DFF", "#59A14FFF",
-    "#8CD17DFF", "#B6992DFF", "#F1CE63FF", "#499894FF", "#86BCB6FF",
-    "#E15759FF", "#FF9D9AFF", "#79706EFF", "#BAB0ACFF", "#D37295FF",
-    "#FABFD2FF", "#B07AA1FF", "#D4A6C8FF", "#9D7660FF", "#D7B5A6FF"
+    "#4E79A7FF",
+    "#A0CBE8FF",
+    "#F28E2BFF",
+    "#FFBE7DFF",
+    "#59A14FFF",
+    "#8CD17DFF",
+    "#B6992DFF",
+    "#F1CE63FF",
+    "#499894FF",
+    "#86BCB6FF",
+    "#E15759FF",
+    "#FF9D9AFF",
+    "#79706EFF",
+    "#BAB0ACFF",
+    "#D37295FF",
+    "#FABFD2FF",
+    "#B07AA1FF",
+    "#D4A6C8FF",
+    "#9D7660FF",
+    "#D7B5A6FF"
   )
 
   x$pal10 <- c(
-    "#4E79A7FF", "#F28E2BFF", "#E15759FF", "#76B7B2FF", "#59A14FFF",
-    "#EDC948FF", "#B07AA1FF", "#FF9DA7FF", "#9C755FFF", "#BAB0ACFF"
+    "#4E79A7FF",
+    "#F28E2BFF",
+    "#E15759FF",
+    "#76B7B2FF",
+    "#59A14FFF",
+    "#EDC948FF",
+    "#B07AA1FF",
+    "#FF9DA7FF",
+    "#9C755FFF",
+    "#BAB0ACFF"
   )
 
   x$dark2 <- c(
-    "#4E79A7", "#1B9E77", "#D95F02", "#7570B3", "#E7298A",
-    "#66A61E", "#E6AB02", "#A6761D", "#666666"
+    "#4E79A7",
+    "#1B9E77",
+    "#D95F02",
+    "#7570B3",
+    "#E7298A",
+    "#66A61E",
+    "#E6AB02",
+    "#A6761D",
+    "#666666"
   )
 
   x$d310 <- c(
-    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf"
   )
 
   x
+}
+
+#' @noRd
+choro_pals <- function() {
+  list(
+    diverging = c(
+      "BrBG",
+      "PiYG",
+      "PRGn",
+      "PuOr",
+      "RdBu",
+      "RdGy",
+      "RdYlBu",
+      "RdYlGn",
+      "Spectral"
+    ),
+    sequential = c(
+      "Blues",
+      "BuGn",
+      "BuPu",
+      "GnBu",
+      "Greens",
+      "Greys",
+      "Oranges",
+      "OrRd",
+      "PuBu",
+      "PuBuGn",
+      "PuRd",
+      "Purples",
+      "RdPu",
+      "Reds",
+      "YlGn",
+      "YlGnBu",
+      "YlOrBr",
+      "YlOrRd"
+    ),
+    viridis = c(
+      "viridis",
+      "magma",
+      "inferno",
+      "plasma"
+    )
+  )
+}
+
+#' @noRd
+choro_breaks <- function() {
+  c(
+    "fixed",
+    "sd",
+    "equal",
+    "pretty",
+    "quantile",
+    "kmeans",
+    "hclust",
+    "bclust",
+    "fisher",
+    "jenks",
+    "dpih",
+    "q6",
+    "Q6",
+    "geom",
+    "arith",
+    "em",
+    "msd",
+    "ckmeans"
+  )
 }
 
 #' @noRd
@@ -96,18 +233,18 @@ setup_group_filter <- function(var, lab, ns, ...) {
 
 #' @noRd
 update_group_filter <- function(session, var, df) {
-    vec <- df[[var]]
-    if (is.factor(vec)) {
-      choices <- levels(droplevels(vec))
-    } else if (is.character(vec)) {
-      choices <- sort(unique(vec))
-    } else {
-      stop("Grouping variables must be factor or character class")
-    }
-    # shinyWidgets::updatePickerInput(session, var, choices = choices)
-    shiny::updateSelectizeInput(session, var, choices = choices)
+  vec <- df[[var]]
+  if (is.factor(vec)) {
+    choices <- levels(droplevels(vec))
+  } else if (is.character(vec)) {
+    choices <- sort(unique(vec))
+  } else {
+    stop("Grouping variables must be factor or character class")
+  }
+  # shinyWidgets::updatePickerInput(session, var, choices = choices)
+  shiny::updateSelectizeInput(session, var, choices = choices)
 }
- 
+
 #' @noRd
 make_select_filter <- function(var, lab, ns, df, ...) {
   vec <- df[[var]]
@@ -129,12 +266,7 @@ make_select_filter <- function(var, lab, ns, df, ...) {
 }
 
 #' @noRd
-picker_opts <- function(actions = TRUE,
-                        search = FALSE,
-                        none_text = "All",
-                        selected_text = "selected",
-                        container = "body",
-                        ...) {
+picker_opts <- function(actions = TRUE, search = FALSE, none_text = "All", selected_text = "selected", container = "body", ...) {
   shinyWidgets::pickerOptions(
     actionsBox = actions,
     liveSearch = search,
@@ -159,7 +291,7 @@ label_breaks <- function(breaks, lab_accuracy = .1, replace_Inf = TRUE) {
     frmt_num(breaks[1:length(breaks) - 1], accuracy = lab_accuracy),
     frmt_num(breaks[2:length(breaks)] - 1, accuracy = lab_accuracy)
   )
-  if (replace_Inf){
+  if (replace_Inf) {
     labs <- gsub("-Inf", "+", labs)
   }
   return(labs)
@@ -181,31 +313,34 @@ frmt_num <- function(x, accuracy = .1) {
 #' @noRd
 hc_week_labels <- function(week_letter = getOption("epishiny.week.letter", "W")) {
   highcharter::JS(
-    glue::glue("function () {
+    glue::glue(
+      "function () {
          var date = new Date(this.value);
          var year = date.getWeekYear();
          var week = date.getWeek();
          return year + '-{{week_letter}}' + week;
-     }", .open = "{{", .close = "}}")
+     }",
+      .open = "{{",
+      .close = "}}"
+    )
   )
 }
 
 
 #' @noRd
 my_hc_export <- function(
-    hc,
-    title,
-    subtitle,
-    credits,
-    caption,
-    colors,
-    width = 900,
-    height = 450,
-    dl_buttons = c("downloadPNG", "downloadJPEG", "downloadSVG", "separator", "downloadCSV", "downloadXLS"),
-    dl_text = "Download",
-    filename = "EPI-FIG-"
+  hc,
+  title,
+  subtitle,
+  credits,
+  caption,
+  colors,
+  width = 900,
+  height = 450,
+  dl_buttons = c("downloadPNG", "downloadJPEG", "downloadSVG", "separator", "downloadCSV", "downloadXLS"),
+  dl_text = "Download",
+  filename = "EPI-FIG-"
 ) {
-
   set_hc_val <- function(first, second) {
     if (!missing(first)) {
       out <- first
@@ -255,10 +390,10 @@ my_hc_export <- function(
 
 #' @noRd
 leaf_basemap <- function(
-    bbox,
-    baseGroups = c("Light", "OSM", "OSM HOT"),
-    overlayGroups = c("Boundaries"),
-    miniMap = TRUE
+  bbox,
+  baseGroups = c("Light", "OSM", "OSM HOT"),
+  overlayGroups = c("Boundaries"),
+  miniMap = TRUE
 ) {
   lf <- leaflet::leaflet() %>%
     leaflet::fitBounds(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]]) %>%
@@ -292,16 +427,45 @@ leaf_basemap <- function(
   return(lf)
 }
 
+#' Generate HTML Tooltip for Leaf Nodes
+#'
+#' This function creates an HTML tooltip for leaf nodes in a Shiny application.
+#' The tooltip displays information about the name, number of patients, population,
+#' and attack rate, if available.
+#'
+#' @param df A data frame containing the data.
+#' @param name_col A string specifying the column name for the names (default is "name").
+#' @param n_col A string specifying the column name for the counts (default is "total").
+#' @param n_lab A string specifying the label for the counts (default is "N patients").
+#' @param pop_col A string specifying the column name for the population (default is NULL).
+#' @param pop_lab A string specifying the label for the population (default is "Population").
+#' @param ar_col A string specifying the column name for the attack rate (default is NULL).
+#' @param ar_lab A string specifying the label for the attack rate (default is "Attack rate").
+#'
+#' @return A list of HTML elements to be used as tooltips in a Shiny application.
+#' @importFrom scales number
+#' @importFrom glue glue
+#' @importFrom purrr map
+#' @importFrom shiny HTML
 #' @noRd
+#'
+#' @examples
+#' df <- data.frame(
+#'   name = c("Location A", "Location B"),
+#'   total = c(100, NA),
+#'   population = c(1000, 2000),
+#'   attack_rate = c(10, NA)
+#' )
+#' make_leaf_tooltip(df, pop_col = "population", ar_col = "attack_rate")
 make_leaf_tooltip <- function(
-    df,
-    name_col = "name",
-    n_col = "total",
-    n_lab = "N patients",
-    pop_col = NULL,
-    pop_lab = "Population",
-    ar_col = NULL,
-    ar_lab = "Attack rate"
+  df,
+  name_col = "name",
+  n_col = "total",
+  n_lab = "N patients",
+  pop_col = NULL,
+  pop_lab = "Population",
+  ar_col = NULL,
+  ar_lab = "Attack rate"
 ) {
   counts <- ifelse(is.na(df[[n_col]]), "No data", scales::number(df[[n_col]], accuracy = 1))
   if (all(!is.null(pop_col), !is.null(ar_col))) {
@@ -312,16 +476,33 @@ make_leaf_tooltip <- function(
        {n_lab}: <b>{counts}</b><br>
        {pop_lab}: <b>{pop}</b><br>
        {ar_lab}: <b>{ar}</b> / 100 000<br>"
-    ) %>% purrr::map(shiny::HTML)
+    ) %>%
+      purrr::map(shiny::HTML)
   } else {
     glue::glue(
       "<b>{df[[name_col]]}</b><br>
        {n_lab}: <b>{counts}</b><br>"
-    ) %>% purrr::map(shiny::HTML)
+    ) %>%
+      purrr::map(shiny::HTML)
   }
 }
 
-#' @noRd 
+#' Get Label for Selected Choice
+#'
+#' This function retrieves the label for a selected choice from a list of choices.
+#'
+#' @param selected The selected choice for which the label is to be retrieved.
+#' @param choices A named vector of choices from which the label is to be retrieved.
+#' @param .default The default label to be used if the selected choice is not found in the choices. Defaults to the value of the "epishiny.count.label" option, or "N" if the option is not set.
+#'
+#' @return The label corresponding to the selected choice if found in the choices, otherwise the default label.
+#'
+#' @examples
+#' choices <- c(a = "apple", b = "banana", c = "cherry")
+#' get_label("b", choices) # Returns "banana"
+#' get_label("d", choices) # Returns "N" (default)
+#'
+#' @noRd
 get_label <- function(selected, choices, .default = getOption("epishiny.count.label", "N")) {
   if (length(choices)) {
     lab <- choices[choices == selected]
@@ -331,7 +512,7 @@ get_label <- function(selected, choices, .default = getOption("epishiny.count.la
   }
 }
 
-#' @noRd 
+#' @noRd
 format_filter_info <- function(fi = NULL, tf = NULL, pf = NULL) {
   if (length(tf)) {
     if (length(fi)) {

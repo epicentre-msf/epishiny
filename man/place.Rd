@@ -18,8 +18,8 @@ place_ui(
   groups_lab = "Group data by",
   no_grouping_lab = "No grouping",
   circle_size_lab = "Circle size multiplyer",
-  opts_btn_lab = "options",
-  download_lab = "download",
+  opts_btn_lab = "Map options",
+  download_lab = "Download image of current map",
   full_screen = TRUE
 )
 
@@ -31,7 +31,7 @@ place_server(
   group_vars = NULL,
   show_parent_borders = FALSE,
   choro_lab = "Rate /100 000",
-  choro_pal = "Reds",
+  choro_pal = "OrRd",
   choro_opacity = 0.7,
   export_width = 1200,
   export_height = 650,
@@ -81,7 +81,8 @@ If named, names are used as variable labels.}
 \item{choro_lab}{Label for attack rate choropleth (only applicable if \code{geo_data} contains population data)}
 
 \item{choro_pal}{Colour palette passed to \code{\link[leaflet:colorNumeric]{leaflet::colorBin()}} for attack rate choropleth
-(only applicable if \code{geo_data} contains population data)}
+(only applicable if \code{geo_data} contains population data). See details of \code{\link[leaflet:colorNumeric]{leaflet::colorBin()}}
+for all palette options.}
 
 \item{choro_opacity}{Opacity of choropleth colour (only applicable if \code{geo_data} contains population data)}
 
