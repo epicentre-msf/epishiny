@@ -1,0 +1,110 @@
+---
+title: "Adding new module"
+output: html_document
+date: "2023-09-20"
+---
+
+This vignette describes exploring the process for adding new module to `epishiny`, from an external user point of view.
+
+## Install package
+
+To ensure all relevant functions can be accessed by new module as described below, need to clone the `epishiny` package then use `pkgload::load_all` to load with all functions copied into environment (not just those listed as exports):
+```
+# install.packages("pkgload")
+library(pkgload)
+setwd("~/Documents/GitHub/epiverse-trace/")
+pkgload::load_all("epishiny")
+```
+
+This vignette also uses the new version of `EpiEstim` for aggregated data and `epiparameter`:
+```
+install.packages('EpiEstim', repos = c('https://mrc-ide.r-universe.dev', 'https://cloud.r-project.org'))
+install.packages("epiparameter")
+```
+
+## Overview of structure of modules in package
+
+Add the moment, there are two ways to display existing modules (defined in `05_launch.R`):
+
+- `launch_module()` displays a single module, currently one of the three (hard coded) options: `c("time", "place", "person")`. This looks for functions of form `[name]_ui.R` and `[name]_ui.R` which are currently sourced from `R/[n]_[name].R` files.
+
+- `launch_demo_dashboard()` displays an app that loads from the UI and server files defined in `inst/examples/demo/`. A simpler version of the structured app with multiple modules is in `docs/app.R`. Each module has a unique id (e.g. `id="map"`) so that repeated functions across the modules will have a unique name in the compiled shiny app (e.g. `ns("dropdown")` turns into `"map-dropdown"`)
+
+## How to define a new module
+
+#### Create new app structure
+First, we need to create a new app folder e.g. `demo/demo_add_module` with three files: `ui.R`, `server.R` and `global.R` (if relevant, to loadr= required options and data). 
+
+#### Create new module files
+Then we need to create both a UI and server file. As starting point, we duplicated `01_time.R` to create `01b_transmission.R`
+
+**Note**: because modules may be very customised to specific use cases, we currently define the new module files in an `R` folder within the app folder, so they will be called only in this app, rather than becoming part of the overall package namespace. But issue is that this requires `pkgload::load_all()` currently, which is designed for development. 
+
+**Issue suggestion: Export all functions required in module files to NAMESPACE, so can run with library(epishiny)**
+
+#### Add functions to UI and server files
+Then we need to add the relevant UI and server functions from `01b_transmission.R` to the UI and server functions in `ui.R`, `server.R`. Need to ensure that both `transmission_ui` in `ui.R` and `transmission_server` in `server.R` have the same ID, e.g. `id = "transmission"`.
+
+**Issue suggestion: Could the default ID be the function name (e.g. "time", "transmission") to avoid potential for manual errors? Or alternatively, add a test/error message to check these are consistently defined?**
+
+In `ui.R`, can use `layout_column_wrap()` to define the geometry of where the additional module sits. In this example, the new module will sit below the map on bottom left.
+
+**Issue suggestion: Would be useful to have way to add new module functions in `ui.R` and `server.R` automatically, without needing to add manually.**
+
+**Issue suggestion: Currently all modules group based on the `group_vars` variable in `global.R`, with "Governate" as the default. Not sure whether this can be edited easily currently, or needs to be redefined in `server.R` etc. Would be useful to have option for customisation (e.g. if plotting R, would be good to show fitted timeseries as default.**
+
+Then we define a global function `estimate_func()` in `global.R` that estimates R using `{EpiEstim}`. This function also groups by date of notification across locations for the weekly R estimation, then re-aggregates to match the original object (this is currently hard coded for data that is displayed weekly).
+
+The serial interval for cholera has previously been defined as a gamma distribution with shape 0.5 and rate 0.1 ([Kahn et al, PNAS, 2020](https://www.pnas.org/doi/10.1073/pnas.1913052117)), so we can convert this into mean and standard deviation as follows:
+
+```
+epiparameter::convert_params_to_summary_stats(
+  distribution = "gamma", shape = 0.5, scale = 1/0.1
+)
+```
+This assumption gives serial interval = 5 days with s.d. = 7.1. We currently calculate R based on total hospitalisations by date of notification.
+
+**Issue suggestion: Would be useful to move the definition of `date_var = "date_notification"` outside `server.R` to make easier for user to define events of interest, and have flexibility in how `estimate_func()` handles different aggregations. Would also be useful to have option for which outcome/group to target in the R estimation (e.g. deaths vs hospitalisations).**
+
+We then edit `transmission_server()` in `01b_transmission.R` to output patient numbers from existing CFR calculation, then pass the data.frame for R estimation and store in the `ratio` column previously used to store CFR values:
+```
+  ... %>%
+  dplyr::select(!!date, n1, N, ratio)
+  
+  df <- df %>% dplyr::left_join(df_ratio, by = input$date)
+
+  # Estimate R
+  #df$ratio <- estimate_func(df)
+```
+**Question: is this the optimal place to introduce this functionality (i.e. using ratio as placeholder for timeseries)? Because weekly data required interpolation, it slows down app loading, so may be better to have as pre-processed input?**
+
+**Issue suggestion: The above code outputs the same R value (=`ratio` column) across geographical areas (it does the same for the original CFR calculation). Not all areas have data for all dates, so this requires some alignment. Could be neater to have a separate ratio object with one national timeseries - this would also allow flexibility in what is plotted (i.e. daily R estimates rather than weekly).**
+
+**Issue suggestion: There is some duplication of same plotting code within the `(isolate(isTruthy(input$show_ratio_line)))` if statement, once when plot displayed and again when updated in observed object, which makes customisation more challenging. Also not sure how to display overlaid R by default on plot, rather than requiring user to select Options > Show R? in the app.**
+
+Note that currently the R plots show only the mean from EpiEstim, but ideally would include uncertainty and/or disclaimer.
+
+**Issue suggestion: Add uncertainty to R estimates, which would require editing the `estimate_func()` function as well as the `01b_transmission.R` server functions to display additional shaded region with uncertainty interval.
+
+## How to add an edited module
+
+It could also be useful to have ability to edit features of a module locally (i.e. `01_time.R`), then deploy this in an app. But from quick check, doesn't seem to overwrite the loaded package functions if place an edited R file in within the app folder, e.g. `demo/demo_add_module/R`
+
+**Issue suggestion: Could be useful to have option for user to load edited version of existing modules locally, beyond display options that can already be defined in `global.R`. Although this may add some instability (e.g. if edited modules have bugs), in which case it might be better to expand as module options that can be defined in as app globals for common use cases.**
+
+#### Try out the app
+
+To use app locally, point to app folder and run shiny:
+```
+setwd("~/Documents/GitHub/epiverse-trace/epishiny/inst/examples/demo_add_module/"); runApp()
+```
+
+## Miscellaenous notes about broader potential improvements
+
+- Unclear why default option in `launch_module()` is `module = c("time", "place", "person")` when it only takes single argument
+
+- App loading is currently quite slow. Wonder if there are particular dependencies or processing tasks that could be optimised. Could check what `waiter()` is wrapped around?
+
+- `date` is a base function in R, so redefining it as a variable in the code potentially creates challenges for users to edit and test functions.
+
+
