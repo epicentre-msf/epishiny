@@ -4,7 +4,10 @@
 \alias{launch_demo_dashboard}
 \title{Launch epishiny demo dashboard}
 \usage{
-launch_demo_dashboard()
+launch_demo_dashboard(disease = "ebola")
+}
+\arguments{
+\item{disease}{name of disease demo dashboard to launch. Current options are "ebola" and "measles".}
 }
 \value{
 No return value, a shiny app is launched.
@@ -17,6 +20,6 @@ using \code{epishiny} modules within a \code{bslib} UI.
 ## Only run this example in interactive R sessions
 if (interactive()) {
   library(epishiny)
-  launch_demo_dashboard()
+  launch_demo_dashboard("ebola")
 }
 }

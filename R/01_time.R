@@ -13,7 +13,7 @@
 #'  If named, names are used as variable labels.
 #' @param title Header title for the card.
 #' @param icon The icon to display next to the title.
-#' @param tooltip additional title hover text information 
+#' @param tooltip additional title hover text information
 #' @param opts_btn_lab text label for the dropdown menu button.
 #' @param date_lab text label for the date variable input.
 #' @param date_int_lab text label for the date interval input.
@@ -24,8 +24,9 @@
 #' @param no_grouping_lab text label for the no grouping option in the grouping input.
 #' @param bar_stacking_lab text label for bar stacking option.
 #' @param cumul_data_lab text label for cumulative data option.
-#' @param ratio_line_lab text label for the ratio line input. This input will only be visable if 
+#' @param ratio_line_lab text label for the ratio line input. This input will only be visable if
 #'  `show_ratio` is TRUE in [time_server]
+#' @param zoom_control_lab text label for the zoom control option.
 #' @param full_screen Add button to card to with the option to enter full screen mode?
 #'
 #' @return the module server function returns any point click event data of the highchart.
@@ -34,24 +35,25 @@
 #' @export
 
 time_ui <- function(
-    id,
-    date_vars,
-    count_vars = NULL,
-    group_vars = NULL,
-    title = "Time",
-    icon = bsicons::bs_icon("bar-chart-line-fill"),
-    tooltip = NULL,
-    opts_btn_lab = "options",
-    date_lab = "Date axis",
-    date_int_lab = "Date interval",
-    date_intervals = c("Day" = "day", "Week" = "week", "Month" = "month"),
-    count_vars_lab = "Indicator",
-    groups_lab = "Group data by",
-    no_grouping_lab = "No grouping",
-    bar_stacking_lab = "Bar stacking",
-    cumul_data_lab = "Show cumulative data?",
-    ratio_line_lab = "Show ratio line?",
-    full_screen = TRUE
+  id,
+  date_vars,
+  count_vars = NULL,
+  group_vars = NULL,
+  title = "Time",
+  icon = bsicons::bs_icon("calendar2-week"),
+  tooltip = NULL,
+  opts_btn_lab = "Chart options",
+  date_lab = "Date axis",
+  date_int_lab = "Date interval",
+  date_intervals = c("Day" = "day", "Week" = "week", "Month" = "month"),
+  count_vars_lab = "Indicator",
+  groups_lab = "Group data by",
+  no_grouping_lab = "No grouping",
+  bar_stacking_lab = "Bar stacking",
+  cumul_data_lab = "Show cumulative data?",
+  ratio_line_lab = "Show ratio line?",
+  zoom_control_lab = "Add zoom control slider?",
+  full_screen = TRUE
 ) {
   ns <- NS(id)
 
@@ -63,7 +65,7 @@ time_ui <- function(
 
   if (length(tooltip)) {
     tt <- bslib::tooltip(
-      bsicons::bs_icon("info-circle"),
+      bsicons::bs_icon("info-circle", class = "ms-2 text-primary", size = "1.2em"),
       tooltip
     )
   } else {
@@ -76,17 +78,18 @@ time_ui <- function(
       # min_height = 300,
       full_screen = full_screen,
       bslib::card_header(
-        class = "d-flex justify-content-start align-items-center",
-
-        tags$span(icon, title, tt, class = "pe-2"),
-
+        class = "d-flex align-items-center",
+        # title
+        tags$span(icon, title, class = "me-auto pe-2"),
         # options button and dropdown menu
         bslib::popover(
-          trigger = actionButton(
-            ns("dropdown"),
-            icon = shiny::icon("sliders"),
-            label = opts_btn_lab,
-            class = "btn-sm btn-light pe-2 me-2"
+          title = opts_btn_lab,
+          placement = "left",
+          trigger = bsicons::bs_icon(
+            "gear",
+            title = opts_btn_lab,
+            class = "ms-2 text-primary",
+            size = "1.2em"
           ),
           selectInput(
             ns("date"),
@@ -100,7 +103,7 @@ time_ui <- function(
             ns("date_interval"),
             label = date_int_lab,
             size = "sm",
-            status = "outline-dark",
+            status = "outline-primary",
             choices = date_intervals,
             selected = ifelse("week" %in% date_intervals, "week", date_intervals[1])
           ),
@@ -124,23 +127,31 @@ time_ui <- function(
             ns("bar_stacking"),
             label = bar_stacking_lab,
             size = "sm",
-            status = "outline-dark",
+            status = "outline-primary",
             choices = c("Count" = "normal", "Percent" = "percent"),
             selected = "normal"
           ),
-          shiny::checkboxInput(
+          bslib::input_switch(
             ns("cumulative"),
             cumul_data_lab,
             value = FALSE,
             width = "100%"
           ),
-          shiny::checkboxInput(
+          bslib::input_switch(
             ns("show_ratio_line"),
             ratio_line_lab,
             value = FALSE,
             width = "100%"
+          ),
+          bslib::input_switch(
+            ns("add_zoom_control"),
+            zoom_control_lab,
+            value = FALSE,
+            width = "100%"
           )
-        )
+        ),
+        # tooltip at the end
+        tt
       ),
       bslib::card_body(
         padding = 0,
@@ -151,8 +162,6 @@ time_ui <- function(
 }
 
 
-
-
 #' @param df Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.
 #' @param show_ratio Display a ratio line on the epicurve?
 #' @param ratio_var For patient level data, character string of variable name to use for ratio calculation.
@@ -161,6 +170,8 @@ time_ui <- function(
 #'  For aggregated data, character string of numeric count column to use of ratio numerator i.e. 'deaths'.
 #' @param ratio_denom For patient level data, values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
 #'  For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.
+#' @param group_pal Colour palette used for groups.
+#' @param na_colour Colour used for missing data.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
 #'   returned by that function here wrapped in a [shiny::reactive()] to add filter information to chart exports.
 #' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` object
@@ -173,19 +184,21 @@ time_ui <- function(
 #' @importFrom dplyr .data
 #' @export
 time_server <- function(
-    id,
-    df,
-    date_vars,
-    count_vars = NULL,
-    group_vars = NULL,
-    show_ratio = FALSE,
-    ratio_var = NULL,
-    ratio_lab = NULL,
-    ratio_numer = NULL,
-    ratio_denom = NULL,
-    place_filter = shiny::reactiveVal(),
-    filter_info = shiny::reactiveVal(),
-    filter_reset = shiny::reactiveVal()
+  id,
+  df,
+  date_vars,
+  count_vars = NULL,
+  group_vars = NULL,
+  show_ratio = FALSE,
+  ratio_var = NULL,
+  ratio_lab = NULL,
+  ratio_numer = NULL,
+  ratio_denom = NULL,
+  group_pal = epi_pals()$frost,
+  na_colour = "#666666",
+  place_filter = shiny::reactiveVal(),
+  filter_info = shiny::reactiveVal(),
+  filter_reset = shiny::reactiveVal()
 ) {
   shiny::moduleServer(
     id,
@@ -239,54 +252,54 @@ time_server <- function(
         date <- input$date
         rv$date <- date
         rv$date_sym <- rlang::sym(date)
-        rv$count_var <- input$count_var
+        count_var <- input$count_var
+        rv$count_var <- count_var
         group <- input$group
         rv$group <- group
         rv$group_sym <- rlang::sym(group)
         # TODO: add method for agg data
         rv$missing_dates <- sum(is.na(df_mod()[[input$date]]))
-        count_var <- input$count_var
         n_lab <- get_label(count_var, count_vars)
         rv$n_lab <- n_lab
       })
 
       df_curve <- reactive({
-        date <- rlang::sym(input$date)
-        group <- rlang::sym(input$group)
-
         # aggregate dates based on input
         df_interval <- df_mod() %>%
-          dplyr::mutate(!!date := lubridate::floor_date(
-            lubridate::as_date(!!date),
-            unit = input$date_interval,
-            week_start = getOption("epishiny.week.start", 1)
-          ))
+          dplyr::mutate(
+            !!rv$date_sym := lubridate::floor_date(
+              lubridate::as_date(!!rv$date_sym),
+              unit = input$date_interval,
+              week_start = getOption("epishiny.week.start", 1)
+            )
+          )
 
         # is the data pre-aggregated
         is_agg <- as.logical(length(count_vars))
         # is a data grouping variable supplied
-        is_grouped <- input$group != "n"
+        is_grouped <- rv$group != "n"
 
         df_time <- get_time_df(
           df = df_interval,
           is_agg = is_agg,
           is_grouped = is_grouped,
-          date_var = input$date,
-          count_var = input$count_var,
-          group_var = input$group
+          date_var = rv$date,
+          count_var = rv$count_var,
+          group_var = rv$group,
+          date_interval = input$date_interval
         )
 
         if (show_ratio) {
           df_ratio <- get_ratio_df(
             df = df_interval,
-            date_var = input$date,
+            date_var = rv$date,
             is_agg = is_agg,
             ratio_var = ratio_var,
             ratio_lab = ratio_lab,
             ratio_numer = ratio_numer,
             ratio_denom = ratio_denom
           )
-          df_time <- df_time %>% dplyr::left_join(df_ratio, by = input$date)
+          df_time <- df_time %>% dplyr::left_join(df_ratio, by = rv$date)
         }
 
         return(df_time)
@@ -302,7 +315,9 @@ time_server <- function(
         missing_dates <- isolate(rv$missing_dates)
         y_lab <- isolate(rv$n_lab)
         n_var <- dplyr::if_else(
-          isolate(input$cumulative), "n_c", "n"
+          isolate(input$cumulative),
+          "n_c",
+          "n"
         )
 
         shiny::validate(shiny::need(nrow(df) > 0, "No data to display"))
@@ -316,7 +331,7 @@ time_server <- function(
             highcharter::hcaes(!!date_sym, !!rlang::sym(n_var)),
             id = "n_bars",
             name = rv$n_lab
-          ) %>% 
+          ) %>%
             highcharter::hc_tooltip(shared = TRUE)
         } else {
           group_lab <- get_label(group, group_vars)
@@ -325,9 +340,17 @@ time_server <- function(
             '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'
           )
 
+          if (any(is.na(df[[group]]))) {
+            df[[group]] <- forcats::fct_na_value_to_level(df[[group]], level = getOption("epishiny.na.label", "(Missing)"))
+          }
+          n_groups <- dplyr::n_distinct(df[[group]])
+          missing_data <- getOption("epishiny.na.label", "(Missing)") %in% unique(df[[group]])
+          pal <- prepare_palette(n_groups, missing_data, pal = group_pal, na_colour = na_colour)
+
           hc <- highcharter::hchart(
             df,
             "column",
+            showInNavigator = TRUE,
             highcharter::hcaes(!!date_sym, !!n_var, group = !!group_sym)
           ) %>%
             highcharter::hc_legend(
@@ -338,7 +361,8 @@ time_server <- function(
               x = -10,
               y = 40,
               itemStyle = list(textOverflow = "ellipsis", width = 150)
-            ) %>% 
+            ) %>%
+            highcharter::hc_colors(pal) %>%
             highcharter::hc_tooltip(
               shared = TRUE,
               pointFormat = '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>'
@@ -346,9 +370,13 @@ time_server <- function(
         }
 
         click_js <- highcharter::JS(
-          glue::glue('function(event) {
+          glue::glue(
+            'function(event) {
             Shiny.setInputValue("{{ns("chart_click")}}", {x: event.point.x, y: event.point.y}, {priority: "event"});
-          }', .open = "{{", .close = "}}")
+          }',
+            .open = "{{",
+            .close = "}}"
+          )
         )
 
         # if a click filter has previously been applied, re-add the plotBand highlight
@@ -373,9 +401,10 @@ time_server <- function(
           highcharter::hc_plotOptions(
             column = list(stacking = isolate(input$bar_stacking)),
             series = list(cursor = "pointer", stickyTracking = TRUE, events = list(click = click_js))
-          ) %>% 
+          ) %>%
           highcharter::hc_xAxis(
             title = list(text = date_lab),
+            lineColor = "black",
             allowDecimals = FALSE,
             crosshair = TRUE,
             plotBands = plot_bands
@@ -392,7 +421,7 @@ time_server <- function(
               gridLineWidth = 0
             )
           ) %>%
-          highcharter::hc_boost(enabled = TRUE) %>% 
+          highcharter::hc_boost(enabled = TRUE) %>%
           my_hc_export(caption = isolate(filter_info_out()))
 
         if (isolate(input$date_interval == "week")) {
@@ -405,6 +434,21 @@ time_server <- function(
               labels = list(
                 formatter = hc_week_labels()
               )
+            )
+        }
+
+        if (input$add_zoom_control) {
+          hc <- hc %>%
+            highcharter::hc_rangeSelector(
+              enabled = TRUE,
+              inputEnabled = FALSE,
+              allButtonsEnabled = FALSE,
+              selected = 5
+            ) %>%
+            # add series for navigator
+            highcharter::hc_navigator(
+              enabled = TRUE,
+              series = list(type = "area", stacking = "normal")
             )
         }
 
@@ -430,7 +474,7 @@ time_server <- function(
             highcharter::hc_add_series(
               data = df,
               "line",
-              highcharter::hcaes(x =!!date, y = !!r_var),
+              highcharter::hcaes(x = !!date, y = !!r_var),
               id = "ratio_line",
               name = ratio_lab,
               yAxis = 1,
@@ -449,7 +493,8 @@ time_server <- function(
         }
 
         hc
-      }) %>% bindEvent(df_curve())
+      }) %>%
+        bindEvent(df_curve(), input$add_zoom_control)
 
       # update bar stacking type via proxy
       observe({
@@ -457,7 +502,8 @@ time_server <- function(
           highcharter::hcpxy_update(
             plotOptions = list(column = list(stacking = input$bar_stacking))
           )
-      }) %>% bindEvent(input$bar_stacking, ignoreInit = TRUE)
+      }) %>%
+        bindEvent(input$bar_stacking, ignoreInit = TRUE)
 
       # update chart via proxy when cumul/non-cumul data is requested
       shiny::observe({
@@ -498,15 +544,16 @@ time_server <- function(
               data = df[[r_var]]
             )
         }
-      }) %>% shiny::bindEvent(input$cumulative, ignoreInit = TRUE)
+      }) %>%
+        shiny::bindEvent(input$cumulative, ignoreInit = TRUE)
 
       # update chart via proxy when ratio line added or removed
       shiny::observe({
         if (isTruthy(input$show_ratio_line)) {
           df_line <- df_curve()
           r_var <- ifelse(
-            input$cumulative, 
-            rlang::sym("ratio_c"), 
+            input$cumulative,
+            rlang::sym("ratio_c"),
             rlang::sym("ratio")
           )
 
@@ -555,7 +602,8 @@ time_server <- function(
               )
             )
         }
-      }) %>% shiny::bindEvent(input$show_ratio_line, ignoreInit = TRUE)
+      }) %>%
+        shiny::bindEvent(input$show_ratio_line, ignoreInit = TRUE)
 
       # click event management ========================================
       bar_click <- reactiveVal(NULL)
@@ -567,17 +615,20 @@ time_server <- function(
         } else {
           bar_click(new_click)
         }
-      }) %>% bindEvent(input$chart_click)
+      }) %>%
+        bindEvent(input$chart_click)
 
       # reset bar click if a filter reset is passed from filter module
       observe({
         bar_click(NULL)
-      }) %>% bindEvent(filter_reset(), ignoreInit = TRUE)
+      }) %>%
+        bindEvent(filter_reset(), ignoreInit = TRUE)
 
       # reset bar click if date interval is changed
       observe({
         bar_click(NULL)
-      }) %>% bindEvent(input$date_interval, ignoreInit = TRUE)
+      }) %>%
+        bindEvent(input$date_interval, ignoreInit = TRUE)
 
       # format chart click input values for filtering
       time_filter <- shiny::reactive({
@@ -608,21 +659,24 @@ time_server <- function(
           pb_limits <- get_plot_band_limits(tf)
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_update(
-              xAxis = list(plotBands = list(
-                list(
-                  color = "#D3D3D350",
-                  zIndex = 1,
-                  from = highcharter::datetime_to_timestamp(pb_limits$from),
-                  to = highcharter::datetime_to_timestamp(pb_limits$to)
+              xAxis = list(
+                plotBands = list(
+                  list(
+                    color = "#D3D3D350",
+                    zIndex = 1,
+                    from = highcharter::datetime_to_timestamp(pb_limits$from),
+                    to = highcharter::datetime_to_timestamp(pb_limits$to)
+                  )
                 )
-              ))
+              )
             )
         } else {
           # remove plotBands
           highcharter::highchartProxy(ns("chart")) %>%
             highcharter::hcpxy_update(xAxis = list(plotBands = list()))
         }
-      }) %>% bindEvent(time_filter(), ignoreNULL = FALSE)
+      }) %>%
+        bindEvent(time_filter(), ignoreNULL = FALSE)
 
       # return time click filter data to main app
       return(reactive(time_filter()))
@@ -632,12 +686,13 @@ time_server <- function(
 
 #' @noRd
 get_time_df <- function(
-    df,
-    is_agg,
-    is_grouped,
-    date_var,
-    count_var,
-    group_var
+  df,
+  is_agg,
+  is_grouped,
+  date_var,
+  count_var,
+  group_var,
+  date_interval
 ) {
   if (is_agg && !length(count_var)) {
     cli::cli_abort(c(
@@ -653,6 +708,14 @@ get_time_df <- function(
     }
     df <- df %>%
       tidyr::drop_na() %>%
+      tidyr::complete(
+        !!rlang::sym(date_var) := seq.Date(
+          min(!!rlang::sym(date_var), na.rm = TRUE),
+          max(!!rlang::sym(date_var), na.rm = TRUE),
+          by = date_interval
+        ),
+        fill = list(n = 0)
+      ) %>%
       dplyr::arrange(.data[[date_var]]) %>%
       dplyr::mutate(n_c = cumsum(.data$n))
   } else {
@@ -664,6 +727,15 @@ get_time_df <- function(
     }
     df <- df %>%
       tidyr::drop_na() %>%
+      tidyr::complete(
+        !!rlang::sym(date_var) := seq.Date(
+          min(!!rlang::sym(date_var), na.rm = TRUE),
+          max(!!rlang::sym(date_var), na.rm = TRUE),
+          by = date_interval
+        ),
+        tidyr::nesting(!!rlang::sym(group_var)),
+        fill = list(n = 0)
+      ) %>%
       dplyr::group_by(.data[[group_var]]) %>%
       dplyr::arrange(.data[[date_var]]) %>%
       dplyr::mutate(n_c = cumsum(.data$n)) %>%
@@ -672,7 +744,7 @@ get_time_df <- function(
   return(df)
 }
 
-#' @noRd 
+#' @noRd
 get_ratio_df <- function(
   df,
   date_var,
@@ -706,7 +778,6 @@ get_ratio_df <- function(
       dplyr::arrange(.data[[date_var]]) %>%
       dplyr::mutate(ratio_c = cumsum(.data$n1) / cumsum(.data$N) * 100) %>%
       dplyr::select(.data[[date_var]], .data$ratio, .data$ratio_c)
-
   } else {
     # method for aggregated data
     if (any(is.null(ratio_numer), is.null(ratio_denom), is.null(ratio_lab))) {
@@ -730,12 +801,11 @@ get_ratio_df <- function(
       dplyr::arrange(.data[[date_var]]) %>%
       dplyr::mutate(ratio_c = cumsum(.data$n1) / cumsum(.data$N) * 100) %>%
       dplyr::select(.data[[date_var]], .data$ratio, .data$ratio_c)
-
   }
   return(df_ratio)
 }
 
-#' @noRd 
+#' @noRd
 format_period <- function(date_times, unit) {
   dplyr::case_match(
     unit,
@@ -778,7 +848,7 @@ format_week <- function(date, week_start = getOption("epishiny.week.start", 1)) 
 }
 
 #' Calculate plotBand limits from time_filter information
-#' @noRd 
+#' @noRd
 get_plot_band_limits <- function(tf) {
   if (tf$interval == "day") {
     pad <- lubridate::period(12, "hours")

@@ -1,4 +1,4 @@
-ui <-tagList(
+ui <- tagList(
   page_navbar(
     title = app_title,
     window_title = app_title,
@@ -7,14 +7,11 @@ ui <-tagList(
     collapsible = TRUE,
 
     theme = bs_theme(
-      version = 5,
-      # preset = "bootstrap",
-      base_font = font_google(
-        app_font,
-        wght = c(300, 400, 500, 600, 700, 800),
-        ital = c(0, 1)
-      ),
-      font_scale = 0.8
+      preset = "minty",
+      font_scale = .8,
+      primary = "#4682B4",
+      secondary = "#D37331",
+      success = "#94BA3B"
     ),
 
     # nav pages
@@ -26,7 +23,7 @@ ui <-tagList(
         sidebar = filter_ui(
           "filter",
           group_vars = group_vars,
-          date_range = date_range,
+          # date_range = date_range,
           period_lab = "Notification period"
         ),
         # main content

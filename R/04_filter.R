@@ -1,4 +1,3 @@
-
 #' Filter module
 #'
 #' Filter linelist data using a sidebar with shiny inputs.
@@ -7,14 +6,15 @@
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
-#' @param date_range A vector containing the minimum and maximum dates for the date range input.
 #' @param title The title of the sidebar.
 #' @param date_filters_lab The label for the date filters accordion panel.
 #' @param period_lab The label for the date range input.
 #' @param missing_dates_lab The label for the include missing dates checkbox.
 #' @param group_filters_lab The label for the group filters accordion panel.
 #' @param filter_btn_lab The label for the filter data button.
+#' @param filter_btn_tooltip The tooltip for the filter data button.
 #' @param reset_btn_lab The label for the reset filters button.
+#' @param bg The background color of the sidebar.
 #'
 #' @return A [bslib::sidebar] UI element with date filters, group filters, and action buttons.
 #'
@@ -22,68 +22,92 @@
 #' @export
 #' @example inst/examples/docs/app.R
 filter_ui <- function(
-    id,
-    group_vars,
-    date_range,
-    title = NULL,
-    date_filters_lab = "Date filters",
-    period_lab = "Period",
-    missing_dates_lab = "Include patients with missing dates?",
-    group_filters_lab = "Group filters",
-    filter_btn_lab = "Filter",
-    reset_btn_lab = "Reset"
+  id,
+  group_vars,
+  title = tags$span(bsicons::bs_icon("filter"), "Filters"),
+  date_filters_lab = "Date filters",
+  period_lab = "Period",
+  missing_dates_lab = "Include patients with missing dates?",
+  group_filters_lab = "Group filters",
+  filter_btn_lab = "update",
+  filter_btn_tooltip = "Click here to apply filters and update the graphics",
+  reset_btn_lab = "Reset",
+  bg = "#fff"
 ) {
   ns <- NS(id)
 
   bslib::sidebar(
     id = ns("sb"),
-    title = title,
+    title = NULL,
+    bg = bg,
+    div(
+      class = "d-flex justify-content-between align-items-center",
+      tags$h5(title),
+      bslib::input_task_button(
+        id = ns("go"),
+        label = filter_btn_lab,
+        icon = icon("refresh"),
+        label_busy = "processing",
+        class = "btn-sm",
+        type = "link"
+      ) |>
+        bslib::tooltip(
+          filter_btn_tooltip,
+          id = ns("tt-filter"),
+          placement = "bottom"
+        )
+    ),
 
     bslib::accordion(
       open = FALSE,
+      multiple = FALSE,
       bslib::accordion_panel(
         date_filters_lab,
         dateRangeInput(
           inputId = ns("date"),
           label = period_lab,
-          min = date_range[1],
-          max = date_range[2],
-          start = date_range[1],
-          end = date_range[2],
-          weekstart = 1,
+          min = NULL, # date_range[1],
+          max = NULL, # date_range[2],
+          start = NULL, # date_range[1],
+          end = NULL, # date_range[2],
+          weekstart = getOption("epishiny.week.start", 1),
           format = "d/m/yy"
         ),
         # actionButton(ns("days_all"), "Période complète", class = "btn-sm"),
         # actionButton(ns("days_14"), "14 jours", class = "btn-sm"),
         # actionButton(ns("days_7"), "7 jours", class = "btn-sm"),
         # actionButton(ns("days_1"), "Dernier jour", class = "btn-sm"),
-        div(style = "padding-top: 10px;", bslib::input_switch(
-          id = ns("include_date_na"),
-          label = missing_dates_lab,
-          value = TRUE
-        ))
+        div(
+          style = "padding-top: 10px;",
+          bslib::input_switch(
+            id = ns("include_date_na"),
+            label = missing_dates_lab,
+            value = TRUE
+          )
+        )
       ),
       bslib::accordion_panel(
         group_filters_lab,
         purrr::map2(group_vars, names(group_vars), setup_group_filter, ns)
       )
     ),
-
-    bslib::layout_columns(
-      col_widths = 6,
-      actionButton(
-        ns("go"),
-        filter_btn_lab,
-        icon = icon("filter"),
-        class = "btn-sm btn-primary"
-      ),
-      actionButton(
-        ns("reset"),
-        reset_btn_lab,
-        icon = icon("arrows-rotate"),
-        class = "btn-sm btn-light"
-      )
-    ),
+    # bslib::layout_columns(
+    #   col_widths = 6,
+    #   bslib::input_task_button(
+    #     ns("go"),
+    #     filter_btn_lab,
+    #     icon = icon("filter"),
+    #     # type = "primary"
+    #     class = "btn-sm btn-primary"
+    #   ),
+    #   actionButton(
+    #     ns("reset"),
+    #     reset_btn_lab,
+    #     icon = icon("arrows-rotate"),
+    #     # type = "light"
+    #     class = "btn-sm btn-light"
+    #   )
+    # ),
     uiOutput(ns("filter_info"))
   )
 }
@@ -95,7 +119,6 @@ filter_ui <- function(
 #'  its filter information to the filter sidebar
 #' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to add
 #'  its filter information to the filter sidebar
-#' @param na_label The label to use for missing values in group variables.
 #'
 #' @return The server function returns both the filtered data and a formatted text string with filter information
 #'   named `df` and `filter_info` respectively in a reactive list. These should be passed as arguments
@@ -105,13 +128,12 @@ filter_ui <- function(
 #' @rdname filter
 #' @export
 filter_server <- function(
-    id,
-    df,
-    date_var,
-    group_vars,
-    time_filter = shiny::reactiveVal(),
-    place_filter = shiny::reactiveVal(),
-    na_label = getOption("epishiny.na.label", "(Missing)")
+  id,
+  df,
+  date_var,
+  group_vars,
+  time_filter = shiny::reactiveVal(),
+  place_filter = shiny::reactiveVal()
 ) {
   moduleServer(
     id,
@@ -127,8 +149,9 @@ filter_server <- function(
       # }) %>% shiny::bindEvent(df_mod())
 
       observe({
-        purrr::walk(group_vars, ~update_group_filter(session, .x, df_mod()))
-      }) %>% shiny::bindEvent(df_mod())
+        purrr::walk(group_vars, ~ update_group_filter(session, .x, df_mod()))
+      }) %>%
+        shiny::bindEvent(df_mod())
 
       # ==========================================================================
       # DATA
@@ -144,12 +167,25 @@ filter_server <- function(
         force_reactive(df) %>%
           dplyr::mutate(dplyr::across(
             unname(group_vars),
-            \(x) forcats::fct_na_value_to_level(x, level = na_label)
+            \(x) forcats::fct_na_value_to_level(x, level = getOption("epishiny.na.label", "(Missing)"))
           ))
       })
 
       observe({
         rv$df <- df_mod()
+      })
+
+      # set date range input as range from data date_var
+      observe({
+        date_range <- range(df_mod()[[date_var]], na.rm = TRUE)
+        shiny::updateDateRangeInput(
+          session = session,
+          inputId = "date",
+          min = date_range[1],
+          max = date_range[2],
+          start = date_range[1],
+          end = date_range[2]
+        )
       })
 
       # reset sidebar inputs when button clicked
@@ -237,8 +273,7 @@ filter_server <- function(
 
         df_out <- df_mod() %>%
           dplyr::filter(
-            ((.data[[date_var]] >= as.Date(date_range[1]) & .data[[date_var]] <= as.Date(date_range[2]))
-             | is.na(.data[[date_var]]))
+            ((.data[[date_var]] >= as.Date(date_range[1]) & .data[[date_var]] <= as.Date(date_range[2])) | is.na(.data[[date_var]]))
           )
 
         if (!isolate(input$include_date_na)) {
@@ -251,7 +286,8 @@ filter_server <- function(
         df_out <- df_out %>% dplyr::filter(selected)
 
         rv$df <- df_out
-      }) %>% shiny::bindEvent(input$go, ignoreNULL = TRUE, ignoreInit = TRUE)
+      }) %>%
+        shiny::bindEvent(input$go, ignoreNULL = TRUE, ignoreInit = TRUE)
 
       # ==========================================================================
       # FILTER INFORMATION TEXT OUTPUT
@@ -261,11 +297,17 @@ filter_server <- function(
           "Period: {format(input$date[1], '%d/%b/%y')} - {format(input$date[2], '%d/%b/%y')}"
         )
 
-        group_filters <- purrr::map2(unname(group_vars), names(group_vars), ~{
-          if (length(input[[.x]])) {
-            glue::glue("{.y}: {glue::glue_collapse(input[[.x]], sep = ', ')}")
+        group_filters <- purrr::map2(
+          unname(group_vars),
+          names(group_vars),
+          ~ {
+            if (length(input[[.x]])) {
+              glue::glue("{.y}: {glue::glue_collapse(input[[.x]], sep = ', ')}")
+            }
           }
-        }) %>% purrr::compact() %>% purrr::list_simplify()
+        ) %>%
+          purrr::compact() %>%
+          purrr::list_simplify()
 
         fi_out <- glue::glue("<b>Filters applied</b></br>{date_filters}")
 
@@ -274,7 +316,8 @@ filter_server <- function(
         }
 
         rv$filter_info <- fi_out
-      })%>% shiny::bindEvent(input$go, ignoreNULL = FALSE, ignoreInit = FALSE)
+      }) %>%
+        shiny::bindEvent(input$go, ignoreNULL = FALSE, ignoreInit = FALSE)
 
       output$filter_info <- renderUI({
         fi <- rv$filter_info
@@ -288,7 +331,6 @@ filter_server <- function(
       shiny::reactive({
         shiny::reactiveValuesToList(rv)
       })
-
     }
   )
 }

@@ -11,9 +11,9 @@ time_ui(
   count_vars = NULL,
   group_vars = NULL,
   title = "Time",
-  icon = bsicons::bs_icon("bar-chart-line-fill"),
+  icon = bsicons::bs_icon("calendar2-week"),
   tooltip = NULL,
-  opts_btn_lab = "options",
+  opts_btn_lab = "Chart options",
   date_lab = "Date axis",
   date_int_lab = "Date interval",
   date_intervals = c(Day = "day", Week = "week", Month = "month"),
@@ -23,6 +23,7 @@ time_ui(
   bar_stacking_lab = "Bar stacking",
   cumul_data_lab = "Show cumulative data?",
   ratio_line_lab = "Show ratio line?",
+  zoom_control_lab = "Add zoom control slider?",
   full_screen = TRUE
 )
 
@@ -37,6 +38,8 @@ time_server(
   ratio_lab = NULL,
   ratio_numer = NULL,
   ratio_denom = NULL,
+  group_pal = epi_pals()$frost,
+  na_colour = "#666666",
   place_filter = shiny::reactiveVal(),
   filter_info = shiny::reactiveVal(),
   filter_reset = shiny::reactiveVal()
@@ -82,6 +85,8 @@ argument of \link[lubridate:round_date]{lubridate::floor_date}. If named, names 
 \item{ratio_line_lab}{text label for the ratio line input. This input will only be visable if
 \code{show_ratio} is TRUE in \link{time_server}}
 
+\item{zoom_control_lab}{text label for the zoom control option.}
+
 \item{full_screen}{Add button to card to with the option to enter full screen mode?}
 
 \item{df}{Data frame or tibble of patient level or aggregated data. Can be either a shiny reactive or static dataset.}
@@ -97,6 +102,10 @@ For aggregated data, character string of numeric count column to use of ratio nu
 
 \item{ratio_denom}{For patient level data, values in \code{ratio_var} to be used for the ratio denominator i.e. \code{c('Death', 'Recovery')}.
 For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.}
+
+\item{group_pal}{Colour palette used for groups.}
+
+\item{na_colour}{Colour used for missing data.}
 
 \item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
 the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)}

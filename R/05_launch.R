@@ -14,7 +14,6 @@
 #' @example inst/examples/docs/launch-module.R
 #' @export
 launch_module <- function(module = c("time", "place", "person"), ...) {
-
   module <- match.arg(module, several.ok = FALSE)
   mod_ui <- paste0(module, "_ui")
   mod_server <- paste0(module, "_server")
@@ -43,19 +42,8 @@ launch_module <- function(module = c("time", "place", "person"), ...) {
   server <- function(input, output, session) {
     do.call(mod_server, args[server_args])
   }
-
-  # slb <- getOption("shiny.launch.browser")
-  # on.exit(options(shiny.launch.browser = slb))
-  # if (
-  #   # Make sure that {rstudioapi} is available
-  #   requireNamespace("rstudioapi", quietly = TRUE) &&
-  #   # Returns TRUE if RStudio is running
-  #   rstudioapi::hasFun("viewer")
-  # ) {
-  #   options(shiny.launch.browser = .rs.invokeShinyPaneViewer)
-  # }
-
-  shiny::shinyApp(ui, server)
+  # runGadget will launch in RStudio's pane viewer if available
+  shiny::runGadget(ui, server)
 }
 
 #' Launch epishiny demo dashboard
@@ -63,16 +51,19 @@ launch_module <- function(module = c("time", "place", "person"), ...) {
 #' See an example of the type of dashboard you can build
 #' using `epishiny` modules within a `bslib` UI.
 #'
+#' @param disease name of disease demo dashboard to launch. Current options are "ebola" and "measles".
+#'
 #' @return No return value, a shiny app is launched.
 #' @examples
 #' ## Only run this example in interactive R sessions
 #' if (interactive()) {
 #'   library(epishiny)
-#'   launch_demo_dashboard()
+#'   launch_demo_dashboard("ebola")
 #' }
 #' @export
-launch_demo_dashboard <- function() {
-  app_dir <- system.file("examples", "demo", package = "epishiny")
+launch_demo_dashboard <- function(disease = "ebola") {
+  rlang::arg_match0(disease, c("ebola", "measles"))
+  app_dir <- system.file("examples", paste0(disease, "-linelist-dash"), package = "epishiny")
   if (app_dir == "") {
     stop("Could not find example directory. Try re-installing `epishiny`.", call. = FALSE)
   }

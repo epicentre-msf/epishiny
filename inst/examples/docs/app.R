@@ -55,7 +55,7 @@ ui <- page_sidebar(
   sidebar = filter_ui(
     "filter",
     group_vars = group_vars,
-    date_range = date_range,
+    # date_range = date_range,
     period_lab = "Notification period"
   ),
   # main content
