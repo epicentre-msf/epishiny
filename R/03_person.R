@@ -121,7 +121,8 @@ person_server <- function(
   # age_labels = c("<5", "5-17", "18-24", "25-34", "35-49", "50+"),
   age_var_lab = "Age (years)",
   age_group_lab = "Age group",
-  colours = c("#19a0aa", "#f15f36"),
+  # colours = c("#19a0aa", "#f15f36"),
+  colours = epi_pals()$frost[1:2],
   filter_info = shiny::reactiveVal(),
   time_filter = shiny::reactiveVal(),
   place_filter = shiny::reactiveVal()

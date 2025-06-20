@@ -20,9 +20,6 @@ geo_data <- list(
   )
 )
 
-# range of dates used in filter module to filter time period
-date_range <- range(df_ll_ebola$date_of_hospitalisation, na.rm = TRUE)
-
 # define date variables in data as named list to be used in app
 date_vars <- c(
   "Date of hospitalisation" = "date_of_hospitalisation",
@@ -41,27 +38,21 @@ group_vars <- c(
 
 # user interface
 ui <- page_sidebar(
+  useBusyIndicators(),
   class = "bslib-page-dashboard",
-  # theme = bs_theme(
-  #   preset = "minty",
-  #   font_scale = .8,
-  #   primary = "#4682B4",
-  #   secondary = "#D37331",
-  #   success = "#94BA3B"
-  # ),
-  # padding = 10,
+  padding = c(10, 50),
   title = "epishiny",
   # sidebar
   sidebar = filter_ui(
     "filter",
     group_vars = group_vars,
-    # date_range = date_range,
     period_lab = "Hospitalisation period"
   ),
   # main content
   layout_columns(
     col_widths = c(12, 7, 5),
     row_heights = c(2, 3),
+    gap = 10,
     time_ui(
       id = "time",
       title = "Time",
@@ -75,19 +66,6 @@ ui <- page_sidebar(
       group_vars = group_vars
     ),
     person_ui(id = "person")
-  ),
-  # start up loading spinner
-  waiter::waiter_preloader(
-    html = tagList(
-      tags$img(
-        src = "epishiny/img/epicentre_logo.png",
-        width = 600,
-        style = "padding: 20px;"
-      ),
-      tags$br(),
-      waiter::spin_3()
-    ),
-    color = "#FFFFFF"
   )
 )
 
@@ -137,6 +115,7 @@ server <- function(input, output, session) {
 }
 
 # launch app
-if (interactive()) {
-  shinyApp(ui, server)
-}
+shinyApp(ui, server)
+# if (interactive()) {
+#   shinyApp(ui, server)
+# }

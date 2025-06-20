@@ -6,7 +6,6 @@
 #'
 #' @param id Module id. Must be the same in both the UI and server function to link the two.
 #' @param group_vars named character vector of categorical variables for the data grouping input. Names are used as variable labels.
-#' @param date_range A vector containing the minimum and maximum dates for the date range input.
 #' @param title The title of the sidebar.
 #' @param date_filters_lab The label for the date filters accordion panel.
 #' @param period_lab The label for the date range input.
@@ -25,7 +24,6 @@
 filter_ui <- function(
   id,
   group_vars,
-  date_range,
   title = tags$span(bsicons::bs_icon("filter"), "Filters"),
   date_filters_lab = "Date filters",
   period_lab = "Period",
@@ -121,7 +119,6 @@ filter_ui <- function(
 #'  its filter information to the filter sidebar
 #' @param place_filter supply the output of [place_server()] wrapped in a [shiny::reactive()] here to add
 #'  its filter information to the filter sidebar
-#' @param na_label The label to use for missing values in group variables.
 #'
 #' @return The server function returns both the filtered data and a formatted text string with filter information
 #'   named `df` and `filter_info` respectively in a reactive list. These should be passed as arguments
@@ -136,8 +133,7 @@ filter_server <- function(
   date_var,
   group_vars,
   time_filter = shiny::reactiveVal(),
-  place_filter = shiny::reactiveVal(),
-  na_label = getOption("epishiny.na.label", "(Missing)")
+  place_filter = shiny::reactiveVal()
 ) {
   moduleServer(
     id,
@@ -171,7 +167,7 @@ filter_server <- function(
         force_reactive(df) %>%
           dplyr::mutate(dplyr::across(
             unname(group_vars),
-            \(x) forcats::fct_na_value_to_level(x, level = na_label)
+            \(x) forcats::fct_na_value_to_level(x, level = getOption("epishiny.na.label", "(Missing)"))
           ))
       })
 

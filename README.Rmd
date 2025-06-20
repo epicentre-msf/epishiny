@@ -56,7 +56,7 @@ update_imgs <- FALSE
 ## Demo Dashboard
 
 Launch a demo dashboard with examples of every epishiny module with the `launch_demo_dashboard()` function.
-The code for this dashboard can be found in [inst/examples/demo](https://github.com/epicentre-msf/epishiny/tree/main/inst/examples/demo)
+The code for the example dashboards can be found in [inst/examples/](https://github.com/epicentre-msf/epishiny/tree/main/inst/examples/)
 of the package repository.
 
 ```{r include=FALSE}
@@ -64,7 +64,7 @@ if (update_imgs) {
   require("shinytest2")
   pkgload::load_all()
 
-  app_path <- here::here("inst/examples/demo")
+  app_path <- here::here("inst/examples/ebola-linelist-dash")
 
   app <- AppDriver$new(app_path, width = 1600, height = 900)
 

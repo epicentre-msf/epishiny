@@ -20,6 +20,6 @@ each column representing a variable associated with said individual.
 Ages and admin boundary pcodes were added by the epishiny author.
 }
 \examples{
-df_ll
+df_ll_ebola
 }
 \keyword{datasets}

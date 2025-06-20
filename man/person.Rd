@@ -28,7 +28,7 @@ person_server(
   age_labels = label_breaks(age_breaks, lab_accuracy = 1),
   age_var_lab = "Age (years)",
   age_group_lab = "Age group",
-  colours = c("#19a0aa", "#f15f36"),
+  colours = epi_pals()$frost[1:2],
   filter_info = shiny::reactiveVal(),
   time_filter = shiny::reactiveVal(),
   place_filter = shiny::reactiveVal()
@@ -147,7 +147,7 @@ ui <- page_sidebar(
   sidebar = filter_ui(
     "filter",
     group_vars = group_vars,
-    date_range = date_range,
+    # date_range = date_range,
     period_lab = "Notification period"
   ),
   # main content

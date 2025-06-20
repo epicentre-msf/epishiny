@@ -38,6 +38,8 @@ time_server(
   ratio_lab = NULL,
   ratio_numer = NULL,
   ratio_denom = NULL,
+  group_pal = epi_pals()$frost,
+  na_colour = "#666666",
   place_filter = shiny::reactiveVal(),
   filter_info = shiny::reactiveVal(),
   filter_reset = shiny::reactiveVal()
@@ -100,6 +102,10 @@ For aggregated data, character string of numeric count column to use of ratio nu
 
 \item{ratio_denom}{For patient level data, values in \code{ratio_var} to be used for the ratio denominator i.e. \code{c('Death', 'Recovery')}.
 For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.}
+
+\item{group_pal}{Colour palette used for groups.}
+
+\item{na_colour}{Colour used for missing data.}
 
 \item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to filter
 the data by click events on the place module map (clicking a polygon will filter the data to the clicked region)}

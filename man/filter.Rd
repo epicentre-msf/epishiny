@@ -8,7 +8,6 @@
 filter_ui(
   id,
   group_vars,
-  date_range,
   title = tags$span(bsicons::bs_icon("filter"), "Filters"),
   date_filters_lab = "Date filters",
   period_lab = "Period",
@@ -26,16 +25,13 @@ filter_server(
   date_var,
   group_vars,
   time_filter = shiny::reactiveVal(),
-  place_filter = shiny::reactiveVal(),
-  na_label = getOption("epishiny.na.label", "(Missing)")
+  place_filter = shiny::reactiveVal()
 )
 }
 \arguments{
 \item{id}{Module id. Must be the same in both the UI and server function to link the two.}
 
 \item{group_vars}{named character vector of categorical variables for the data grouping input. Names are used as variable labels.}
-
-\item{date_range}{A vector containing the minimum and maximum dates for the date range input.}
 
 \item{title}{The title of the sidebar.}
 
@@ -64,8 +60,6 @@ its filter information to the filter sidebar}
 
 \item{place_filter}{supply the output of \code{\link[=place_server]{place_server()}} wrapped in a \code{\link[shiny:reactive]{shiny::reactive()}} here to add
 its filter information to the filter sidebar}
-
-\item{na_label}{The label to use for missing values in group variables.}
 }
 \value{
 A \link[bslib:sidebar]{bslib::sidebar} UI element with date filters, group filters, and action buttons.
@@ -135,7 +129,7 @@ ui <- page_sidebar(
   sidebar = filter_ui(
     "filter",
     group_vars = group_vars,
-    date_range = date_range,
+    # date_range = date_range,
     period_lab = "Notification period"
   ),
   # main content

@@ -170,6 +170,8 @@ time_ui <- function(
 #'  For aggregated data, character string of numeric count column to use of ratio numerator i.e. 'deaths'.
 #' @param ratio_denom For patient level data, values in `ratio_var` to be used for the ratio denominator i.e. `c('Death', 'Recovery')`.
 #'  For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.
+#' @param group_pal Colour palette used for groups.
+#' @param na_colour Colour used for missing data.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
 #'   returned by that function here wrapped in a [shiny::reactive()] to add filter information to chart exports.
 #' @param filter_reset If contained within an app using [filter_server()], supply the `filter_reset` object
@@ -192,6 +194,8 @@ time_server <- function(
   ratio_lab = NULL,
   ratio_numer = NULL,
   ratio_denom = NULL,
+  group_pal = epi_pals()$frost,
+  na_colour = "#666666",
   place_filter = shiny::reactiveVal(),
   filter_info = shiny::reactiveVal(),
   filter_reset = shiny::reactiveVal()
@@ -336,6 +340,13 @@ time_server <- function(
             '{group_lab}<br/><span style="font-size: 9px; color: #666; font-weight: normal">(click to filter)</span>'
           )
 
+          if (any(is.na(df[[group]]))) {
+            df[[group]] <- forcats::fct_na_value_to_level(df[[group]], level = getOption("epishiny.na.label", "(Missing)"))
+          }
+          n_groups <- dplyr::n_distinct(df[[group]])
+          missing_data <- getOption("epishiny.na.label", "(Missing)") %in% unique(df[[group]])
+          pal <- prepare_palette(n_groups, missing_data, pal = group_pal, na_colour = na_colour)
+
           hc <- highcharter::hchart(
             df,
             "column",
@@ -351,6 +362,7 @@ time_server <- function(
               y = 40,
               itemStyle = list(textOverflow = "ellipsis", width = 150)
             ) %>%
+            highcharter::hc_colors(pal) %>%
             highcharter::hc_tooltip(
               shared = TRUE,
               pointFormat = '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y} ({point.percentage:.1f}%)</b><br/>'

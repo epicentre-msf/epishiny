@@ -129,13 +129,26 @@ place_ui <- function(
                 placement = "top"
               )
           ),
-          selectInput(
-            ns("choro_pal"),
-            label = "Palette",
-            choices = choro_pals(),
-            selected = "Reds",
-            multiple = FALSE,
-            selectize = FALSE
+          tags$div(
+            # id = ns("choro_inputs"),
+            class = "d-flex justify-content-center align-items-start",
+            selectInput(
+              ns("choro_pal"),
+              label = "Palette",
+              choices = choro_pals(),
+              selected = "Reds",
+              multiple = FALSE,
+              selectize = FALSE
+            )
+            # numericInput(
+            #   inputId = ns("choro_alpha"),
+            #   label = "Alpha",
+            #   value = 8,
+            #   min = 1,
+            #   max = 10,
+            #   step = 1,
+            #   width = "60px"
+            # )
           ),
           bslib::input_switch(
             id = ns("choro_pal_rev"),
@@ -661,7 +674,7 @@ place_server <- function(
 
           if (!is.null(bins$error)) {
             shiny::showNotification(
-              stringr::str_glue("{input$choro_breaks} breaks could not be calculated for this data. Reverting to standard breaks."),
+              stringr::str_glue("{input$choro_breaks} breaks could not be calculated for this data. Reverting to default breaks."),
               type = "error"
             )
           }
@@ -670,6 +683,7 @@ place_server <- function(
             palette = input$choro_pal,
             domain = df_map$attack_rate,
             bins = bins$result,
+            # alpha = input$choro_alpha / 10,
             reverse = input$choro_pal_rev,
             na.color = "transparent"
           )

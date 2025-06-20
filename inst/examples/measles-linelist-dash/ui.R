@@ -1,4 +1,4 @@
-ui <-tagList(
+ui <- tagList(
   page_navbar(
     title = app_title,
     window_title = app_title,
@@ -23,7 +23,7 @@ ui <-tagList(
         sidebar = filter_ui(
           "filter",
           group_vars = group_vars,
-          date_range = date_range,
+          # date_range = date_range,
           period_lab = "Notification period"
         ),
         # main content

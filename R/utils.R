@@ -140,7 +140,57 @@ epi_pals <- function() {
     "#17becf"
   )
 
+  x$vibrant <- c(
+    "#0077BB",
+    "#33BBEE",
+    "#009988",
+    "#EE7733",
+    "#CC3311",
+    "#EE3377"
+  )
+
+  x$muted <- c(
+    "#332288",
+    "#88CCEE",
+    "#44AA99",
+    "#117733",
+    "#999933",
+    "#DDCC77",
+    "#CC6677",
+    "#882255",
+    "#AA4499"
+  )
+
+  x$aurora <- c("#BF616A", "#D08770", "#EBCB8B", "#A3BE8C", "#B48EAD")
+
+  x$frost <- c("#5E81AC", "#81A1C1", "#88C0D0", "#8FBCBB")
+
   x
+}
+
+prepare_palette <- function(
+  n,
+  missing_data = FALSE,
+  na_colour = "#666666",
+  pal = epi_pals()$aurora,
+  alpha = 0.8
+) {
+  if (!length(pal)) {
+    pal <- epi_pals()$aurora
+  }
+  n_pal <- length(pal)
+  n_non_na <- ifelse(missing_data, n - 1, n)
+  pal <- if (n_non_na > n_pal && n_non_na < 10) {
+    grDevices::colorRampPalette(epi_pals()$aurora)(n_non_na)
+  } else if (n_non_na > n_pal) {
+    epi_pals()$pal20
+  } else {
+    pal
+  }
+  if (missing_data) {
+    pal[n] <- na_colour
+  }
+  scales::alpha(pal, alpha)
 }
 
 #' @noRd
@@ -212,7 +262,9 @@ choro_breaks <- function() {
 
 #' @noRd
 setup_group_filter <- function(var, lab, ns, ...) {
-  if (is.null(lab)) lab <- var
+  if (is.null(lab)) {
+    lab <- var
+  }
   # shinyWidgets::pickerInput(
   #   inputId = ns(var),
   #   label = lab,
