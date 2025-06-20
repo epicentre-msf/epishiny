@@ -59,8 +59,8 @@
 <span>  groups_lab <span class="op">=</span> <span class="st">"Group data by"</span>,</span>
 <span>  no_grouping_lab <span class="op">=</span> <span class="st">"No grouping"</span>,</span>
 <span>  circle_size_lab <span class="op">=</span> <span class="st">"Circle size multiplyer"</span>,</span>
-<span>  opts_btn_lab <span class="op">=</span> <span class="st">"options"</span>,</span>
-<span>  download_lab <span class="op">=</span> <span class="st">"download"</span>,</span>
+<span>  opts_btn_lab <span class="op">=</span> <span class="st">"Map options"</span>,</span>
+<span>  download_lab <span class="op">=</span> <span class="st">"Download image of current map"</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -72,7 +72,7 @@
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  show_parent_borders <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  choro_lab <span class="op">=</span> <span class="st">"Rate /100 000"</span>,</span>
-<span>  choro_pal <span class="op">=</span> <span class="st">"Reds"</span>,</span>
+<span>  choro_pal <span class="op">=</span> <span class="st">"OrRd"</span>,</span>
 <span>  choro_opacity <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  export_width <span class="op">=</span> <span class="fl">1200</span>,</span>
 <span>  export_height <span class="op">=</span> <span class="fl">650</span>,</span>
@@ -163,7 +163,8 @@ If named, names are used as variable labels.</p></dd>
 
 <dt id="arg-choro-pal">choro_pal<a class="anchor" aria-label="anchor" href="#arg-choro-pal"></a></dt>
 <dd><p>Colour palette passed to <code><a href="https://rstudio.github.io/leaflet/reference/colorNumeric.html" class="external-link">leaflet::colorBin()</a></code> for attack rate choropleth
-(only applicable if <code>geo_data</code> contains population data)</p></dd>
+(only applicable if <code>geo_data</code> contains population data). See details of <code><a href="https://rstudio.github.io/leaflet/reference/colorNumeric.html" class="external-link">leaflet::colorBin()</a></code>
+for all palette options.</p></dd>
 
 
 <dt id="arg-choro-opacity">choro_opacity<a class="anchor" aria-label="anchor" href="#arg-choro-opacity"></a></dt>
@@ -258,7 +259,7 @@ returned by that function here wrapped in a <code><a href="https://rdrr.io/pkg/s
 <span class="r-in"><span>  sidebar <span class="op">=</span> <span class="fu"><a href="filter.html">filter_ui</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="st">"filter"</span>,</span></span>
 <span class="r-in"><span>    group_vars <span class="op">=</span> <span class="va">group_vars</span>,</span></span>
-<span class="r-in"><span>    date_range <span class="op">=</span> <span class="va">date_range</span>,</span></span>
+<span class="r-in"><span>    <span class="co"># date_range = date_range,</span></span></span>
 <span class="r-in"><span>    period_lab <span class="op">=</span> <span class="st">"Notification period"</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># main content</span></span></span>
@@ -333,7 +334,7 @@ returned by that function here wrapped in a <code><a href="https://rdrr.io/pkg/s
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>

@@ -52,9 +52,9 @@
 <span>  count_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Time"</span>,</span>
-<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/bsicons/man/bs_icon.html" class="external-link">bs_icon</a></span><span class="op">(</span><span class="st">"bar-chart-line-fill"</span><span class="op">)</span>,</span>
+<span>  icon <span class="op">=</span> <span class="fu">bsicons</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/bsicons/man/bs_icon.html" class="external-link">bs_icon</a></span><span class="op">(</span><span class="st">"calendar2-week"</span><span class="op">)</span>,</span>
 <span>  tooltip <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  opts_btn_lab <span class="op">=</span> <span class="st">"options"</span>,</span>
+<span>  opts_btn_lab <span class="op">=</span> <span class="st">"Chart options"</span>,</span>
 <span>  date_lab <span class="op">=</span> <span class="st">"Date axis"</span>,</span>
 <span>  date_int_lab <span class="op">=</span> <span class="st">"Date interval"</span>,</span>
 <span>  date_intervals <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Day <span class="op">=</span> <span class="st">"day"</span>, Week <span class="op">=</span> <span class="st">"week"</span>, Month <span class="op">=</span> <span class="st">"month"</span><span class="op">)</span>,</span>
@@ -64,6 +64,7 @@
 <span>  bar_stacking_lab <span class="op">=</span> <span class="st">"Bar stacking"</span>,</span>
 <span>  cumul_data_lab <span class="op">=</span> <span class="st">"Show cumulative data?"</span>,</span>
 <span>  ratio_line_lab <span class="op">=</span> <span class="st">"Show ratio line?"</span>,</span>
+<span>  zoom_control_lab <span class="op">=</span> <span class="st">"Add zoom control slider?"</span>,</span>
 <span>  full_screen <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -78,6 +79,8 @@
 <span>  ratio_lab <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ratio_numer <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ratio_denom <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  group_pal <span class="op">=</span> <span class="fu">epi_pals</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">frost</span>,</span>
+<span>  na_colour <span class="op">=</span> <span class="st">"#666666"</span>,</span>
 <span>  place_filter <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  filter_info <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  filter_reset <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactiveVal.html" class="external-link">reactiveVal</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -161,6 +164,10 @@ argument of <a href="https://lubridate.tidyverse.org/reference/round_date.html" 
 <code>show_ratio</code> is TRUE in time_server</p></dd>
 
 
+<dt id="arg-zoom-control-lab">zoom_control_lab<a class="anchor" aria-label="anchor" href="#arg-zoom-control-lab"></a></dt>
+<dd><p>text label for the zoom control option.</p></dd>
+
+
 <dt id="arg-full-screen">full_screen<a class="anchor" aria-label="anchor" href="#arg-full-screen"></a></dt>
 <dd><p>Add button to card to with the option to enter full screen mode?</p></dd>
 
@@ -189,6 +196,14 @@ For aggregated data, character string of numeric count column to use of ratio nu
 <dt id="arg-ratio-denom">ratio_denom<a class="anchor" aria-label="anchor" href="#arg-ratio-denom"></a></dt>
 <dd><p>For patient level data, values in <code>ratio_var</code> to be used for the ratio denominator i.e. <code>c('Death', 'Recovery')</code>.
 For aggregated data, character string of numeric count column to use of ratio denominator i.e. 'cases'.</p></dd>
+
+
+<dt id="arg-group-pal">group_pal<a class="anchor" aria-label="anchor" href="#arg-group-pal"></a></dt>
+<dd><p>Colour palette used for groups.</p></dd>
+
+
+<dt id="arg-na-colour">na_colour<a class="anchor" aria-label="anchor" href="#arg-na-colour"></a></dt>
+<dd><p>Colour used for missing data.</p></dd>
 
 
 <dt id="arg-place-filter">place_filter<a class="anchor" aria-label="anchor" href="#arg-place-filter"></a></dt>
@@ -221,7 +236,7 @@ see <a href="https://jkunst.com/highcharter/reference/hc_add_event_point.html" c
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>
