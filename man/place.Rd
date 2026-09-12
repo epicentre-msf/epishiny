@@ -36,7 +36,7 @@ place_server(
   show_parent_borders = FALSE,
   choro_lab_rate = "Rate /100 000",
   choro_opacity = 0.7,
-  base_maps = c("Stadia.AlidadeSmooth", "OpenStreetMap", "OpenStreetMap.HOT"),
+  base_maps = c("Esri.WorldGrayCanvas", "OpenStreetMap", "OpenStreetMap.HOT"),
   export_width = 1200,
   export_height = 650,
   time_filter = shiny::reactiveVal(),
