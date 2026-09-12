@@ -238,7 +238,7 @@ place_server <- function(
   show_parent_borders = FALSE,
   choro_lab_rate = "Rate /100 000",
   choro_opacity = .7,
-  base_maps = c("Stadia.AlidadeSmooth", "OpenStreetMap", "OpenStreetMap.HOT"),
+  base_maps = c("Esri.WorldGrayCanvas", "OpenStreetMap", "OpenStreetMap.HOT"),
   export_width = 1200,
   export_height = 650,
   time_filter = shiny::reactiveVal(),
@@ -851,7 +851,7 @@ place_server <- function(
           }
 
           # Add base tiles using helper function
-          base_tiles <- input$map_groups[[1]] %||% "Stadia.AlidadeSmooth"
+          base_tiles <- input$map_groups[[1]] %||% "Esri.WorldGrayCanvas"
           if (grepl("CartoDB", base_tiles)) {
             leaf_out <- addCartoTiles(leaf_out, style = base_tiles)
           } else {
@@ -1663,7 +1663,7 @@ choro_breaks <- function() {
 #' @noRd
 leaf_basemap <- function(
   bbox,
-  baseMaps = c("Stadia.AlidadeSmooth", "OpenStreetMap", "OpenStreetMap.HOT"),
+  baseMaps = c("Esri.WorldGrayCanvas", "OpenStreetMap", "OpenStreetMap.HOT"),
   overlayGroups = character(0),
   miniMap = TRUE
 ) {
