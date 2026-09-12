@@ -36,6 +36,7 @@ place_server(
   show_parent_borders = FALSE,
   choro_lab_rate = "Rate /100 000",
   choro_opacity = 0.7,
+  base_maps = c("Stadia.AlidadeSmooth", "OpenStreetMap", "OpenStreetMap.HOT"),
   export_width = 1200,
   export_height = 650,
   time_filter = shiny::reactiveVal(),
@@ -94,6 +95,8 @@ If named, names are used as variable labels.}
 \item{choro_lab_rate}{Label for attack rate choropleth (only used if \code{geo_data} contains population data).}
 
 \item{choro_opacity}{Opacity of choropleth colour.}
+
+\item{base_maps}{A character vector of base map providers to include in the map. See \link[leaflet:providers]{leaflet::providers} for available options.}
 
 \item{export_width}{The width of the exported map image.}
 

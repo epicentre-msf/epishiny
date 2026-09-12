@@ -213,6 +213,7 @@ place_ui <- function(
 #' @param show_parent_borders Show borders of parent boundary levels?
 #' @param choro_lab_rate Label for attack rate choropleth (only used if `geo_data` contains population data).
 #' @param choro_opacity Opacity of choropleth colour.
+#' @param base_maps A character vector of base map providers to include in the map. See [leaflet::providers] for available options.
 #' @param export_width The width of the exported map image.
 #' @param export_height The height of the exported map image.
 #' @param filter_info If contained within an app using [filter_server()], supply the `filter_info` object
@@ -237,6 +238,7 @@ place_server <- function(
   show_parent_borders = FALSE,
   choro_lab_rate = "Rate /100 000",
   choro_opacity = .7,
+  base_maps = c("Stadia.AlidadeSmooth", "OpenStreetMap", "OpenStreetMap.HOT"),
   export_width = 1200,
   export_height = 650,
   time_filter = shiny::reactiveVal(),
@@ -463,7 +465,7 @@ place_server <- function(
       output$map <- leaflet::renderLeaflet({
         # bbox <- sf::st_bbox(geo_data[[1]]$sf)
         bbox <- sf::st_bbox(isolate(rv$sf))
-        leaf_basemap(bbox, miniMap = TRUE)
+        leaf_basemap(bbox, baseMaps = base_maps, miniMap = TRUE)
       })
 
       # manage map click events to return selected regions
@@ -849,8 +851,12 @@ place_server <- function(
           }
 
           # Add base tiles using helper function
-          base_tiles <- input$map_groups[[1]] %||% "CartoDB"
-          leaf_out <- add_base_tiles(leaf_out, base_tiles)
+          base_tiles <- input$map_groups[[1]] %||% "Stadia.AlidadeSmooth"
+          if (grepl("CartoDB", base_tiles)) {
+            leaf_out <- addCartoTiles(leaf_out, style = base_tiles)
+          } else {
+            leaf_out <- leaf_out %>% leaflet::addProviderTiles(base_tiles)
+          }
 
           mapshot2(
             leaf_out,
@@ -1204,34 +1210,6 @@ add_parent_borders <- function(map, geo_data, current_level, boundaries) {
         )
     }
   }
-  map
-}
-
-#' Add base tiles to leaflet map
-#' @noRd
-add_base_tiles <- function(map, tile_provider) {
-  # Map friendly names to provider names
-  tiles <- dplyr::recode(
-    tile_provider,
-    "CartoDB" = "CartoDB.PositronNoLabels",
-    "OSM" = "OpenStreetMap",
-    "OSM.HOT" = "OpenStreetMap.HOT",
-    "Esri" = "Esri.WorldGrayCanvas",
-    "Stadia" = "Stadia.AlidadeSmooth",
-    .default = "CartoDB.PositronNoLabels"
-  )
-
-  map <- map %>% leaflet::addProviderTiles(tiles)
-
-  # Add labels overlay for CartoDB
-  if (tiles == "CartoDB.PositronNoLabels") {
-    map <- map %>%
-      leaflet::addProviderTiles(
-        "CartoDB.PositronOnlyLabels",
-        options = leaflet::providerTileOptions(pane = "place_labels")
-      )
-  }
-
   map
 }
 
@@ -1685,7 +1663,7 @@ choro_breaks <- function() {
 #' @noRd
 leaf_basemap <- function(
   bbox,
-  baseGroups = c("CartoDB", "OSM", "OSM.HOT", "Esri"),
+  baseMaps = c("Stadia.AlidadeSmooth", "OpenStreetMap", "OpenStreetMap.HOT"),
   overlayGroups = character(0),
   miniMap = TRUE
 ) {
@@ -1696,30 +1674,96 @@ leaf_basemap <- function(
     leaflet::addMapPane(name = "circles", zIndex = 410) %>%
     leaflet::addMapPane(name = "boundaries", zIndex = 420) %>%
     leaflet::addMapPane(name = "geo_highlight", zIndex = 430) %>%
-    leaflet::addProviderTiles("CartoDB.PositronNoLabels", group = "CartoDB") %>%
-    leaflet::addProviderTiles(
-      "CartoDB.PositronOnlyLabels",
-      group = "CartoDB",
-      options = leaflet::leafletOptions(pane = "place_labels")
-    ) %>%
-    leaflet::addProviderTiles("OpenStreetMap", group = "OSM") %>%
-    leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM.HOT") %>%
-    leaflet::addProviderTiles("Esri.WorldGrayCanvas", group = "Esri") %>%
-    leaflet::addScaleBar(
-      position = "bottomright",
-      options = leaflet::scaleBarOptions(imperial = FALSE)
-    ) %>%
-    leaflet::addLayersControl(
-      baseGroups = baseGroups,
-      overlayGroups = overlayGroups,
-      position = "topleft"
-    )
+    leaflet::addScaleBar(position = "bottomright", options = leaflet::scaleBarOptions(imperial = FALSE))
+
+  for (tile in baseMaps) {
+    if (grepl("CartoDB", tile)) {
+      lf <- addCartoTiles(lf, style = tile)
+    } else {
+      lf <- lf %>% leaflet::addProviderTiles(tile, group = tile)
+    }
+  }
+
+  if (length(baseMaps) > 1) {
+    lf <- lf %>%
+      leaflet::addLayersControl(
+        baseGroups = baseMaps,
+        overlayGroups = overlayGroups,
+        position = "topleft"
+      )
+  }
 
   if (miniMap) {
     lf <- lf %>% leaflet::addMiniMap(toggleDisplay = TRUE, position = "bottomleft")
   }
 
   return(lf)
+}
+
+addCartoTiles <- function(map, style = "CartoDB.Positron") {
+  # Map basemap names to CARTO tile URLs
+  basemap_urls <- list(
+    "CartoDB.Positron" = c(
+      "https://basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}.png",
+      "https://basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}.png"
+    ),
+    "CartoDB.DarkMatter" = c(
+      "https://basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}.png",
+      "https://basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png"
+    ),
+    "CartoDB.Voyager" = c(
+      "https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png",
+      "https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png"
+    )
+  )
+
+  # Validate tile type
+  if (!style %in% names(basemap_urls)) {
+    cli::cli_abort(
+      c(
+        "x" = "Invalid CARTO basemap style: {.code {style}}",
+        "i" = "Available styles: {.code {paste(names(basemap_urls), collapse = ', ')}}"
+      )
+    )
+  }
+  # Get the URL for the requested basemap
+  url <- basemap_urls[[style]]
+
+  # Append API key if available
+  api_key <- Sys.getenv("CARTO_API_KEY")
+  if (nzchar(api_key)) {
+    url <- paste0(url, "?key=", api_key)
+  } else {
+    rlang::warn(
+      paste(
+        "CARTO API key not detected. Visit https://carto.com/basemaps/apikey/ to obtain a free API key,",
+        "then set the CARTO_API_KEY environment variable to render CARTO tiles without the watermark."
+      ),
+      .frequency = "once",
+      .frequency_id = "carto_api_key"
+    )
+  }
+
+  # Standard CARTO attribution
+  attribution <- paste(
+    '&copy; <a href="https://carto.com/attributions">CARTO</a>,',
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  )
+
+  # Add tiles to the map and return
+  map |>
+    # basemap
+    leaflet::addTiles(
+      urlTemplate = url[1],
+      attribution = attribution,
+      group = style
+    ) |>
+    # labels above data layers
+    leaflet::addTiles(
+      urlTemplate = url[2],
+      group = style,
+      options = leaflet::leafletOptions(pane = "place_labels")
+    )
 }
 
 #' Generate HTML Tooltip for Leaflet
